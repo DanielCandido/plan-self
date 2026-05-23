@@ -6,7 +6,7 @@ const columns = [
   { title: 'Done', tasks: ['Estrutura monorepo inicial'] },
 ];
 
-const buttonBaseClass = 'rounded px-md py-sm text-sm font-medium transition-colors duration-150 ease-in-out';
+const buttonBaseClass = 'rounded px-4 py-2 text-sm font-medium transition-colors duration-150 ease-in-out';
 
 export default function Home() {
   return (

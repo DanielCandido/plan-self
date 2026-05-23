@@ -44,7 +44,7 @@
   }
 
   * {
-    @apply box-border border-outline-variant/70;
+    @apply box-border;
   }
 
   body {
