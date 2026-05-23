@@ -31,7 +31,6 @@ const config: Config = {
         xl: '0.75rem',
       },
       spacing: {
-        unit: '4px',
         xs: '4px',
         sm: '8px',
         md: '16px',
