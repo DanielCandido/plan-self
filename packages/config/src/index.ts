@@ -31,7 +31,7 @@ const MONOREPO_MARKERS = ['turbo.json', '.env.example'];
 const findMonorepoRoot = (startDir: string): string | undefined => {
   let current = startDir;
 
-  for (;;) {
+  while (true) {
     const hasAllMarkers = MONOREPO_MARKERS.every((marker) => existsSync(join(current, marker)));
     if (hasAllMarkers) {
       return current;
@@ -79,7 +79,7 @@ export const requireEnv = (key: string): string => {
   return value;
 };
 
-const readEnv = (key: string, fallback: string): string => process.env[key] ?? fallback;
+const readEnvOrDefault = (key: string, fallback: string): string => process.env[key] ?? fallback;
 
 export const loadConfig = (): AppConfig => ({
   databaseUrl: requireEnv('DATABASE_URL'),
@@ -91,14 +91,14 @@ export const loadConfig = (): AppConfig => ({
 export const loadApiConfig = (): ApiConfig => ({
   jwtAccessSecret: requireEnv('JWT_ACCESS_SECRET'),
   jwtRefreshSecret: requireEnv('JWT_REFRESH_SECRET'),
-  appBaseUrl: readEnv('APP_BASE_URL', 'http://localhost:3000'),
-  googleOauthUrl: readEnv('GOOGLE_OAUTH_URL', '#'),
-  githubOauthUrl: readEnv('GITHUB_OAUTH_URL', '#'),
-  nodeEnv: readEnv('NODE_ENV', 'development'),
+  appBaseUrl: readEnvOrDefault('APP_BASE_URL', 'http://localhost:3000'),
+  googleOauthUrl: readEnvOrDefault('GOOGLE_OAUTH_URL', '#'),
+  githubOauthUrl: readEnvOrDefault('GITHUB_OAUTH_URL', '#'),
+  nodeEnv: readEnvOrDefault('NODE_ENV', 'development'),
 });
 
 export const loadWorkerConfig = (): WorkerConfig => ({
-  redisUrl: readEnv('REDIS_URL', 'redis://localhost:6379'),
+  redisUrl: readEnvOrDefault('REDIS_URL', 'redis://localhost:6379'),
 });
 
 export const loadGatewayConfig = (): GatewayConfig => {
