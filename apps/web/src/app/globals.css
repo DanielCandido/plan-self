@@ -49,6 +49,6 @@
 
   body {
     @apply m-0 min-h-screen bg-background text-foreground antialiased;
-    font-family: var(--font-geist), ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-family: Geist, ui-sans-serif, system-ui, -apple-system, sans-serif;
   }
 }
