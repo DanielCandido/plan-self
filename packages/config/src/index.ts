@@ -1,3 +1,7 @@
+import { existsSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 export interface AppConfig {
   databaseUrl: string;
   redisUrl: string;
@@ -5,7 +9,69 @@ export interface AppConfig {
   jwtRefreshSecret: string;
 }
 
-const requireEnv = (key: string): string => {
+export interface ApiConfig {
+  jwtAccessSecret: string;
+  jwtRefreshSecret: string;
+  appBaseUrl: string;
+  googleOauthUrl: string;
+  githubOauthUrl: string;
+  nodeEnv: string;
+}
+
+export interface WorkerConfig {
+  redisUrl: string;
+}
+
+export interface GatewayConfig {
+  port: number;
+}
+
+const MONOREPO_MARKERS = ['turbo.json', '.env.example'];
+
+const findMonorepoRoot = (startDir: string): string | undefined => {
+  let current = startDir;
+
+  for (;;) {
+    const hasAllMarkers = MONOREPO_MARKERS.every((marker) => existsSync(join(current, marker)));
+    if (hasAllMarkers) {
+      return current;
+    }
+
+    const parent = dirname(current);
+    if (parent === current) {
+      return undefined;
+    }
+    current = parent;
+  }
+};
+
+const resolveRepoRoot = (): string => {
+  const cwdRoot = findMonorepoRoot(process.cwd());
+  if (cwdRoot) {
+    return cwdRoot;
+  }
+
+  const sourceRoot = findMonorepoRoot(dirname(fileURLToPath(import.meta.url)));
+  if (sourceRoot) {
+    return sourceRoot;
+  }
+
+  return process.cwd();
+};
+
+export const resolveRootEnvPath = (): string => join(resolveRepoRoot(), '.env');
+
+export const loadRootEnv = (): { path: string; loaded: boolean } => {
+  const envPath = resolveRootEnvPath();
+  if (!existsSync(envPath)) {
+    return { path: envPath, loaded: false };
+  }
+
+  process.loadEnvFile(envPath);
+  return { path: envPath, loaded: true };
+};
+
+export const requireEnv = (key: string): string => {
   const value = process.env[key];
   if (!value) {
     throw new Error(`${key} is required`);
@@ -13,9 +79,38 @@ const requireEnv = (key: string): string => {
   return value;
 };
 
+const readEnv = (key: string, fallback: string): string => process.env[key] ?? fallback;
+
 export const loadConfig = (): AppConfig => ({
   databaseUrl: requireEnv('DATABASE_URL'),
   redisUrl: requireEnv('REDIS_URL'),
   jwtAccessSecret: requireEnv('JWT_ACCESS_SECRET'),
   jwtRefreshSecret: requireEnv('JWT_REFRESH_SECRET'),
 });
+
+export const loadApiConfig = (): ApiConfig => ({
+  jwtAccessSecret: requireEnv('JWT_ACCESS_SECRET'),
+  jwtRefreshSecret: requireEnv('JWT_REFRESH_SECRET'),
+  appBaseUrl: readEnv('APP_BASE_URL', 'http://localhost:3000'),
+  googleOauthUrl: readEnv('GOOGLE_OAUTH_URL', '#'),
+  githubOauthUrl: readEnv('GITHUB_OAUTH_URL', '#'),
+  nodeEnv: readEnv('NODE_ENV', 'development'),
+});
+
+export const loadWorkerConfig = (): WorkerConfig => ({
+  redisUrl: readEnv('REDIS_URL', 'redis://localhost:6379'),
+});
+
+export const loadGatewayConfig = (): GatewayConfig => {
+  const rawPort = process.env.GATEWAY_PORT;
+  if (!rawPort) {
+    return { port: 3010 };
+  }
+
+  const port = Number.parseInt(rawPort, 10);
+  if (Number.isNaN(port) || port <= 0) {
+    throw new Error('GATEWAY_PORT must be a positive number');
+  }
+
+  return { port };
+};

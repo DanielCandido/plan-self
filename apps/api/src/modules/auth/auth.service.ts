@@ -7,6 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import type { LoginDto } from './dto/login.dto';
+import { apiConfig } from '../../config/api.config';
 
 export interface UserRecord {
   id: string;
@@ -38,8 +39,8 @@ const MOCK_USERS: UserRecord[] = [];
 export class AuthService {
   constructor(private readonly jwtService: JwtService) {}
 
-  private readonly accessSecret = process.env.JWT_ACCESS_SECRET ?? 'change-me';
-  private readonly refreshSecret = process.env.JWT_REFRESH_SECRET ?? 'change-me-refresh';
+  private readonly accessSecret = apiConfig.jwtAccessSecret;
+  private readonly refreshSecret = apiConfig.jwtRefreshSecret;
   private readonly accessExpiresIn = '15m';
   private readonly refreshExpiresIn = '7d';
   private readonly refreshCookieName = 'refresh_token';
@@ -61,7 +62,7 @@ export class AuthService {
   }
 
   private setRefreshCookie(res: Response, token: string): void {
-    const isProduction = process.env.NODE_ENV === 'production';
+    const isProduction = apiConfig.nodeEnv === 'production';
     res.cookie(this.refreshCookieName, token, {
       httpOnly: true,
       secure: isProduction,
@@ -185,13 +186,11 @@ export class AuthService {
   // ─── OAuth redirect helpers ────────────────────────────────────────────────
 
   oauthRedirectGoogle() {
-    const googleAuthUrl = process.env.GOOGLE_OAUTH_URL ?? '#';
-    return { url: googleAuthUrl };
+    return { url: apiConfig.googleOauthUrl };
   }
 
   oauthRedirectGithub() {
-    const githubAuthUrl = process.env.GITHUB_OAUTH_URL ?? '#';
-    return { url: githubAuthUrl };
+    return { url: apiConfig.githubOauthUrl };
   }
 
   // ─── Utility: seed a user (for dev/testing) ───────────────────────────────

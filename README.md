@@ -73,6 +73,15 @@ Ou:
 ./scripts/setup.sh
 ```
 
+## Configuração de ambiente (.env)
+
+- O arquivo canônico de ambiente do monorepo é `/.env` (na raiz do projeto).
+- API, Gateway e Worker agora carregam esse arquivo explicitamente quando iniciado em desenvolvimento local.
+- Precedência de variáveis:
+  1. variáveis já definidas no ambiente de execução (ex.: Docker/Kubernetes/CI)
+  2. valores de `/.env` (apenas para chaves ainda não definidas no ambiente)
+- Variáveis obrigatórias para subir a API: `JWT_ACCESS_SECRET` e `JWT_REFRESH_SECRET`.
+
 ## Serviços (docker compose)
 
 - `web` → http://localhost:3000
@@ -97,4 +106,3 @@ Ou:
 4. Setup wizard com geração automática de `.env`, compose e secrets
 5. Integrar providers de IA (OpenAI/Ollama/OpenRouter/Anthropic)
 6. Expandir integrações Git/Slack/Discord/Email/DevOps
-
