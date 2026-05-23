@@ -1,4 +1,4 @@
-type Role = 'OWNER' | 'ADMIN' | 'MANAGER' | 'MEMBER' | 'GUEST';
+import type { Role } from '@plan-self/types';
 
 const hierarchy: Role[] = ['GUEST', 'MEMBER', 'MANAGER', 'ADMIN', 'OWNER'];
 

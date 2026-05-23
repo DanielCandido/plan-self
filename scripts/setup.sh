@@ -5,4 +5,4 @@ cp .env.example .env
 npm install
 npm run db:generate
 
-echo "Setup concluído. Ajuste .env e execute: docker compose up -d --build"
+echo "Setup complete. Adjust .env and run: docker compose up -d --build"

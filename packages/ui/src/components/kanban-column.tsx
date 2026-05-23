@@ -5,4 +5,9 @@ interface KanbanColumnProps {
   children: ReactNode;
 }
 
-export const KanbanColumn = ({ title, children }: KanbanColumnProps) => ({ title, children });
+export const KanbanColumn = ({ title, children }: KanbanColumnProps) => (
+  <section>
+    <h3>{title}</h3>
+    {children}
+  </section>
+);

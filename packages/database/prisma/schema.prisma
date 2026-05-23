@@ -55,6 +55,8 @@ model User {
   organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   memberships    TeamMember[]
   taskAssignees  TaskAssignee[]
+  taskComments   TaskComment[]
+  messages       Message[]
 }
 
 model TeamMember {
@@ -158,6 +160,7 @@ model TaskComment {
   content   String
   createdAt DateTime @default(now())
   task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
 
 model Channel {
@@ -178,6 +181,7 @@ model Message {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
 
 model AuditLog {

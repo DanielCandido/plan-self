@@ -5,9 +5,17 @@ export interface AppConfig {
   jwtRefreshSecret: string;
 }
 
+const requireEnv = (key: string): string => {
+  const value = process.env[key];
+  if (!value) {
+    throw new Error(`${key} is required`);
+  }
+  return value;
+};
+
 export const loadConfig = (): AppConfig => ({
-  databaseUrl: process.env.DATABASE_URL ?? '',
-  redisUrl: process.env.REDIS_URL ?? '',
-  jwtAccessSecret: process.env.JWT_ACCESS_SECRET ?? 'dev-only-secret',
-  jwtRefreshSecret: process.env.JWT_REFRESH_SECRET ?? 'dev-only-refresh',
+  databaseUrl: requireEnv('DATABASE_URL'),
+  redisUrl: requireEnv('REDIS_URL'),
+  jwtAccessSecret: requireEnv('JWT_ACCESS_SECRET'),
+  jwtRefreshSecret: requireEnv('JWT_REFRESH_SECRET'),
 });

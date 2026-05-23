@@ -1,11 +1,17 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 
+const jwtAccessSecret = process.env.JWT_ACCESS_SECRET;
+
+if (!jwtAccessSecret) {
+  throw new Error('JWT_ACCESS_SECRET is required');
+}
+
 @Module({
   imports: [
     JwtModule.register({
       global: true,
-      secret: process.env.JWT_ACCESS_SECRET ?? 'dev-only-secret',
+      secret: jwtAccessSecret,
       signOptions: { expiresIn: '15m' },
     }),
   ],
