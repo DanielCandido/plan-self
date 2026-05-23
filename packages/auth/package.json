@@ -1,0 +1,19 @@
+{
+  "name": "@plan-self/auth",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "tsc --noEmit -p tsconfig.json",
+    "test": "npm run build && node --test dist/index.test.js"
+  },
+  "dependencies": {
+    "@plan-self/types": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.5"
+  }
+}
