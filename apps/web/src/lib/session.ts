@@ -4,13 +4,13 @@ import { setAccessToken } from './api';
 
 export interface SessionHydrationResult {
   user: User | null;
-  accessToken: string | null;
 }
 
 export async function hydrateSession(): Promise<SessionHydrationResult> {
   const user = await bootstrapSession();
-  const accessToken = user ? null : null; // token comes back from /auth/me only for session validation
-  return { user, accessToken };
+  // Access token is kept in-memory after login; bootstrap re-validates the
+  // session via the httpOnly refresh cookie on the /auth/me endpoint.
+  return { user };
 }
 
 export function invalidateSession() {

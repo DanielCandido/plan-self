@@ -17,9 +17,7 @@ const DEFAULT_PUBLIC_ROUTE = '/login';
  */
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const sessionCookie =
-    req.cookies.get('refresh_token')?.value ??
-    req.cookies.get('planself.session')?.value;
+  const sessionCookie = req.cookies.get('refresh_token')?.value;
 
   const isAuthenticated = Boolean(sessionCookie);
   const isPublicRoute = PUBLIC_ROUTES.some((r) => pathname.startsWith(r));
