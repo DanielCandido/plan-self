@@ -6,6 +6,8 @@ const columns = [
   { title: 'Done', tasks: ['Estrutura monorepo inicial'] },
 ];
 
+const buttonBaseClass = 'rounded px-md py-sm text-sm font-medium transition-colors duration-150 ease-in-out';
+
 export default function Home() {
   return (
     <main className="mx-auto min-h-screen w-full max-w-[1440px] px-margin-mobile py-xl md:px-margin-desktop">
@@ -15,10 +17,10 @@ export default function Home() {
           Kanban + colaboração em tempo real + setup guiado para self-hosting.
         </p>
         <div className="mt-md flex flex-wrap gap-sm">
-          <button className="rounded px-md py-sm text-sm font-medium transition-colors duration-150 ease-in-out bg-primary text-on-primary hover:bg-primary/90">
+          <button className={`${buttonBaseClass} bg-primary text-on-primary hover:bg-primary/90`}>
             Primário
           </button>
-          <button className="rounded border border-outline px-md py-sm text-sm font-medium transition-colors duration-150 ease-in-out hover:bg-surface-container-high/40">
+          <button className={`${buttonBaseClass} border border-outline hover:bg-surface-container-high/40`}>
             Secundário
           </button>
         </div>
