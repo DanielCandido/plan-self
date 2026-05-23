@@ -1,0 +1,118 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import { AuthBackground } from '@/components/auth/auth-background';
+import { AuthCard } from '@/components/auth/auth-card';
+import { SocialLogin } from '@/components/auth/social-login';
+import { LoginForm } from '@/components/auth/login-form';
+import { useAuth } from '@/hooks/useAuth';
+
+const dividerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { delay: 0.3, duration: 0.4 } },
+};
+
+export default function LoginPage() {
+  const { loginWithOAuth, isLoading } = useAuth();
+
+  return (
+    <main className="relative flex min-h-screen flex-col items-center justify-center px-4 py-12">
+      <AuthBackground />
+
+      <AuthCard>
+        {/* Logo */}
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.05 }}
+          className="mb-5 flex justify-center"
+          aria-label="Plan Self"
+        >
+          <PlanSelfLogo />
+        </motion.div>
+
+        {/* Heading */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.1 }}
+          className="mb-6 text-center"
+        >
+          <h1 className="text-[22px] font-semibold tracking-tight text-white">
+            Bem-vindo de volta
+          </h1>
+          <p className="mt-1 text-sm text-[#d2bbff]/55">
+            Entre com sua conta Plan Self
+          </p>
+        </motion.div>
+
+        {/* Social login */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.15 }}
+        >
+          <SocialLogin onLogin={loginWithOAuth} isLoading={isLoading} />
+        </motion.div>
+
+        {/* Divider */}
+        <motion.div
+          variants={dividerVariants}
+          initial="hidden"
+          animate="visible"
+          className="my-5 flex items-center gap-3"
+        >
+          <div className="h-px flex-1 bg-white/[0.07]" />
+          <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#d2bbff]/35">
+            OU USE E-MAIL
+          </span>
+          <div className="h-px flex-1 bg-white/[0.07]" />
+        </motion.div>
+
+        {/* Email form */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.22 }}
+        >
+          <LoginForm />
+        </motion.div>
+      </AuthCard>
+
+      {/* Footer links */}
+      <motion.footer
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, delay: 0.5 }}
+        className="mt-7 flex items-center gap-4"
+      >
+        {['Privacidade', 'Termos', 'Suporte'].map((link) => (
+          <a
+            key={link}
+            href="#"
+            className="text-[10px] font-medium uppercase tracking-[0.1em] text-[#d2bbff]/30 transition-colors hover:text-[#d2bbff]/60"
+          >
+            {link}
+          </a>
+        ))}
+      </motion.footer>
+    </main>
+  );
+}
+
+function PlanSelfLogo() {
+  return (
+    <div
+      className="flex h-10 w-10 items-center justify-center rounded-xl"
+      style={{
+        background: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)',
+        boxShadow: '0 4px 16px rgba(124,58,237,0.35)',
+      }}
+    >
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <rect x="3" y="3" width="6" height="14" rx="1.5" fill="white" fillOpacity="0.9" />
+        <rect x="11" y="3" width="6" height="8" rx="1.5" fill="white" fillOpacity="0.6" />
+      </svg>
+    </div>
+  );
+}
