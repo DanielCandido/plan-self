@@ -56,6 +56,7 @@ const resolveRepoRoot = (): string => {
     return sourceRoot;
   }
 
+  console.warn('[config] Could not detect monorepo root. Falling back to process.cwd() for .env lookup.');
   return process.cwd();
 };
 
