@@ -7,7 +7,11 @@ ADD COLUMN "passwordHash" TEXT,
 ADD COLUMN "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE',
 ADD COLUMN "role" "Role" NOT NULL DEFAULT 'MEMBER',
 ADD COLUMN "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-ADD COLUMN "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ADD COLUMN "updatedAt" TIMESTAMP(3);
+
+-- Backfill updatedAt for existing rows and enforce NOT NULL
+UPDATE "User" SET "updatedAt" = CURRENT_TIMESTAMP WHERE "updatedAt" IS NULL;
+ALTER TABLE "User" ALTER COLUMN "updatedAt" SET NOT NULL;
 
 -- CreateTable
 CREATE TABLE "AuthSession" (
@@ -19,7 +23,7 @@ CREATE TABLE "AuthSession" (
     "revokedAt" TIMESTAMP(3),
     "replacedBySessionId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "lastUsedAt" TIMESTAMP(3),
     "userAgent" TEXT,
     "ipAddress" TEXT,

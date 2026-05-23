@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import type { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -23,6 +23,8 @@ interface RefreshPayload {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
@@ -139,12 +141,24 @@ export class AuthService {
   async login(dto: LoginDto, req: Request, res: Response) {
     const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
 
-    if (!user || !user.passwordHash || user.status !== 'ACTIVE') {
+    if (!user) {
+      this.logger.warn(`Login failed: user not found for email ${dto.email}`);
+      throw new UnauthorizedException('Credenciais inválidas');
+    }
+
+    if (!user.passwordHash) {
+      this.logger.warn(`Login failed: missing password hash for user ${user.id}`);
+      throw new UnauthorizedException('Credenciais inválidas');
+    }
+
+    if (user.status !== 'ACTIVE') {
+      this.logger.warn(`Login failed: inactive user status (${user.status}) for user ${user.id}`);
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
     const passwordMatch = await bcrypt.compare(dto.password, user.passwordHash);
     if (!passwordMatch) {
+      this.logger.warn(`Login failed: invalid password for user ${user.id}`);
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
@@ -199,6 +213,7 @@ export class AuthService {
     }
 
     if (session.expiresAt.getTime() <= Date.now()) {
+      this.logger.warn(`Refresh denied: session expired in database for user ${session.userId} (jti ${session.jti})`);
       await this.prisma.authSession.update({
         where: { id: session.id },
         data: { revokedAt: new Date() },
@@ -207,6 +222,8 @@ export class AuthService {
       throw new UnauthorizedException('Sessão expirada');
     }
 
+    // Defense-in-depth: validates that the cookie token still matches the
+    // hashed token persisted for this session record.
     const refreshMatch = await bcrypt.compare(token, session.refreshTokenHash);
     if (!refreshMatch) {
       await this.revokeAllUserSessions(session.userId);
@@ -237,7 +254,6 @@ export class AuthService {
           expiresAt: this.refreshExpiresAt(),
           userAgent: this.getUserAgent(req),
           ipAddress: this.getRequestIp(req),
-          lastUsedAt: now,
         },
       });
 
