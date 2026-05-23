@@ -56,7 +56,9 @@ const resolveRepoRoot = (): string => {
     return sourceRoot;
   }
 
-  console.warn('[config] Could not detect monorepo root. Falling back to process.cwd() for .env lookup.');
+  console.warn(
+    '[config] Could not detect monorepo root (expected markers: turbo.json and .env.example). Falling back to process.cwd() for .env lookup.',
+  );
   return process.cwd();
 };
 
@@ -109,8 +111,8 @@ export const loadGatewayConfig = (): GatewayConfig => {
   }
 
   const port = Number.parseInt(rawPort, 10);
-  if (Number.isNaN(port) || port <= 0) {
-    throw new Error('GATEWAY_PORT must be a positive number');
+  if (Number.isNaN(port) || port <= 0 || port > 65535) {
+    throw new Error('GATEWAY_PORT must be a number between 1 and 65535');
   }
 
   return { port };
