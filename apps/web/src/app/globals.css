@@ -1,0 +1,40 @@
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+  background: #0b1020;
+  color: #e5e7eb;
+}
+
+main {
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.column {
+  background: #11182f;
+  border: 1px solid #1f2a44;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+}
+
+.card {
+  background: #1a2340;
+  border: 1px solid #24335e;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@plan-self/database",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "build": "prisma generate",
+    "lint": "prisma format --schema prisma/schema.prisma",
+    "test": "node --test",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "node prisma/seed.mjs"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.20.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.20.0"
+  }
+}
