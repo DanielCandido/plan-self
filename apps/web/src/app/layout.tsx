@@ -1,5 +1,5 @@
-import 'geist/font/sans.css';
 import './globals.css';
+import { GeistSans } from 'geist/font/sans';
 import type { ReactNode } from 'react';
 
 export const metadata = {
@@ -10,7 +10,7 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="pt-BR" className="dark">
-      <body>{children}</body>
+      <body className={GeistSans.className}>{children}</body>
     </html>
   );
 }
