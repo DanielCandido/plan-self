@@ -1,6 +1,5 @@
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 export interface AppConfig {
   databaseUrl: string;
@@ -51,7 +50,7 @@ const resolveRepoRoot = (): string => {
     return cwdRoot;
   }
 
-  const sourceRoot = findMonorepoRoot(dirname(fileURLToPath(import.meta.url)));
+  const sourceRoot = findMonorepoRoot(__dirname);
   if (sourceRoot) {
     return sourceRoot;
   }
