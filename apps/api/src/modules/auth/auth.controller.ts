@@ -24,9 +24,10 @@ export class AuthController {
   @ApiOperation({ summary: 'Authenticate user and return tokens' })
   login(
     @Body() dto: LoginDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    return this.authService.login(dto, res);
+    return this.authService.login(dto, req, res);
   }
 
   @Post('refresh')

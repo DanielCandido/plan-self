@@ -1,51 +1,41 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import type { Role } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
+import { randomUUID } from 'node:crypto';
 import type { Request, Response } from 'express';
 import type { LoginDto } from './dto/login.dto';
 import { apiConfig } from '../../config/api.config';
-
-export interface UserRecord {
-  id: string;
-  email: string;
-  name: string;
-  passwordHash: string;
-  avatarUrl?: string;
-  role: 'OWNER' | 'ADMIN' | 'MANAGER' | 'MEMBER' | 'GUEST';
-}
 
 export interface AuthUserPayload {
   id: string;
   name: string;
   email: string;
   avatar?: string;
-  role: UserRecord['role'];
+  role: Role;
 }
 
-export interface TokenPair {
-  accessToken: string;
-  refreshToken: string;
+interface RefreshPayload {
+  sub: string;
+  jti: string;
 }
-
-// ─── In-memory user store (replace with Prisma in production) ───────────────
-
-const MOCK_USERS: UserRecord[] = [];
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly jwtService: JwtService) {}
+  private readonly logger = new Logger(AuthService.name);
+
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   private readonly accessSecret = apiConfig.jwtAccessSecret;
   private readonly refreshSecret = apiConfig.jwtRefreshSecret;
   private readonly accessExpiresIn = '15m';
   private readonly refreshExpiresIn = '7d';
   private readonly refreshCookieName = 'refresh_token';
-
-  // ─── Token helpers ─────────────────────────────────────────────────────────
+  private readonly refreshWindowMs = 7 * 24 * 60 * 60 * 1000;
 
   private signAccess(payload: AuthUserPayload): string {
     return this.jwtService.sign(payload, {
@@ -54,8 +44,8 @@ export class AuthService {
     });
   }
 
-  private signRefresh(payload: AuthUserPayload): string {
-    return this.jwtService.sign({ sub: payload.id }, {
+  private signRefresh(payload: RefreshPayload): string {
+    return this.jwtService.sign(payload, {
       secret: this.refreshSecret,
       expiresIn: this.refreshExpiresIn,
     });
@@ -67,43 +57,123 @@ export class AuthService {
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? 'strict' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: this.refreshWindowMs,
       path: '/',
     });
   }
 
   private clearRefreshCookie(res: Response): void {
-    res.clearCookie(this.refreshCookieName, { path: '/' });
+    const isProduction = apiConfig.nodeEnv === 'production';
+    res.clearCookie(this.refreshCookieName, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'strict' : 'lax',
+      path: '/',
+    });
   }
 
   private readRefreshCookie(req: Request): string | undefined {
     return req.cookies?.[this.refreshCookieName] as string | undefined;
   }
 
-  // ─── Auth operations ───────────────────────────────────────────────────────
+  private buildAuthPayload(user: { id: string; name: string; email: string; avatarUrl: string | null; role: Role }): AuthUserPayload {
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatarUrl ?? undefined,
+      role: user.role,
+    };
+  }
 
-  async login(dto: LoginDto, res: Response) {
-    const user = MOCK_USERS.find((u) => u.email === dto.email);
+  private refreshExpiresAt(): Date {
+    return new Date(Date.now() + this.refreshWindowMs);
+  }
+
+  private getRequestIp(req: Request): string | undefined {
+    const forwarded = req.headers['x-forwarded-for'];
+    if (typeof forwarded === 'string' && forwarded.length > 0) {
+      return forwarded.split(',')[0]?.trim();
+    }
+    if (Array.isArray(forwarded) && forwarded.length > 0) {
+      return forwarded[0];
+    }
+    return req.ip;
+  }
+
+  private getUserAgent(req: Request): string | undefined {
+    const userAgent = req.headers['user-agent'];
+    if (typeof userAgent === 'string') {
+      return userAgent;
+    }
+    if (Array.isArray(userAgent)) {
+      return userAgent[0];
+    }
+    return undefined;
+  }
+
+  private async revokeAllUserSessions(userId: string): Promise<void> {
+    await this.prisma.authSession.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+  }
+
+  private async createSession(params: {
+    userId: string;
+    jti: string;
+    refreshToken: string;
+    req: Request;
+  }) {
+    const refreshTokenHash = await bcrypt.hash(params.refreshToken, 12);
+    return this.prisma.authSession.create({
+      data: {
+        userId: params.userId,
+        jti: params.jti,
+        refreshTokenHash,
+        expiresAt: this.refreshExpiresAt(),
+        userAgent: this.getUserAgent(params.req),
+        ipAddress: this.getRequestIp(params.req),
+      },
+    });
+  }
+
+  async login(dto: LoginDto, req: Request, res: Response) {
+    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
 
     if (!user) {
+      this.logger.warn(`Login failed: user not found for email ${dto.email}`);
+      throw new UnauthorizedException('Credenciais inválidas');
+    }
+
+    if (!user.passwordHash) {
+      this.logger.warn(`Login failed: missing password hash for user ${user.id}`);
+      throw new UnauthorizedException('Credenciais inválidas');
+    }
+
+    if (user.status !== 'ACTIVE') {
+      this.logger.warn(`Login failed: inactive user status (${user.status}) for user ${user.id}`);
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
     const passwordMatch = await bcrypt.compare(dto.password, user.passwordHash);
     if (!passwordMatch) {
+      this.logger.warn(`Login failed: invalid password for user ${user.id}`);
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
-    const payload: AuthUserPayload = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      avatar: user.avatarUrl,
-      role: user.role,
-    };
-
+    const payload = this.buildAuthPayload(user);
     const accessToken = this.signAccess(payload);
-    const refreshToken = this.signRefresh(payload);
+
+    const jti = randomUUID();
+    const refreshToken = this.signRefresh({ sub: user.id, jti });
+
+    await this.createSession({
+      userId: user.id,
+      jti,
+      refreshToken,
+      req,
+    });
 
     this.setRefreshCookie(res, refreshToken);
 
@@ -116,9 +186,9 @@ export class AuthService {
       throw new UnauthorizedException('Sessão expirada');
     }
 
-    let decoded: { sub: string };
+    let decoded: RefreshPayload;
     try {
-      decoded = this.jwtService.verify<{ sub: string }>(token, {
+      decoded = this.jwtService.verify<RefreshPayload>(token, {
         secret: this.refreshSecret,
       });
     } catch {
@@ -126,29 +196,107 @@ export class AuthService {
       throw new UnauthorizedException('Sessão inválida');
     }
 
-    const user = MOCK_USERS.find((u) => u.id === decoded.sub);
-    if (!user) {
+    const session = await this.prisma.authSession.findUnique({
+      where: { jti: decoded.jti },
+      include: { user: true },
+    });
+
+    if (!session || session.userId !== decoded.sub) {
       this.clearRefreshCookie(res);
-      throw new NotFoundException('Usuário não encontrado');
+      throw new UnauthorizedException('Sessão inválida');
     }
 
-    const payload: AuthUserPayload = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      avatar: user.avatarUrl,
-      role: user.role,
-    };
+    if (session.revokedAt) {
+      await this.revokeAllUserSessions(session.userId);
+      this.clearRefreshCookie(res);
+      throw new UnauthorizedException('Sessão inválida');
+    }
 
+    if (session.expiresAt.getTime() <= Date.now()) {
+      this.logger.warn(`Refresh denied: session expired in database for user ${session.userId} (jti ${session.jti})`);
+      await this.prisma.authSession.update({
+        where: { id: session.id },
+        data: { revokedAt: new Date() },
+      });
+      this.clearRefreshCookie(res);
+      throw new UnauthorizedException('Sessão expirada');
+    }
+
+    // Defense-in-depth: validates that the cookie token still matches the
+    // hashed token persisted for this session record.
+    const refreshMatch = await bcrypt.compare(token, session.refreshTokenHash);
+    if (!refreshMatch) {
+      await this.revokeAllUserSessions(session.userId);
+      this.clearRefreshCookie(res);
+      throw new UnauthorizedException('Sessão inválida');
+    }
+
+    if (session.user.status !== 'ACTIVE') {
+      await this.revokeAllUserSessions(session.userId);
+      this.clearRefreshCookie(res);
+      throw new UnauthorizedException('Conta indisponível');
+    }
+
+    const payload = this.buildAuthPayload(session.user);
     const newAccessToken = this.signAccess(payload);
-    const newRefreshToken = this.signRefresh(payload);
+
+    const newJti = randomUUID();
+    const newRefreshToken = this.signRefresh({ sub: session.userId, jti: newJti });
+    const newRefreshTokenHash = await bcrypt.hash(newRefreshToken, 12);
+    const now = new Date();
+
+    await this.prisma.$transaction(async (tx) => {
+      const nextSession = await tx.authSession.create({
+        data: {
+          userId: session.userId,
+          jti: newJti,
+          refreshTokenHash: newRefreshTokenHash,
+          expiresAt: this.refreshExpiresAt(),
+          userAgent: this.getUserAgent(req),
+          ipAddress: this.getRequestIp(req),
+        },
+      });
+
+      await tx.authSession.update({
+        where: { id: session.id },
+        data: {
+          revokedAt: now,
+          replacedBySessionId: nextSession.id,
+          lastUsedAt: now,
+        },
+      });
+    });
 
     this.setRefreshCookie(res, newRefreshToken);
 
     return { accessToken: newAccessToken };
   }
 
-  logout(_req: Request, res: Response) {
+  async logout(req: Request, res: Response) {
+    const token = this.readRefreshCookie(req);
+
+    if (token) {
+      try {
+        const decoded = this.jwtService.verify<RefreshPayload>(token, {
+          secret: this.refreshSecret,
+        });
+
+        await this.prisma.authSession.updateMany({
+          where: {
+            jti: decoded.jti,
+            userId: decoded.sub,
+            revokedAt: null,
+          },
+          data: {
+            revokedAt: new Date(),
+            lastUsedAt: new Date(),
+          },
+        });
+      } catch {
+        // Ignore invalid/expired refresh token during logout.
+      }
+    }
+
     this.clearRefreshCookie(res);
     return { ok: true };
   }
@@ -169,8 +317,8 @@ export class AuthService {
       throw new UnauthorizedException('Token inválido ou expirado');
     }
 
-    const user = MOCK_USERS.find((u) => u.id === payload.id);
-    if (!user) {
+    const user = await this.prisma.user.findUnique({ where: { id: payload.id } });
+    if (!user || user.status !== 'ACTIVE') {
       throw new UnauthorizedException('Usuário não encontrado');
     }
 
@@ -178,12 +326,10 @@ export class AuthService {
       id: user.id,
       name: user.name,
       email: user.email,
-      avatar: user.avatarUrl,
+      avatar: user.avatarUrl ?? undefined,
       role: user.role,
     };
   }
-
-  // ─── OAuth redirect helpers ────────────────────────────────────────────────
 
   oauthRedirectGoogle() {
     return { url: apiConfig.googleOauthUrl };
@@ -191,23 +337,5 @@ export class AuthService {
 
   oauthRedirectGithub() {
     return { url: apiConfig.githubOauthUrl };
-  }
-
-  // ─── Utility: seed a user (for dev/testing) ───────────────────────────────
-
-  async seedUser(email: string, plainPassword: string, name: string): Promise<UserRecord> {
-    const existing = MOCK_USERS.find((u) => u.email === email);
-    if (existing) return existing;
-
-    const passwordHash = await bcrypt.hash(plainPassword, 12);
-    const user: UserRecord = {
-      id: `user_${Date.now()}`,
-      email,
-      name,
-      passwordHash,
-      role: 'OWNER',
-    };
-    MOCK_USERS.push(user);
-    return user;
   }
 }

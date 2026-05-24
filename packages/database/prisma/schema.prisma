@@ -15,6 +15,11 @@ enum Role {
   GUEST
 }
 
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
 enum TaskState {
   BACKLOG
   TODO
@@ -49,14 +54,42 @@ model User {
   id             String         @id @default(cuid())
   email          String         @unique
   name           String
+  passwordHash   String?
+  status         UserStatus     @default(ACTIVE)
+  role           Role           @default(MEMBER)
   avatarUrl      String?
   onlineStatus   String         @default("offline")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
   organizationId String
   organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   memberships    TeamMember[]
+  authSessions   AuthSession[]
   taskAssignees  TaskAssignee[]
   taskComments   TaskComment[]
   messages       Message[]
+}
+
+model AuthSession {
+  id                  String       @id @default(cuid())
+  userId              String
+  jti                 String       @unique
+  refreshTokenHash    String
+  expiresAt           DateTime
+  revokedAt           DateTime?
+  replacedBySessionId String?      @unique
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  lastUsedAt          DateTime?
+  userAgent           String?
+  ipAddress           String?
+  user                User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  replacedBySession   AuthSession? @relation("SessionReplacement", fields: [replacedBySessionId], references: [id], onDelete: SetNull)
+  replacesSession     AuthSession? @relation("SessionReplacement")
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([revokedAt])
 }
 
 model TeamMember {
