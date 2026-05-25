@@ -18,6 +18,15 @@ import { DashboardGateway } from './dashboard.gateway';
 const TASK_UPDATED_ACTION = 'task.updated';
 const TASK_CREATED_ACTION = 'task.created';
 const TASK_COMPLETED_ACTION = 'task.completed';
+// Dashboard productivity defaults until explicit time-tracking fields exist.
+// - DEFAULT_HOURS_PER_TASK: baseline planning estimate for tasks without story points.
+// - HOURS_PER_ACTIVITY_ACTION: 12 minutes of active work per logged action.
+const DEFAULT_HOURS_PER_TASK = 4;
+const MAX_ACTIVE_HOURS_PER_DAY = 8;
+const HOURS_PER_ACTIVITY_ACTION = 0.2;
+const MS_PER_DAY = 86_400_000;
+// Lead-time proxy approximates half of a sprint cycle.
+const SPRINT_TO_LEAD_TIME_RATIO = 2;
 
 @Injectable()
 export class DashboardService {
@@ -64,7 +73,7 @@ export class DashboardService {
       activeSprint?.tasks.reduce((sum, task) => sum + (task.story?.storyPoints ?? 0) * 2, 0) ?? 0;
 
     const remainingDays = activeSprint?.endDate
-      ? Math.max(0, Math.ceil((activeSprint.endDate.getTime() - now.getTime()) / 86_400_000))
+      ? Math.max(0, Math.ceil((activeSprint.endDate.getTime() - now.getTime()) / MS_PER_DAY))
       : 0;
 
     const myAssignments = await this.prisma.taskAssignee.findMany({
@@ -147,7 +156,7 @@ export class DashboardService {
       id: log.id,
       type: log.action,
       user: log.actorId ? actorById.get(log.actorId) ?? 'Sistema' : 'Sistema',
-      task: this.readTaskTitle(log.metadata),
+      task: this.extractTaskTitleFromMetadata(log.metadata),
       createdAt: log.createdAt.toISOString(),
     }));
 
@@ -196,7 +205,9 @@ export class DashboardService {
       },
     });
 
-    const activeTimeToday = Number(Math.min(8, activeActionsToday * 0.2).toFixed(1));
+    const activeTimeToday = Number(
+      Math.min(MAX_ACTIVE_HOURS_PER_DAY, activeActionsToday * HOURS_PER_ACTIVITY_ACTION).toFixed(1),
+    );
 
     const activeUsersByDay = await this.prisma.auditLog.groupBy({
       by: ['actorId'],
@@ -229,7 +240,12 @@ export class DashboardService {
               sprintDurations.reduce((sum, sprint) => {
                 const start = sprint.startDate?.getTime() ?? now.getTime();
                 const end = sprint.endDate?.getTime() ?? now.getTime();
-                return sum + Math.max(0, (end - start) / 86_400_000) / 2;
+                return (
+                  sum +
+                  // Historical sprint duration is converted to lead-time proxy.
+                  // We divide by 2 to approximate the average task lead time inside the sprint.
+                  Math.max(0, (end - start) / MS_PER_DAY) / SPRINT_TO_LEAD_TIME_RATIO
+                );
               }, 0) / sprintDurations.length
             ).toFixed(1),
           )
@@ -246,7 +262,9 @@ export class DashboardService {
             totalTasks: sprintTotalTasks,
             blockedTasks: sprintBlockedTasks,
             estimatedHours:
-              sprintEstimatedHours > 0 ? sprintEstimatedHours : sprintTotalTasks * 4,
+              sprintEstimatedHours > 0
+                ? sprintEstimatedHours
+                : sprintTotalTasks * DEFAULT_HOURS_PER_TASK,
           }
         : null,
       productivity: {
@@ -453,7 +471,7 @@ export class DashboardService {
     return this.mapTask(task);
   }
 
-  private readTaskTitle(metadata: Prisma.JsonValue | null): string | null {
+  private extractTaskTitleFromMetadata(metadata: Prisma.JsonValue | null): string | null {
     if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) {
       return null;
     }

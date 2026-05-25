@@ -308,7 +308,9 @@ class DashboardErrorBoundary extends React.Component<
     return { hasError: true };
   }
 
-  componentDidCatch(_error: Error, _errorInfo: ErrorInfo) {}
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('Dashboard rendering error:', error, errorInfo);
+  }
 
   render() {
     if (this.state.hasError) {

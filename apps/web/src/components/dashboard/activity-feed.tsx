@@ -8,6 +8,8 @@ interface ActivityFeedProps {
   activities: DashboardActivity[];
 }
 
+const VISIBLE_ACTIVITIES_LIMIT = 8;
+
 export const ActivityFeed = memo(function ActivityFeed({ activities }: ActivityFeedProps) {
   return (
     <article className="glass-card rounded-lg border border-white/10 p-4 transition duration-200 hover:shadow-glow">
@@ -17,7 +19,7 @@ export const ActivityFeed = memo(function ActivityFeed({ activities }: ActivityF
         <p className="mt-4 text-sm text-[#d2bbff]/65">Sem atividades recentes.</p>
       ) : (
         <ul className="mt-4 space-y-2">
-          {activities.slice(0, 8).map((activity, index) => (
+          {activities.slice(0, VISIBLE_ACTIVITIES_LIMIT).map((activity, index) => (
             <motion.li
               key={activity.id}
               initial={{ opacity: 0, y: 8 }}

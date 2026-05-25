@@ -13,4 +13,4 @@ export interface TenantContext {
   teamId?: string;
 }
 
-export * from './dashboard';
+export * from './dashboard.js';

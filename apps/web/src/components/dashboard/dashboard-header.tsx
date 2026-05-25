@@ -12,6 +12,9 @@ interface DashboardHeaderProps {
   isLoggingOut: boolean;
 }
 
+// Tuned for quick perceived feedback while avoiding excessive query churn.
+const SEARCH_DEBOUNCE_MS = 240;
+
 export const DashboardHeader = memo(function DashboardHeader({
   userName,
   searchTerm,
@@ -30,7 +33,7 @@ export const DashboardHeader = memo(function DashboardHeader({
   useEffect(() => {
     const timer = setTimeout(() => {
       onSearchChange(localSearch);
-    }, 240);
+    }, SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
   }, [localSearch, onSearchChange]);

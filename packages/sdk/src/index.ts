@@ -1,4 +1,4 @@
-import { DashboardClient } from './dashboard';
+import { DashboardClient } from './dashboard.js';
 
 export interface PlanSelfClientOptions {
   baseUrl: string;
@@ -25,4 +25,4 @@ export class PlanSelfClient {
   }
 }
 
-export { DashboardClient } from './dashboard';
+export { DashboardClient } from './dashboard.js';

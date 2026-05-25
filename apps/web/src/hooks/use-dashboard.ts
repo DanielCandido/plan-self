@@ -9,6 +9,12 @@ import { useDashboardStore } from '@/store/dashboard.store';
 
 const DASHBOARD_QUERY_KEY = ['dashboard', 'overview'] as const;
 const REALTIME_EVENTS = ['task.updated', 'task.created', 'sprint.updated'] as const;
+const DASHBOARD_STALE_TIME_MS = 20_000;
+const DASHBOARD_GC_TIME_MS = 120_000;
+const REALTIME_THROTTLE_MS = 750;
+
+const getDefaultApiWsUrl = () =>
+  typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001';
 
 export function useDashboard() {
   const queryClient = useQueryClient();
@@ -21,8 +27,8 @@ export function useDashboard() {
       const { data } = await apiClient.get<DashboardOverviewResponse>('/dashboard/overview');
       return data;
     },
-    staleTime: 20_000,
-    gcTime: 120_000,
+    staleTime: DASHBOARD_STALE_TIME_MS,
+    gcTime: DASHBOARD_GC_TIME_MS,
   });
 
   const updateTaskStatusMutation = useMutation({
@@ -70,7 +76,10 @@ export function useDashboard() {
       return;
     }
 
-    const dashboardWsUrl = process.env.NEXT_PUBLIC_API_WS_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+    const dashboardWsUrl =
+      process.env.NEXT_PUBLIC_API_WS_URL ??
+      process.env.NEXT_PUBLIC_API_URL ??
+      getDefaultApiWsUrl();
 
     const socket: Socket = io(`${dashboardWsUrl}/dashboard`, {
       transports: ['websocket'],
@@ -86,7 +95,7 @@ export function useDashboard() {
       invalidateTimeout.current = setTimeout(() => {
         invalidateTimeout.current = null;
         void queryClient.invalidateQueries({ queryKey: DASHBOARD_QUERY_KEY });
-      }, 750);
+      }, REALTIME_THROTTLE_MS);
     };
 
     REALTIME_EVENTS.forEach((event) => {

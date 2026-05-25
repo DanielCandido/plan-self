@@ -9,6 +9,8 @@ interface MyTasksCardProps {
   onUpdateStatus: (payload: { taskId: string; status: DashboardTaskState }) => Promise<unknown>;
 }
 
+const VISIBLE_TASKS_LIMIT = 10;
+
 export const MyTasksCard = memo(function MyTasksCard({
   tasks,
   isUpdating,
@@ -22,7 +24,7 @@ export const MyTasksCard = memo(function MyTasksCard({
         <p className="mt-4 text-sm text-[#d2bbff]/65">Nenhuma task atribuída no momento.</p>
       ) : (
         <ul className="mt-4 space-y-2">
-          {tasks.slice(0, 10).map((task) => (
+          {tasks.slice(0, VISIBLE_TASKS_LIMIT).map((task) => (
             <li key={task.id} className="rounded border border-white/10 bg-white/[0.04] p-2.5">
               <div className="flex items-start justify-between gap-2">
                 <div>
