@@ -132,7 +132,7 @@ function SidebarContent({
         <button
           type="button"
           onClick={onNewProject}
-          className="mt-auto mb-4 rounded-md bg-[#d2bbff]/85 px-3 py-3 text-sm font-medium text-[#271a43] transition hover:bg-[#d2bbff]"
+          className="mt-auto rounded-md bg-[#d2bbff]/85 px-3 py-3 text-sm font-medium text-[#271a43] transition hover:bg-[#d2bbff]"
         >
           New Project
         </button>

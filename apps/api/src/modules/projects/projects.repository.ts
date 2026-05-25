@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, Role, TaskState } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -487,6 +487,9 @@ export class ProjectsRepository {
     if (!role) return 'MEMBER';
     const normalized = role.toUpperCase();
     const validRoles: Role[] = ['OWNER', 'ADMIN', 'MANAGER', 'MEMBER', 'GUEST'];
-    return validRoles.includes(normalized as Role) ? (normalized as Role) : 'MEMBER';
+    if (!validRoles.includes(normalized as Role)) {
+      throw new BadRequestException('Role inválida para membro do projeto');
+    }
+    return normalized as Role;
   }
 }

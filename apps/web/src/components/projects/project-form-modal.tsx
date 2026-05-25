@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type { CreateProjectPayload, ProjectItem } from '@plan-self/types';
 
 const schema = z.object({
-  name: z.string().min(2, 'Nome é obrigatório'),
+  name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   description: z.string().optional(),
   status: z.string().optional(),
   priority: z.string().optional(),

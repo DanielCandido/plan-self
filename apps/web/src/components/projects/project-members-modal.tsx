@@ -83,6 +83,7 @@ export function ProjectMembersModal({
           <section className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-white/75">Add people</h3>
             <input
+              aria-label="Search users by name"
               placeholder="Search users by name"
               onChange={(event) => onSearchChange(event.target.value)}
               className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white outline-none"

@@ -87,12 +87,12 @@ function ProjectsPageContent() {
       onNewProject={() => setActiveModal('create')}
       sidebarFooter={
         <div className="space-y-4 border-t border-white/10 pt-6 text-sm text-white/55">
-          <a href="#" className="block hover:text-white">
+          <button type="button" className="block hover:text-white">
             Help
-          </a>
-          <a href="#" className="block hover:text-white">
+          </button>
+          <button type="button" className="block hover:text-white">
             Logout
-          </a>
+          </button>
         </div>
       }
       mainClassName="bg-[#0b0d16]"

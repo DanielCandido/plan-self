@@ -32,7 +32,7 @@ const DOT_CLASSES: Record<string, string> = {
 
 export function ProjectStatusBadge({ status }: { status: string | null | undefined }) {
   const key = (status ?? 'PLANNED').toUpperCase();
-  const label = STATUS_LABELS[key] ?? key.replaceAll('_', ' ');
+  const label = STATUS_LABELS[key] ?? key.replace(/_/g, ' ');
   const className = STATUS_CLASSES[key] ?? STATUS_CLASSES.PLANNED;
   const dotClass = DOT_CLASSES[key] ?? DOT_CLASSES.PLANNED;
 
