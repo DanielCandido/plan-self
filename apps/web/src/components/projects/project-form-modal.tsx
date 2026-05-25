@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { CreateProjectPayload, ProjectItem, UpdateProjectPayload } from '@plan-self/types';
+import type { CreateProjectPayload, ProjectItem } from '@plan-self/types';
 
 const schema = z.object({
   name: z.string().min(2, 'Nome é obrigatório'),
@@ -36,7 +36,7 @@ export function ProjectFormModal({
   isSubmitting?: boolean;
   initialProject?: ProjectItem | null;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (payload: CreateProjectPayload | UpdateProjectPayload) => Promise<void>;
+  onSubmit: (payload: CreateProjectPayload) => Promise<void>;
 }) {
   const form = useForm<FormValues, unknown, FormOutput>({
     resolver: zodResolver(schema),
