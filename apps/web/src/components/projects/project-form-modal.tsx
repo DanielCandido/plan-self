@@ -61,7 +61,7 @@ export function ProjectFormModal({
       ownerId: initialProject?.ownerId ?? '',
       teamId: initialProject?.teamId ?? '',
     });
-  }, [form, initialProject, open]);
+  }, [initialProject, open]);
 
   if (!open) return null;
 

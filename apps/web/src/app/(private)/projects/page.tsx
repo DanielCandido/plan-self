@@ -107,7 +107,8 @@ function ProjectsPageContent() {
           <div className="flex gap-3">
             <button
               type="button"
-              className="rounded-md border border-white/15 bg-white/[0.03] px-5 py-3 text-base text-white/80"
+              disabled={!selectedProject}
+              className="rounded-md border border-white/15 bg-white/[0.03] px-5 py-3 text-base text-white/80 disabled:cursor-not-allowed disabled:opacity-40"
               onClick={async () => {
                 if (!selectedProject) return;
                 await archiveProject({

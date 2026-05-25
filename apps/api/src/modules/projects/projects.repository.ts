@@ -33,14 +33,7 @@ export class ProjectsRepository {
       ];
     }
 
-    const orderBy: Prisma.ProjectOrderByWithRelationInput =
-      options.sortBy === 'name'
-        ? { name: options.order ?? 'asc' }
-        : options.sortBy === 'createdAt'
-          ? { createdAt: options.order ?? 'desc' }
-          : options.sortBy === 'priority'
-            ? { priority: options.order ?? 'desc' }
-            : { updatedAt: options.order ?? 'desc' };
+    const orderBy = this.resolveProjectOrderBy(options.sortBy, options.order);
 
     const [items, totalCount] = await Promise.all([
       this.prisma.project.findMany({
@@ -227,12 +220,12 @@ export class ProjectsRepository {
         },
       },
       update: {
-        role: (data.role as Role) ?? 'MEMBER',
+        role: this.resolveRole(data.role),
       },
       create: {
         teamId: project.teamId,
         userId: data.userId,
-        role: (data.role as Role) ?? 'MEMBER',
+        role: this.resolveRole(data.role),
       },
     });
 
@@ -476,5 +469,24 @@ export class ProjectsRepository {
       const progress = total === 0 ? 0 : Math.round((done / total) * 100);
       return { ...p, meta: { taskCount: total, completedTaskCount: done, progress } };
     });
+  }
+
+  private resolveProjectOrderBy(sortBy?: string, order?: Prisma.SortOrder): Prisma.ProjectOrderByWithRelationInput {
+    const safeOrder = order ?? 'desc';
+    const map: Record<string, Prisma.ProjectOrderByWithRelationInput> = {
+      name: { name: safeOrder === 'desc' ? 'desc' : 'asc' },
+      createdAt: { createdAt: safeOrder },
+      priority: { priority: safeOrder },
+      updatedAt: { updatedAt: safeOrder },
+    };
+
+    return map[sortBy ?? 'updatedAt'] ?? map.updatedAt;
+  }
+
+  private resolveRole(role?: string): Role {
+    if (!role) return 'MEMBER';
+    const normalized = role.toUpperCase();
+    const validRoles: Role[] = ['OWNER', 'ADMIN', 'MANAGER', 'MEMBER', 'GUEST'];
+    return validRoles.includes(normalized as Role) ? (normalized as Role) : 'MEMBER';
   }
 }

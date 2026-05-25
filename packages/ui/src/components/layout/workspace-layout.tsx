@@ -99,18 +99,32 @@ function SidebarContent({
 
       <nav className="space-y-1">
         {navItems.map((item) => (
-          <a
-            key={item.label}
-            onClick={onSelect}
-            href={item.href}
-            className={`flex w-full items-center rounded px-3 py-2 text-left text-sm transition ${
-              item.active
-                ? 'border border-[#d2bbff]/25 bg-[#d2bbff]/10 text-[#d2bbff]'
-                : 'border border-transparent text-white/70 hover:border-white/10 hover:bg-white/5 hover:text-white'
-            }`}
-          >
-            {item.label}
-          </a>
+          item.href ? (
+            <a
+              key={item.label}
+              href={item.href}
+              className={`flex w-full items-center rounded px-3 py-2 text-left text-sm transition ${
+                item.active
+                  ? 'border border-[#d2bbff]/25 bg-[#d2bbff]/10 text-[#d2bbff]'
+                  : 'border border-transparent text-white/70 hover:border-white/10 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              {item.label}
+            </a>
+          ) : (
+            <button
+              key={item.label}
+              type="button"
+              onClick={onSelect}
+              className={`flex w-full items-center rounded px-3 py-2 text-left text-sm transition ${
+                item.active
+                  ? 'border border-[#d2bbff]/25 bg-[#d2bbff]/10 text-[#d2bbff]'
+                  : 'border border-transparent text-white/70 hover:border-white/10 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              {item.label}
+            </button>
+          )
         ))}
       </nav>
 
