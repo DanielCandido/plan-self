@@ -1,4 +1,5 @@
 import { DashboardClient } from './dashboard.js';
+import { SprintClient } from './sprints.js';
 
 export interface PlanSelfClientOptions {
   baseUrl: string;
@@ -7,9 +8,11 @@ export interface PlanSelfClientOptions {
 
 export class PlanSelfClient {
   readonly dashboard: DashboardClient;
+  readonly sprints: SprintClient;
 
   constructor(private readonly options: PlanSelfClientOptions) {
     this.dashboard = new DashboardClient(() => this.options);
+    this.sprints = new SprintClient(() => this.options);
   }
 
   async getHealth() {
@@ -26,3 +29,5 @@ export class PlanSelfClient {
 }
 
 export { DashboardClient } from './dashboard.js';
+
+export { SprintClient } from './sprints.js';
