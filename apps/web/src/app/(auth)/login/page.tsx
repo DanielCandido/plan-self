@@ -6,7 +6,7 @@ import { AuthCard } from '@/components/auth/auth-card';
 import { SocialLogin } from '@/components/auth/social-login';
 import { LoginForm } from '@/components/auth/login-form';
 import { useAuth } from '@/hooks/useAuth';
-import {PlanSelfLogo} from "@/components/ui/default-layout/plan-self-logo";
+import { PlanSelfLogo } from '@plan-self/ui';
 
 const dividerVariants = {
   hidden: { opacity: 0 },

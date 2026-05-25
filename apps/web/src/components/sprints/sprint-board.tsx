@@ -26,6 +26,7 @@ import { SprintMetrics } from './sprint-metrics';
 import { useBacklogStore } from '@/store/backlog.store';
 import { useDragStore } from '@/store/drag.store';
 import { useSprintStore } from '@/store/sprint.store';
+import { WorkspaceLayout } from '@plan-self/ui';
 
 export function SprintBoard({
   projectId,
@@ -180,114 +181,113 @@ export function SprintBoard({
   };
 
   return (
-    <main className="min-h-screen bg-[#0d0e14] text-white">
-      <div className="flex min-h-screen">
-        <aside className="hidden w-72 border-r border-white/6 bg-[#12131a] px-5 py-7 xl:flex xl:flex-col">
-          <div className="mb-10 flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#d2bbff] to-[#8b5cf6] text-[#140d22] shadow-[0_10px_35px_rgba(139,92,246,0.45)]">◈</div>
-            <div>
-              <p className="text-2xl font-semibold text-white">Plan Self</p>
-              <p className="text-sm text-white/50">Enterprise Workspace</p>
-            </div>
-          </div>
-          <nav className="space-y-2 text-white/65">
-            {['Dashboard', 'My Tasks', 'Projects', 'Team', 'Reports'].map((item) => (
-              <div key={item} className={`rounded-2xl px-4 py-3 ${item === 'Projects' ? 'bg-gradient-to-r from-[#7c3aed] to-[#8b5cf6] text-white' : 'bg-transparent'}`}>
-                {item}
-              </div>
-            ))}
-          </nav>
-          <div className="mt-auto space-y-3 text-sm text-white/45">
-            <div>Settings</div>
-            <div>Support</div>
-          </div>
-        </aside>
+    <>
+      <WorkspaceLayout
+      navItems={[
+        { label: 'Dashboard' },
+        { label: 'My Tasks' },
+        { label: 'Projects', active: true },
+        { label: 'Team' },
+        { label: 'Reports' },
+      ]}
+      sidebarFooter={
+        <div className="space-y-3 px-1 text-sm text-white/45">
+          <div>Settings</div>
+          <div>Support</div>
+        </div>
+      }
+      mainClassName="bg-[#0d0e14]"
+      sidebarClassName="w-72"
+      desktopSidebarVisibilityClassName="xl:flex xl:flex-col"
+      contentWrapperClassName="xl:ml-72 px-4 py-5 md:px-6 xl:px-8"
+      header={
+        <div className="mx-auto max-w-[1600px]">
+          <SprintHeader
+            projectName={board?.projectName ?? 'Sprint board'}
+            backlogCount={board?.backlogCount ?? backlogItems.length}
+            search={search}
+            onSearchChange={setSearch}
+            onOpenCreateSprint={() => setActiveModal('create')}
+            onOpenHistory={() => setActiveModal('history')}
+            onOpenCommand={() => setCommandOpen(true)}
+          />
+        </div>
+      }
+    >
+      <div className="mx-auto max-w-[1600px]">
 
-        <section className="flex-1 px-4 py-5 md:px-6 xl:px-8">
-          <div className="mx-auto max-w-[1600px]">
-            <SprintHeader
-              projectName={board?.projectName ?? 'Sprint board'}
-              backlogCount={board?.backlogCount ?? backlogItems.length}
-              search={search}
-              onSearchChange={setSearch}
-              onOpenCreateSprint={() => setActiveModal('create')}
-              onOpenHistory={() => setActiveModal('history')}
-              onOpenCommand={() => setCommandOpen(true)}
-            />
+        <div className="mb-4 flex gap-2 xl:hidden">
+          <MobileTab active={mobileTab === 'sprint'} onClick={() => setMobileTab('sprint')}>Sprint</MobileTab>
+          <MobileTab active={mobileTab === 'backlog'} onClick={() => setMobileTab('backlog')}>Backlog</MobileTab>
+        </div>
 
-            <div className="mb-4 flex gap-2 xl:hidden">
-              <MobileTab active={mobileTab === 'sprint'} onClick={() => setMobileTab('sprint')}>Sprint</MobileTab>
-              <MobileTab active={mobileTab === 'backlog'} onClick={() => setMobileTab('backlog')}>Backlog</MobileTab>
-            </div>
-
-            <DndContext sensors={sensors} collisionDetection={closestCorners} autoScroll onDragStart={onDragStart} onDragEnd={handleDragEnd}>
-              <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.85fr)]">
-                <div className={`${mobileTab === 'backlog' ? 'hidden xl:block' : 'block'} space-y-4`}>
-                  <SortableContext items={sprintTasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
-                    <div id="sprint-container">
-                      <SprintCard
-                        sprint={activeSprint}
-                        selectedTaskIds={selectedTaskIds}
-                        onSelectTask={toggleTaskSelection}
-                        onQuickEditTask={(taskId) => {
-                          setFocusedTaskId(taskId);
-                          setActiveModal('move');
-                        }}
-                        isDropActive={draggingTaskIds.length > 0}
-                      />
-                    </div>
-                  </SortableContext>
-                  <SprintMetrics
+        <DndContext sensors={sensors} collisionDetection={closestCorners} autoScroll onDragStart={onDragStart} onDragEnd={handleDragEnd}>
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.85fr)]">
+            <div className={`${mobileTab === 'backlog' ? 'hidden xl:block' : 'block'} space-y-4`}>
+              <SortableContext items={sprintTasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
+                <div id="sprint-container">
+                  <SprintCard
                     sprint={activeSprint}
-                    metrics={board?.metrics ?? []}
-                    burndown={board?.burndown ?? []}
-                    velocityTrend={board?.velocityTrend ?? []}
+                    selectedTaskIds={selectedTaskIds}
+                    onSelectTask={toggleTaskSelection}
+                    onQuickEditTask={(taskId) => {
+                      setFocusedTaskId(taskId);
+                      setActiveModal('move');
+                    }}
+                    isDropActive={draggingTaskIds.length > 0}
                   />
                 </div>
+              </SortableContext>
+              <SprintMetrics
+                sprint={activeSprint}
+                metrics={board?.metrics ?? []}
+                burndown={board?.burndown ?? []}
+                velocityTrend={board?.velocityTrend ?? []}
+              />
+            </div>
 
-                <div className={`${mobileTab === 'sprint' ? 'hidden xl:block' : 'block'}`}>
-                  <SortableContext items={backlogItems.map((task) => task.id)} strategy={verticalListSortingStrategy}>
-                    <div id="backlog-container">
-                      <BacklogPanel
-                        groups={groupedBacklog}
-                        selectedTaskIds={selectedTaskIds}
-                        collapsedEpics={collapsedEpics}
-                        onToggleEpic={toggleEpic}
-                        onSelectTask={toggleTaskSelection}
-                        onQuickEditTask={(taskId) => {
-                          setFocusedTaskId(taskId);
-                          setActiveModal('move');
-                        }}
-                        onSearchChange={setSearch}
-                        search={search}
-                        onCreateQuickTask={async (title) => {
-                          await createQuickTask({ title });
-                        }}
-                        onPriorityChange={setPriority}
-                        onSortChange={setSortBy}
-                        onLoadMore={() => {
-                          void fetchNextPage();
-                        }}
-                        hasNextPage={hasNextPage}
-                        isFetchingNextPage={isFetchingNextPage}
-                      />
-                    </div>
-                  </SortableContext>
+            <div className={`${mobileTab === 'sprint' ? 'hidden xl:block' : 'block'}`}>
+              <SortableContext items={backlogItems.map((task) => task.id)} strategy={verticalListSortingStrategy}>
+                <div id="backlog-container">
+                  <BacklogPanel
+                    groups={groupedBacklog}
+                    selectedTaskIds={selectedTaskIds}
+                    collapsedEpics={collapsedEpics}
+                    onToggleEpic={toggleEpic}
+                    onSelectTask={toggleTaskSelection}
+                    onQuickEditTask={(taskId) => {
+                      setFocusedTaskId(taskId);
+                      setActiveModal('move');
+                    }}
+                    onSearchChange={setSearch}
+                    search={search}
+                    onCreateQuickTask={async (title) => {
+                      await createQuickTask({ title });
+                    }}
+                    onPriorityChange={setPriority}
+                    onSortChange={setSortBy}
+                    onLoadMore={() => {
+                      void fetchNextPage();
+                    }}
+                    hasNextPage={hasNextPage}
+                    isFetchingNextPage={isFetchingNextPage}
+                  />
                 </div>
-              </div>
-
-              <DragOverlay>
-                {dragPreviewTask ? (
-                  <div className="rounded-3xl border border-[#b794ff]/70 bg-[#1c1630] px-4 py-3 shadow-2xl">
-                    <p className="text-sm text-white/45">{dragPreviewTask.code}</p>
-                    <p className="mt-1 text-lg font-semibold text-white">{dragPreviewTask.title}</p>
-                  </div>
-                ) : null}
-              </DragOverlay>
-            </DndContext>
+              </SortableContext>
+            </div>
           </div>
-        </section>
+
+          <DragOverlay>
+            {dragPreviewTask ? (
+              <div className="rounded-3xl border border-[#b794ff]/70 bg-[#1c1630] px-4 py-3 shadow-2xl">
+                <p className="text-sm text-white/45">{dragPreviewTask.code}</p>
+                <p className="mt-1 text-lg font-semibold text-white">{dragPreviewTask.title}</p>
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       </div>
+      </WorkspaceLayout>
 
       <CreateSprintModal
         open={activeModal === 'create'}
@@ -336,7 +336,7 @@ export function SprintBoard({
       >
         +
       </button>
-    </main>
+    </>
   );
 }
 

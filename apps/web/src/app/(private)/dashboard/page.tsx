@@ -1,15 +1,8 @@
 'use client';
 
-import React, {
-  Suspense,
-  memo,
-  useEffect,
-  type ErrorInfo,
-  type ReactNode,
-} from 'react';
+import React, { Suspense, memo } from 'react';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
-import { DashboardShell } from '@/components/dashboard/dashboard-shell';
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { SprintCard } from '@/components/dashboard/sprint-card';
 import { ProductivityCard } from '@/components/dashboard/productivity-card';
@@ -18,6 +11,13 @@ import { useDashboard } from '@/hooks/use-dashboard';
 import { useAuth } from '@/hooks/useAuth';
 import { useSession } from '@/hooks/useSession';
 import { useDashboardStore } from '@/store/dashboard.store';
+import {
+  ClientErrorBoundary,
+  DashboardCommandPalette,
+  DashboardErrorState,
+  DashboardSkeleton,
+  WorkspaceLayout,
+} from '@plan-self/ui';
 
 const ActivityFeed = dynamic(
   () => import('@/components/dashboard/activity-feed').then((module) => module.ActivityFeed),
@@ -28,6 +28,14 @@ const MyTasksCard = dynamic(
   () => import('@/components/dashboard/my-tasks-card').then((module) => module.MyTasksCard),
   { ssr: false },
 );
+
+const DASHBOARD_NAV_ITEMS = [
+  { label: 'Dashboard', active: true },
+  { label: 'Projects' },
+  { label: 'Sprints' },
+  { label: 'Reports' },
+  { label: 'Settings' },
+];
 
 export default function DashboardPage() {
   useSession();
@@ -56,7 +64,10 @@ export default function DashboardPage() {
   }
 
   return (
-    <DashboardErrorBoundary fallback={<DashboardErrorState />}>
+    <ClientErrorBoundary
+      fallback={<DashboardErrorState />}
+      onError={(error, errorInfo) => console.error('Dashboard rendering error:', error, errorInfo)}
+    >
       <Suspense fallback={<DashboardSkeleton />}>
         <DashboardContent
           userName={user?.name}
@@ -70,7 +81,7 @@ export default function DashboardPage() {
           onCommandChange={setCommandOpen}
         />
       </Suspense>
-    </DashboardErrorBoundary>
+    </ClientErrorBoundary>
   );
 }
 
@@ -98,9 +109,16 @@ const DashboardContent = memo(function DashboardContent({
   const { data, rawData, isUpdatingTask, updateTaskStatus } = useDashboard();
 
   return (
-    <DashboardShell
+    <WorkspaceLayout
       sidebarOpen={sidebarOpen}
       onSidebarChange={onSidebarChange}
+      navItems={DASHBOARD_NAV_ITEMS}
+      sidebarFooter={
+        <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
+          <p className="text-xs text-white/60">Modo escuro ativo</p>
+          <p className="mt-1 text-xs text-[#89ceff]/85">Realtime conectado</p>
+        </div>
+      }
       header={
         <DashboardHeader
           userName={userName}
@@ -159,7 +177,7 @@ const DashboardContent = memo(function DashboardContent({
         </motion.div>
       </div>
 
-      <CommandPalette
+      <DashboardCommandPalette
         open={commandOpen}
         onOpenChange={onCommandChange}
         searchTerm={searchTerm}
@@ -167,156 +185,6 @@ const DashboardContent = memo(function DashboardContent({
         taskTitles={rawData.myTasks.map((task) => task.title)}
         activityTitles={rawData.recentActivities.map((activity) => activity.task ?? activity.type)}
       />
-    </DashboardShell>
+    </WorkspaceLayout>
   );
 });
-
-function DashboardSkeleton() {
-  return (
-    <main className="min-h-screen bg-[#12131a] px-4 py-6 md:px-6">
-      <div className="mx-auto max-w-[1500px] animate-pulse space-y-4">
-        <div className="h-10 rounded-lg border border-white/10 bg-white/[0.04]" />
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-12">
-          <div className="h-48 rounded-lg border border-white/10 bg-white/[0.04] xl:col-span-5" />
-          <div className="h-48 rounded-lg border border-white/10 bg-white/[0.04] xl:col-span-7" />
-          <div className="h-72 rounded-lg border border-white/10 bg-white/[0.04] xl:col-span-6" />
-          <div className="h-72 rounded-lg border border-white/10 bg-white/[0.04] xl:col-span-6" />
-          <div className="h-24 rounded-lg border border-white/10 bg-white/[0.04] xl:col-span-12" />
-        </div>
-      </div>
-    </main>
-  );
-}
-
-function DashboardErrorState() {
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-[#12131a] px-4">
-      <div className="glass-card w-full max-w-md rounded-lg border border-white/10 p-5 text-center">
-        <h2 className="text-base font-semibold text-white">Falha ao carregar dashboard</h2>
-        <p className="mt-2 text-sm text-[#d2bbff]/70">
-          Não foi possível obter os dados agora. Atualize a página para tentar novamente.
-        </p>
-      </div>
-    </main>
-  );
-}
-
-function CommandPalette({
-  open,
-  onOpenChange,
-  searchTerm,
-  onSearchChange,
-  taskTitles,
-  activityTitles,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
-  taskTitles: string[];
-  activityTitles: string[];
-}) {
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onOpenChange(false);
-      }
-    };
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [open, onOpenChange]);
-
-  if (!open) return null;
-
-  return (
-    <div className="fixed inset-0 z-[70] flex items-start justify-center bg-black/70 px-4 pt-20 backdrop-blur-sm">
-      <button
-        type="button"
-        className="absolute inset-0"
-        onClick={() => onOpenChange(false)}
-        aria-label="Fechar comando"
-      />
-      <div className="relative z-10 w-full max-w-xl rounded-lg border border-white/10 bg-[#161823]/95 p-3 shadow-glow">
-        <div className="flex items-center gap-2 rounded border border-white/10 bg-white/[0.04] px-2">
-          <span className="text-xs text-[#d2bbff]/60">⌘K</span>
-          <input
-            autoFocus
-            value={searchTerm}
-            onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Buscar..."
-            className="h-10 w-full bg-transparent text-sm text-white placeholder:text-[#d2bbff]/35 outline-none"
-          />
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] text-white/70"
-          >
-            Esc
-          </button>
-        </div>
-
-        <div className="mt-3 max-h-72 space-y-3 overflow-y-auto pr-1">
-          <CommandSection title="Tasks" items={taskTitles} />
-          <CommandSection title="Atividades" items={activityTitles} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CommandSection({ title, items }: { title: string; items: string[] }) {
-  const visible = items.filter(Boolean).slice(0, 8);
-
-  return (
-    <section>
-      <p className="mb-1 text-[11px] uppercase tracking-[0.12em] text-[#d2bbff]/45">{title}</p>
-      {visible.length === 0 ? (
-        <p className="rounded border border-white/10 bg-white/[0.04] px-2 py-1.5 text-xs text-white/45">
-          Sem resultados.
-        </p>
-      ) : (
-        <ul className="space-y-1">
-          {visible.map((item) => (
-            <li
-              key={`${title}-${item}`}
-              className="rounded border border-white/10 bg-white/[0.04] px-2 py-1.5 text-xs text-white/80"
-            >
-              {item}
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
-
-class DashboardErrorBoundary extends React.Component<
-  { children: ReactNode; fallback: ReactNode },
-  { hasError: boolean }
-> {
-  constructor(props: { children: ReactNode; fallback: ReactNode }) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Dashboard rendering error:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return this.props.fallback;
-    }
-
-    return this.props.children;
-  }
-}
