@@ -107,20 +107,6 @@ function ProjectsPageContent() {
           <div className="flex gap-3">
             <button
               type="button"
-              disabled={!selectedProject}
-              className="rounded-md border border-white/15 bg-white/[0.03] px-5 py-3 text-base text-white/80 disabled:cursor-not-allowed disabled:opacity-40"
-              onClick={async () => {
-                if (!selectedProject) return;
-                await archiveProject({
-                  projectId: selectedProject.id,
-                  payload: { archive: !selectedProject.archived },
-                });
-              }}
-            >
-              Archive
-            </button>
-            <button
-              type="button"
               className="rounded-md border border-white/15 bg-white/[0.03] px-4 py-3 text-base text-white/80"
               onClick={() => setSearchTerm('')}
             >

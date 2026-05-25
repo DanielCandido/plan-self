@@ -474,7 +474,7 @@ export class ProjectsRepository {
   private resolveProjectOrderBy(sortBy?: string, order?: Prisma.SortOrder): Prisma.ProjectOrderByWithRelationInput {
     const safeOrder = order ?? 'desc';
     const map: Record<string, Prisma.ProjectOrderByWithRelationInput> = {
-      name: { name: safeOrder === 'desc' ? 'desc' : 'asc' },
+      name: { name: safeOrder },
       createdAt: { createdAt: safeOrder },
       priority: { priority: safeOrder },
       updatedAt: { updatedAt: safeOrder },

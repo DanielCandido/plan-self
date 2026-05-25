@@ -50,9 +50,10 @@ export function ProjectFormModal({
       teamId: initialProject?.teamId ?? '',
     },
   });
+  const resetForm = form.reset;
 
   useEffect(() => {
-    form.reset({
+    resetForm({
       name: initialProject?.name ?? '',
       description: initialProject?.description ?? '',
       status: initialProject?.status ?? 'PLANNED',
@@ -61,7 +62,7 @@ export function ProjectFormModal({
       ownerId: initialProject?.ownerId ?? '',
       teamId: initialProject?.teamId ?? '',
     });
-  }, [initialProject, open]);
+  }, [initialProject, open, resetForm]);
 
   if (!open) return null;
 

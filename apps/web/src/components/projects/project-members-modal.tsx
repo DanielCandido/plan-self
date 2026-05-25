@@ -65,7 +65,11 @@ export function ProjectMembersModal({
                     type="button"
                     disabled={isSaving}
                     onClick={async () => {
-                      await onRemoveMember(member.userId);
+                      try {
+                        await onRemoveMember(member.userId);
+                      } catch (error) {
+                        console.error('Failed to remove project member', error);
+                      }
                     }}
                     className="rounded-md border border-rose-500/30 px-2 py-1 text-xs text-rose-300 hover:bg-rose-500/10"
                   >
@@ -100,9 +104,14 @@ export function ProjectMembersModal({
                       type="button"
                       disabled={isSaving || user.isMember}
                       onClick={async () => {
-                        setPendingUserId(user.userId);
-                        await onAddMember(user.userId);
-                        setPendingUserId(null);
+                        try {
+                          setPendingUserId(user.userId);
+                          await onAddMember(user.userId);
+                        } catch (error) {
+                          console.error('Failed to add project member', error);
+                        } finally {
+                          setPendingUserId(null);
+                        }
                       }}
                       className="rounded-md border border-[#b794ff]/40 px-2 py-1 text-xs text-[#d7c5ff] disabled:opacity-40"
                     >
