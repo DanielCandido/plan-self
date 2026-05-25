@@ -40,14 +40,18 @@ interface BacklogPageResponse {
 
 export function useSprintBoard(projectId: string) {
   const queryClient = useQueryClient();
-  const filters = useBacklogStore((state) => ({
-    search: state.search,
-    priority: state.priority,
-    epicId: state.epicId,
-    assigneeId: state.assigneeId,
-    sortBy: state.sortBy,
-    order: state.order,
-  }));
+  const search = useBacklogStore((state) => state.search);
+  const priority = useBacklogStore((state) => state.priority);
+  const epicId = useBacklogStore((state) => state.epicId);
+  const assigneeId = useBacklogStore((state) => state.assigneeId);
+  const sortBy = useBacklogStore((state) => state.sortBy);
+  const order = useBacklogStore((state) => state.order);
+
+  const filters = useMemo(
+    () => ({ search, priority, epicId, assigneeId, sortBy, order }),
+    [search, priority, epicId, assigneeId, sortBy, order],
+  );
+
   const setLastUndoMove = useDragStore((state) => state.setLastUndoMove);
   const invalidateTimeout = useRef<NodeJS.Timeout | null>(null);
 

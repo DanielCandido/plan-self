@@ -1,4 +1,5 @@
-import { IsArray, IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
+import { IsArray, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import {IsCuid} from "@plan-self/utils";
 
 export class UpdateTaskDto {
   @IsOptional()
@@ -22,7 +23,7 @@ export class UpdateTaskDto {
 
   @IsOptional()
   @IsArray()
-  @IsUUID('4', { each: true })
+  @IsCuid()
   assigneeIds?: string[];
 
   @IsOptional()

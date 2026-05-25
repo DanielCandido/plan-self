@@ -36,6 +36,11 @@ export function redirectToOAuth(provider: OAuthProvider): void {
 
 export async function bootstrapSession(): Promise<User | null> {
   try {
+    // First try to refresh the access token using the httpOnly cookie.
+    const { accessToken } = await refreshRequest();
+    setAccessToken(accessToken);
+
+    // With the new access token set, request the authenticated user.
     const user = await getMeRequest();
     return user;
   } catch {

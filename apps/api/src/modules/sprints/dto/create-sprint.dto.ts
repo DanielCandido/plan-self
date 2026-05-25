@@ -5,14 +5,14 @@ import {
   IsInt,
   IsOptional,
   IsString,
-  IsUUID,
   Max,
   Min,
   ValidateNested,
 } from 'class-validator';
+import { IsCuid } from '@plan-self/utils';
 
 export class CreateSprintMemberDto {
-  @IsUUID()
+  @IsCuid()
   userId!: string;
 
   @IsOptional()
@@ -29,7 +29,7 @@ export class CreateSprintMemberDto {
 }
 
 export class CreateSprintDto {
-  @IsUUID()
+  @IsCuid()
   projectId!: string;
 
   @IsString()

@@ -1,9 +1,10 @@
-import { IsArray, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsArray, IsOptional, IsString } from 'class-validator';
+import { IsCuid } from '@plan-self/utils';
 
 export class CompleteSprintDto {
   @IsOptional()
   @IsArray()
-  @IsUUID('4', { each: true })
+  @IsCuid()
   carryOverTaskIds?: string[];
 
   @IsOptional()

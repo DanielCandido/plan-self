@@ -1,14 +1,15 @@
 import { IsArray, IsOptional, IsUUID } from 'class-validator';
+import {IsCuid} from "@plan-self/utils";
 
 export class ReorderTaskDto {
-  @IsUUID()
+  @IsCuid()
   projectId!: string;
 
   @IsArray()
-  @IsUUID('4', { each: true })
+  @IsCuid()
   orderedTaskIds!: string[];
 
   @IsOptional()
-  @IsUUID()
+  @IsCuid()
   sprintId?: string | null;
 }

@@ -5,10 +5,22 @@ import { useParams } from 'next/navigation';
 import { SprintBoard } from '@/components/sprints/sprint-board';
 import { useSprintBoard } from '@/hooks/use-sprint-board';
 import { useSession } from '@/hooks/useSession';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function ProjectSprintsPage() {
   useSession();
   const params = useParams<{ projectId: string }>();
+  const { isBootstrapped, isAuthenticated } = useAuth();
+
+  // Don't mount the board (which performs API calls) until session bootstrapping
+  if (!isBootstrapped) {
+    return <SprintSkeleton />;
+  }
+
+  // If user is not authenticated, render nothing (useSession will redirect)
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <SprintErrorBoundary fallback={<SprintErrorState />}>

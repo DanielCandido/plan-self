@@ -1,5 +1,6 @@
 import { Transform } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import {IsCuid} from "@plan-self/utils";
 
 export class BacklogQueryDto {
   @IsOptional()
@@ -24,11 +25,11 @@ export class BacklogQueryDto {
   priority?: string;
 
   @IsOptional()
-  @IsUUID()
+  @IsCuid()
   epicId?: string;
 
   @IsOptional()
-  @IsUUID()
+  @IsCuid()
   assigneeId?: string;
 
   @IsOptional()

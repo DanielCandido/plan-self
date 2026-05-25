@@ -1,7 +1,8 @@
-import { IsArray, IsUUID } from 'class-validator';
+import { IsArray } from 'class-validator';
+import { IsCuid } from '@plan-self/utils';
 
 export class AddSprintTasksDto {
   @IsArray()
-  @IsUUID('4', { each: true })
+  @IsCuid()
   taskIds!: string[];
 }

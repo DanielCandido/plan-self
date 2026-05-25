@@ -1,15 +1,16 @@
-import { IsArray, IsInt, IsOptional, IsUUID, Min } from 'class-validator';
+import { IsArray, IsInt, IsOptional, Min } from 'class-validator';
+import { IsCuid } from '@plan-self/utils';
 
 export class MoveTaskDto {
-  @IsUUID()
+  @IsCuid()
   projectId!: string;
 
   @IsArray()
-  @IsUUID('4', { each: true })
+  @IsCuid()
   taskIds!: string[];
 
   @IsOptional()
-  @IsUUID()
+  @IsCuid()
   targetSprintId?: string | null;
 
   @IsOptional()

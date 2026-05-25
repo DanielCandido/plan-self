@@ -1,11 +1,11 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
+import * as test from 'node:test';
+import * as assert from 'node:assert/strict';
 import {
   calculateCapacity,
   calculateVelocity,
   canMoveTask,
   computeSprintMetrics,
-} from './sprint.rules.ts';
+} from '@plan-self/api/src/modules/sprints/sprint.rules';
 
 test('calculateCapacity sums member capacity using availability', () => {
   assert.equal(
