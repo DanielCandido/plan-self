@@ -14,11 +14,9 @@ import type {
   UpdateTaskPayload,
 } from '@plan-self/types';
 import apiClient, { getAccessToken } from '@/lib/api';
+import { resolveRealtimeUrl } from '@/lib/realtime';
 import { useBacklogStore } from '@/store/backlog.store';
 import { useDragStore } from '@/store/drag.store';
-
-const getDefaultWsUrl = () =>
-  typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001';
 
 const boardQueryKey = (projectId: string) => ['sprints', 'board', projectId] as const;
 const backlogQueryKey = (
@@ -178,7 +176,7 @@ export function useSprintBoard(projectId: string) {
     const token = getAccessToken();
     if (!token) return;
 
-    const wsUrl = process.env.NEXT_PUBLIC_API_WS_URL ?? process.env.NEXT_PUBLIC_API_URL ?? getDefaultWsUrl();
+    const wsUrl = resolveRealtimeUrl();
     const socket: Socket = io(`${wsUrl}/sprints`, {
       transports: ['websocket'],
       auth: { token },

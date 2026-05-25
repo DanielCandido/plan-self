@@ -71,8 +71,9 @@ export function validateSprintWindow(
     throw new BadRequestException(`A sprint não pode ultrapassar ${maxDurationDays} dias`);
   }
 
-  const nowUtc = new Date(now.toISOString());
-  if (startDate.getTime() < nowUtc.getTime()) {
+  const normalizedStart = new Date(startDate.toISOString());
+  const normalizedNow = new Date(now.toISOString());
+  if (normalizedStart.getTime() < normalizedNow.getTime()) {
     throw new BadRequestException('A sprint não pode iniciar no passado');
   }
 

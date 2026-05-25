@@ -173,6 +173,12 @@ export function SprintBoard({
     setDraggingTaskIds([]);
   };
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    onDragEnd(event).catch((error) => {
+      console.error('Sprint drag and drop failed', error);
+    });
+  };
+
   return (
     <main className="min-h-screen bg-[#0d0e14] text-white">
       <div className="flex min-h-screen">
@@ -214,7 +220,7 @@ export function SprintBoard({
               <MobileTab active={mobileTab === 'backlog'} onClick={() => setMobileTab('backlog')}>Backlog</MobileTab>
             </div>
 
-            <DndContext sensors={sensors} collisionDetection={closestCorners} autoScroll onDragStart={onDragStart} onDragEnd={(event) => { void onDragEnd(event); }}>
+            <DndContext sensors={sensors} collisionDetection={closestCorners} autoScroll onDragStart={onDragStart} onDragEnd={handleDragEnd}>
               <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.85fr)]">
                 <div className={`${mobileTab === 'backlog' ? 'hidden xl:block' : 'block'} space-y-4`}>
                   <SortableContext items={sprintTasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
