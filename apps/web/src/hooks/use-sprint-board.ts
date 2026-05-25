@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { io, type Socket } from 'socket.io-client';
 import { toast } from 'sonner';
@@ -84,10 +84,10 @@ export function useSprintBoard(projectId: string) {
     staleTime: 15_000,
   });
 
-  const invalidateAll = () => {
+  const invalidateAll = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: boardQueryKey(projectId) });
     void queryClient.invalidateQueries({ queryKey: ['sprints', 'backlog', projectId] });
-  };
+  }, [projectId, queryClient]);
 
   const createSprint = useMutation({
     mutationFn: async (payload: CreateSprintPayload) => {
@@ -208,7 +208,7 @@ export function useSprintBoard(projectId: string) {
       }
       socket.disconnect();
     };
-  }, [projectId, queryClient]);
+  }, [invalidateAll, projectId]);
 
   const backlogItems = useMemo(
     () => backlog.data?.pages.flatMap((page) => page.items) ?? [],
