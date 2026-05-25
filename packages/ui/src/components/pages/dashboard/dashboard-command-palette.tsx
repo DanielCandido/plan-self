@@ -36,7 +36,9 @@ export function DashboardCommandPalette({
 
   return (
     <div className="fixed inset-0 z-[70] flex items-start justify-center bg-black/70 px-4 pt-20 backdrop-blur-sm">
-      <button type="button" className="absolute inset-0" onClick={() => onOpenChange(false)} aria-label="Fechar comando" />
+      <button type="button" className="absolute inset-0" onClick={() => onOpenChange(false)}>
+        <span className="sr-only">Fechar paleta de comandos</span>
+      </button>
       <div className="relative z-10 w-full max-w-xl rounded-lg border border-white/10 bg-[#161823]/95 p-3 shadow-glow">
         <div className="flex items-center gap-2 rounded border border-white/10 bg-white/[0.04] px-2">
           <span className="text-xs text-[#d2bbff]/60">⌘K</span>

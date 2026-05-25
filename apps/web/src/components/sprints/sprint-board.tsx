@@ -181,8 +181,7 @@ export function SprintBoard({
   };
 
   return (
-    <>
-      <WorkspaceLayout
+    <WorkspaceLayout
       navItems={[
         { label: 'Dashboard' },
         { label: 'My Tasks' },
@@ -199,7 +198,8 @@ export function SprintBoard({
       mainClassName="bg-[#0d0e14]"
       sidebarClassName="w-72"
       desktopSidebarVisibilityClassName="xl:flex xl:flex-col"
-      contentWrapperClassName="xl:ml-72 px-4 py-5 md:px-6 xl:px-8"
+      contentOffsetClassName="xl:ml-72"
+      contentClassName="py-5 xl:px-8"
       header={
         <div className="mx-auto max-w-[1600px]">
           <SprintHeader
@@ -215,7 +215,6 @@ export function SprintBoard({
       }
     >
       <div className="mx-auto max-w-[1600px]">
-
         <div className="mb-4 flex gap-2 xl:hidden">
           <MobileTab active={mobileTab === 'sprint'} onClick={() => setMobileTab('sprint')}>Sprint</MobileTab>
           <MobileTab active={mobileTab === 'backlog'} onClick={() => setMobileTab('backlog')}>Backlog</MobileTab>
@@ -287,7 +286,6 @@ export function SprintBoard({
           </DragOverlay>
         </DndContext>
       </div>
-      </WorkspaceLayout>
 
       <CreateSprintModal
         open={activeModal === 'create'}
@@ -336,7 +334,7 @@ export function SprintBoard({
       >
         +
       </button>
-    </>
+    </WorkspaceLayout>
   );
 }
 
