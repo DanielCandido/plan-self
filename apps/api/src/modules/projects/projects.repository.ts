@@ -2,6 +2,9 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { Prisma, Role, TaskState } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
+const PROJECT_ORDER_FIELDS = ['name', 'createdAt', 'priority', 'updatedAt'] as const;
+type ProjectOrderField = (typeof PROJECT_ORDER_FIELDS)[number];
+
 @Injectable()
 export class ProjectsRepository {
   constructor(public readonly prisma: PrismaService) {}
@@ -272,14 +275,16 @@ export class ProjectsRepository {
 
     const memberIds = new Set(existingMembers.map((member) => member.userId));
 
+    const searchTerm = search?.trim();
+
     const users = await this.prisma.user.findMany({
       where: {
         organizationId,
         status: 'ACTIVE',
-        ...(search?.trim()
+        ...(searchTerm
           ? {
               name: {
-                contains: search.trim(),
+                contains: searchTerm,
                 mode: 'insensitive',
               },
             }
@@ -473,14 +478,18 @@ export class ProjectsRepository {
 
   private resolveProjectOrderBy(sortBy?: string, order?: Prisma.SortOrder): Prisma.ProjectOrderByWithRelationInput {
     const safeOrder = order ?? 'desc';
-    const map: Record<string, Prisma.ProjectOrderByWithRelationInput> = {
+    const map: Record<ProjectOrderField, Prisma.ProjectOrderByWithRelationInput> = {
       name: { name: safeOrder },
       createdAt: { createdAt: safeOrder },
       priority: { priority: safeOrder },
       updatedAt: { updatedAt: safeOrder },
     };
 
-    return map[sortBy ?? 'updatedAt'] ?? map.updatedAt;
+    const key = PROJECT_ORDER_FIELDS.includes((sortBy ?? 'updatedAt') as ProjectOrderField)
+      ? ((sortBy ?? 'updatedAt') as ProjectOrderField)
+      : 'updatedAt';
+
+    return map[key];
   }
 
   private resolveRole(role?: string): Role {

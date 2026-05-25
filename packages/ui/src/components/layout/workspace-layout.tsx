@@ -128,17 +128,20 @@ function SidebarContent({
         ))}
       </nav>
 
-      {onNewProject ? (
-        <button
-          type="button"
-          onClick={onNewProject}
-          className="mt-auto rounded-md bg-[#d2bbff]/85 px-3 py-3 text-sm font-medium text-[#271a43] transition hover:bg-[#d2bbff]"
-        >
-          New Project
-        </button>
+      {onNewProject || footer ? (
+        <div className="mt-auto space-y-4">
+          {onNewProject ? (
+            <button
+              type="button"
+              onClick={onNewProject}
+              className="w-full rounded-md bg-[#d2bbff]/85 px-3 py-3 text-sm font-medium text-[#271a43] transition hover:bg-[#d2bbff]"
+            >
+              New Project
+            </button>
+          ) : null}
+          {footer ? <div>{footer}</div> : null}
+        </div>
       ) : null}
-
-      {footer ? <div className="mt-auto">{footer}</div> : null}
     </div>
   );
 }

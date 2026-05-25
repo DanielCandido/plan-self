@@ -99,7 +99,7 @@ export class ProjectsController {
     @CurrentUser() currentUser: CurrentUserPayload,
     @Query() query: ListProjectTasksQueryDto,
   ) {
-    return this.projectsService.listProjectTasks(id, currentUser, query as any);
+    return this.projectsService.listProjectTasks(id, currentUser, query);
   }
 
   @Post('projects/:id/tasks')
@@ -109,6 +109,6 @@ export class ProjectsController {
     @CurrentUser() currentUser: CurrentUserPayload,
     @Body() dto: CreateProjectTaskDto,
   ) {
-    return this.projectsService.createProjectTask(id, currentUser, dto as any);
+    return this.projectsService.createProjectTask(id, currentUser, dto);
   }
 }
