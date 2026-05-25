@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Plan Self - Backlog &amp; Sprints</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
+        
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+            font-size: 20px;
+        }
+
+        body {
+            font-family: 'Geist', sans-serif;
+            background-color: #12131a;
+            color: #e3e1ec;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .glass-panel {
+            background: rgba(30, 31, 38, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #4a4455;
+            border-radius: 10px;
+        }
+
+        .task-card {
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#d2bbff",
+                        "primary-container": "#7c3aed",
+                        "on-primary": "#3f008e",
+                        "on-primary-container": "#ede0ff",
+                        "secondary": "#89ceff",
+                        "secondary-container": "#00a2e6",
+                        "tertiary": "#ffb784",
+                        "surface": "#12131a",
+                        "surface-variant": "#33343c",
+                        "surface-container-lowest": "#0d0e15",
+                        "surface-container-low": "#1a1b22",
+                        "surface-container": "#1e1f26",
+                        "surface-container-high": "#292931",
+                        "surface-container-highest": "#33343c",
+                        "on-surface": "#e3e1ec",
+                        "on-surface-variant": "#ccc3d8",
+                        "outline": "#958da1",
+                        "outline-variant": "#4a4455",
+                        "error": "#ffb4ab",
+                        "error-container": "#93000a",
+                        "background": "#12131a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "md": "16px",
+                        "lg": "24px",
+                        "xl": "40px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Geist"],
+                        "body-md": ["Geist"],
+                        "label-md": ["Geist"],
+                        "headline-md": ["Geist"],
+                        "headline-lg": ["Geist"]
+                    },
+                    "fontSize": {
+                        "caption": ["12px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                        "label-md": ["12px", {"lineHeight": "1.4", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface">
+<!-- Sidebar Navigation (Aligned with SCREEN_12) -->
+<aside class="h-screen w-64 fixed left-0 top-0 z-50 flex flex-col py-md border-r border-outline-variant/10 bg-surface-container-low/90 backdrop-blur-2xl transition-all duration-300">
+<div class="px-6 mb-8 flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary">layers</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-on-surface">Plan Self</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant opacity-70">Enterprise Workspace</p>
+</div>
+</div>
+<nav class="flex-grow flex flex-col gap-1">
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors duration-150 rounded-lg px-4 py-3 mx-2" href="#">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors duration-150 rounded-lg px-4 py-3 mx-2" href="#">
+<span class="material-symbols-outlined">check_circle</span>
+<span class="font-label-md text-label-md">My Tasks</span>
+</a>
+<a class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg px-4 py-3 mx-2 translate-x-1 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">folder_special</span>
+<span class="font-label-md text-label-md">Projects</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors duration-150 rounded-lg px-4 py-3 mx-2" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-md text-label-md">Team</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors duration-150 rounded-lg px-4 py-3 mx-2" href="#">
+<span class="material-symbols-outlined">insert_chart</span>
+<span class="font-label-md text-label-md">Reports</span>
+</a>
+</nav>
+<div class="px-2 mt-auto flex flex-col gap-1 border-t border-outline-variant/10 pt-4">
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors duration-150 rounded-lg px-4 py-3" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors duration-150 rounded-lg px-4 py-3" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+</div>
+</aside>
+<!-- Top App Bar (Aligned with Global Header Pattern) -->
+<header class="fixed top-0 right-0 w-[calc(100%-256px)] h-16 z-40 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10 flex justify-between items-center px-gutter">
+<div class="flex items-center gap-6">
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">search</span>
+<input class="bg-surface-container-high/50 border-none rounded-lg pl-10 pr-4 py-1.5 font-body-sm text-body-sm w-80 focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-on-surface-variant/50" placeholder="Search tasks, assets..." type="text"/>
+</div>
+<nav class="flex items-center gap-6">
+<a class="text-on-surface-variant font-medium hover:text-on-surface font-label-md text-label-md" href="#">Dashboard</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1 font-label-md text-label-md" href="#">Sprints</a>
+<a class="text-on-surface-variant font-medium hover:text-on-surface font-label-md text-label-md" href="#">Analytics</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-variant/50 transition-all">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-variant/50 transition-all">
+<span class="material-symbols-outlined text-on-surface-variant">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/20 ml-2">
+<img alt="User Profile" data-alt="Portrait of a tech professional in a sleek modern workspace. Minimalist dark-first aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHa11om2ErHiVh2uE886WkHf8gr7ocfPEtUb6JZgsPvfQIyPbe7XKhUApAaI0NR_XMfiT2p9Q0EYAdjNyJdYLW5BhamJJIXNl1nLJcS0wjKLNb5uTaBOIj-_W6se8Fs51QyVjZ6pS-4fdWnftGLfZi_0wng47F9GSKNybCvckIhxY_FXrLcmhaT2o0brn6wEh0Wdp7reKLRYwBG5J_vVxwHE1J6Hs_C4zXS99Dt4zK-j8O1tbqFg996sFmikUT7BkLhf9lZ7KgGxE"/>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-64 pt-16 h-screen flex flex-col overflow-hidden">
+<!-- Breadcrumbs & Context Header (Aligned with SCREEN_4) -->
+<div class="px-gutter pt-lg pb-md">
+<nav class="flex items-center gap-2 text-on-surface-variant font-label-md text-[11px] uppercase tracking-widest mb-2">
+<span>PROJETOS</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-bold">REBRAND 2026</span>
+</nav>
+<div class="flex justify-between items-end">
+<div>
+<h2 class="font-headline-lg text-headline-lg tracking-tight">Development Backlog</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Manage your project roadmap and active sprints.</p>
+</div>
+<div class="flex gap-3">
+<button class="px-4 py-2 rounded-lg border border-outline-variant/20 bg-surface-container hover:bg-surface-container-high transition-colors text-label-md flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">history</span>
+                        Sprint History
+                    </button>
+<button class="bg-primary text-on-primary font-label-md text-label-md px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-all shadow-lg shadow-primary/10">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        New Sprint
+                    </button>
+</div>
+</div>
+</div>
+<!-- Integrated Layout Container -->
+<div class="flex-1 flex overflow-hidden px-gutter pb-lg gap-6">
+<!-- Left Column: Active Sprint (Integrated into App Shell) -->
+<section class="flex-[1.3] flex flex-col bg-surface-container-lowest border border-outline-variant/10 rounded-xl overflow-hidden">
+<div class="p-lg border-b border-outline-variant/10 bg-surface-container-low/50">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<h3 class="font-headline-md text-headline-md font-bold">Sprint 14</h3>
+<div class="flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-secondary/10 text-secondary font-label-md text-label-md">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+                                ACTIVE
+                            </div>
+</div>
+<button class="px-4 py-1.5 bg-primary-container text-on-primary-container font-label-md text-label-md rounded-lg hover:opacity-90 transition-all">
+                            Complete Sprint
+                        </button>
+</div>
+<div class="flex items-center gap-md text-body-sm text-on-surface-variant mb-6">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">calendar_month</span>
+                            Oct 12 - Oct 26
+                        </div>
+<span class="text-outline-variant/30">•</span>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">flag</span>
+                            Goal: V2 Core Architecture Migration
+                        </div>
+</div>
+<!-- Progress/Capacity (Design System tokens) -->
+<div class="space-y-2">
+<div class="flex justify-between text-label-md">
+<span class="text-on-surface-variant font-medium">Sprint Velocity</span>
+<span class="text-on-surface font-bold">34 <span class="text-on-surface-variant font-normal">/ 40 pts</span></span>
+</div>
+<div class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[85%] rounded-full shadow-[0_0_8px_rgba(210,187,255,0.4)]"></div>
+</div>
+</div>
+</div>
+<!-- Sprint Task List -->
+<div class="flex-1 overflow-y-auto custom-scrollbar p-md space-y-2 bg-surface-container-lowest/50">
+<!-- Task Item (Refined with Status/Badge styles from SCREEN_12) -->
+<div class="task-card p-3 bg-surface hover:bg-surface-container-low border border-outline-variant/10 rounded-xl transition-all flex items-center justify-between group cursor-pointer">
+<div class="flex items-center gap-4">
+<span class="font-body-sm text-body-sm text-outline w-16">PS-102</span>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1 text-error">
+<span class="material-symbols-outlined" style="font-size: 14px">stat_3</span>
+<span class="font-label-md text-[10px] uppercase font-bold tracking-wider">Urgent</span>
+</div>
+<span class="font-body-sm text-body-sm font-medium text-on-surface">Refactor Redux Store to RTK Query</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex -space-x-1.5">
+<img class="w-6 h-6 rounded-full border-2 border-surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlab28CfBQgGtDC8ehqFZNuMroB66YoSJLPd_XCFmoSyPCY4COdFU5QH9YbhKU3Yr2Reg0OikBzDFSf-FZfJd_5YzhsCIqnqmRnvMDn7wDGsfefCrindeU9KG0V8e5o_b3O7VPLU9moPckd-LIopiXJHdIgdNLH6AGTE8i2P8VIq3n7-xul3ySsz3vocKrNwMvvRQGzREks-3zkVYIlYqEiUajBB9u2Wm6UAgBBTeo9UDsfq8R_yYS9xRiGfKk8ARn1t6lTAefKL8"/>
+</div>
+<span class="bg-surface-variant/50 px-2 py-0.5 rounded text-[10px] font-bold text-outline">8 PTS</span>
+<span class="material-symbols-outlined text-outline opacity-0 group-hover:opacity-100 transition-opacity">drag_indicator</span>
+</div>
+</div>
+<div class="task-card p-3 bg-surface hover:bg-surface-container-low border border-outline-variant/10 rounded-xl transition-all flex items-center justify-between group cursor-pointer">
+<div class="flex items-center gap-4">
+<span class="font-body-sm text-body-sm text-outline w-16">PS-105</span>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1 text-tertiary">
+<span class="material-symbols-outlined" style="font-size: 14px">stat_2</span>
+<span class="font-label-md text-[10px] uppercase font-bold tracking-wider">High</span>
+</div>
+<span class="font-body-sm text-body-sm font-medium text-on-surface">Implement Shared Shell Components</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<img class="w-6 h-6 rounded-full border-2 border-surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5094ApVTk9PIYYL10tpj0Juk9Wb8YtUtjSn2c2UVzsYHJ__c_F9XRrGHIM4mjEKl8FsP-Asinz26mPiHfn97_-nLCo_HOJTzosS_YdHCtnP3adybSGxtVBpC33vcYY4o7NF-gE_NJVZn4JUavjQNVj_Xp7gRNTD32gpmKXcqyt_AB__Q4pYBpN_srptQbAupQVd03Kh3-j1xryl9rPv7KQEDzlFPEznhpqtG50Xcs0OkB00OVf7qOJ7J8pk-13yOxBsycNJcebnw"/>
+<span class="bg-surface-variant/50 px-2 py-0.5 rounded text-[10px] font-bold text-outline">5 PTS</span>
+<span class="material-symbols-outlined text-outline opacity-0 group-hover:opacity-100 transition-opacity">drag_indicator</span>
+</div>
+</div>
+<!-- Drop Zone -->
+<div class="border-2 border-dashed border-outline-variant/20 rounded-xl h-20 flex items-center justify-center text-outline-variant font-label-md hover:border-primary/30 hover:bg-primary/5 transition-all">
+                        Drop tasks here to add to sprint
+                    </div>
+</div>
+</section>
+<!-- Right Column: Backlog Section -->
+<section class="flex-1 flex flex-col bg-surface-container-lowest border border-outline-variant/10 rounded-xl overflow-hidden">
+<div class="p-lg border-b border-outline-variant/10 bg-surface-container-low/50">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-headline-md text-headline-md font-bold">Backlog</h3>
+<div class="flex items-center gap-2">
+<span class="bg-surface-container-highest px-3 py-1 rounded-lg font-label-md text-label-md text-on-surface">124 Items</span>
+<button class="p-1.5 hover:bg-surface-variant rounded-lg transition-colors text-outline">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+</div>
+<div class="flex flex-col gap-3">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
+<input class="w-full bg-surface-container border border-outline-variant/20 rounded-lg pl-10 pr-md py-1.5 text-body-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all placeholder:text-outline/50" placeholder="Search backlog..." type="text"/>
+</div>
+<div class="flex flex-wrap gap-2">
+<button class="px-3 py-1 bg-surface-container-highest text-on-surface-variant rounded-lg text-[11px] font-bold uppercase tracking-wider border border-outline-variant/10 flex items-center gap-1.5">
+                                Priority <span class="material-symbols-outlined text-[14px]">expand_more</span>
+</button>
+<button class="px-3 py-1 bg-surface-container-highest text-on-surface-variant rounded-lg text-[11px] font-bold uppercase tracking-wider border border-outline-variant/10 flex items-center gap-1.5">
+                                Epic <span class="material-symbols-outlined text-[14px]">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Backlog Items List -->
+<div class="flex-1 overflow-y-auto custom-scrollbar p-md space-y-1">
+<!-- Backlog Row -->
+<div class="task-card p-3 bg-surface hover:bg-surface-container-low rounded-xl border border-transparent hover:border-outline-variant/20 transition-all flex items-center justify-between group cursor-grab active:cursor-grabbing">
+<div class="flex items-center gap-4">
+<span class="font-body-sm text-body-sm text-outline/50 w-16">PS-112</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-medium text-on-surface">User Auth Security Audit</span>
+<div class="flex gap-1.5 mt-1">
+<span class="bg-error/10 text-error px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-tighter">CRITICAL</span>
+<span class="bg-secondary/10 text-secondary px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-tighter">SECURITY</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="font-label-md text-label-md text-outline">13 pts</span>
+<span class="material-symbols-outlined text-outline/40 group-hover:text-on-surface transition-colors">drag_indicator</span>
+</div>
+</div>
+<div class="task-card p-3 bg-surface hover:bg-surface-container-low rounded-xl border border-transparent hover:border-outline-variant/20 transition-all flex items-center justify-between group cursor-grab active:cursor-grabbing">
+<div class="flex items-center gap-4">
+<span class="font-body-sm text-body-sm text-outline/50 w-16">PS-114</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-medium text-on-surface">Dark Mode Polish: Glassmorphism</span>
+<div class="flex gap-1.5 mt-1">
+<span class="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-tighter">UI/UX</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="font-label-md text-label-md text-outline">3 pts</span>
+<span class="material-symbols-outlined text-outline/40 group-hover:text-on-surface transition-colors">drag_indicator</span>
+</div>
+</div>
+<!-- Repeated item for list density -->
+<div class="task-card p-3 bg-surface hover:bg-surface-container-low rounded-xl border border-transparent hover:border-outline-variant/20 transition-all flex items-center justify-between group cursor-grab active:cursor-grabbing">
+<div class="flex items-center gap-4">
+<span class="font-body-sm text-body-sm text-outline/50 w-16">PS-119</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-medium text-on-surface">Analytics Dashboard Integration</span>
+<div class="flex gap-1.5 mt-1">
+<span class="bg-tertiary/10 text-tertiary px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-tighter">FEATURE</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="font-label-md text-label-md text-outline">21 pts</span>
+<span class="material-symbols-outlined text-outline/40 group-hover:text-on-surface transition-colors">drag_indicator</span>
+</div>
+</div>
+</div>
+<!-- Footer Quick Add (Integrated style) -->
+<div class="p-md bg-surface-container-low border-t border-outline-variant/10">
+<button class="w-full py-3 border border-dashed border-outline-variant/30 rounded-xl text-outline hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-all flex items-center justify-center gap-2 group">
+<span class="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">add_circle</span>
+<span class="font-label-md text-label-md">Add task to backlog</span>
+</button>
+</div>
+</section>
+</div>
+</main>
+<!-- Contextual FAB (Violet Variant) -->
+<button class="fixed bottom-lg right-lg w-14 h-14 bg-primary-container text-on-primary-container rounded-full shadow-2xl shadow-primary-container/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 group">
+<span class="material-symbols-outlined text-[28px] group-hover:rotate-90 transition-transform duration-300">add</span>
+</button>
+</body></html>

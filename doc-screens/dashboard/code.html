@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/fonts/geist.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Geist', sans-serif;
+            background-color: #12131a;
+            color: #e3e1ec;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(30, 31, 38, 0.6);
+            backdrop-filter: saturate(180%) blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(210, 187, 255, 0.1);
+            border-radius: 10px;
+        }
+        .chart-gradient {
+            background: linear-gradient(180deg, rgba(210, 187, 255, 0.1) 0%, rgba(210, 187, 255, 0) 100%);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed-variant": "#713700",
+                        "surface-container-high": "#292931",
+                        "surface-bright": "#383941",
+                        "surface-container-highest": "#33343c",
+                        "on-surface-variant": "#ccc3d8",
+                        "on-primary": "#3f008e",
+                        "surface-tint": "#d2bbff",
+                        "primary-container": "#7c3aed",
+                        "on-primary-fixed": "#25005a",
+                        "on-secondary-container": "#00344e",
+                        "secondary-fixed": "#c9e6ff",
+                        "on-secondary-fixed": "#001e2f",
+                        "on-tertiary-container": "#ffe0cd",
+                        "outline-variant": "#4a4455",
+                        "tertiary-fixed": "#ffdcc6",
+                        "error-container": "#93000a",
+                        "secondary-container": "#00a2e6",
+                        "on-secondary": "#00344d",
+                        "tertiary-container": "#a15100",
+                        "on-tertiary": "#4f2500",
+                        "primary": "#d2bbff",
+                        "surface": "#12131a",
+                        "surface-container-low": "#1a1b22",
+                        "secondary": "#89ceff",
+                        "inverse-primary": "#732ee4",
+                        "surface-container": "#1e1f26",
+                        "on-secondary-fixed-variant": "#004c6e",
+                        "surface-container-lowest": "#0d0e15",
+                        "secondary-fixed-dim": "#89ceff",
+                        "on-primary-container": "#ede0ff",
+                        "on-surface": "#e3e1ec",
+                        "tertiary": "#ffb784",
+                        "inverse-surface": "#e3e1ec",
+                        "outline": "#958da1",
+                        "surface-variant": "#33343c",
+                        "surface-dim": "#12131a",
+                        "on-background": "#e3e1ec",
+                        "background": "#12131a",
+                        "tertiary-fixed-dim": "#ffb784",
+                        "error": "#ffb4ab",
+                        "inverse-on-surface": "#2f3038",
+                        "on-error-container": "#ffdad6",
+                        "primary-fixed": "#eaddff",
+                        "on-tertiary-fixed": "#301400",
+                        "on-error": "#690005",
+                        "primary-fixed-dim": "#d2bbff",
+                        "on-primary-fixed-variant": "#5a00c6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "margin-desktop": "48px",
+                        "xl": "40px",
+                        "md": "16px",
+                        "max-width": "1440px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "xs": "4px",
+                        "unit": "4px",
+                        "sm": "8px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Geist"],
+                        "display-xl": ["Geist"],
+                        "headline-lg": ["Geist"],
+                        "headline-lg-mobile": ["Geist"],
+                        "caption": ["Geist"],
+                        "headline-md": ["Geist"],
+                        "body-lg": ["Geist"],
+                        "body-sm": ["Geist"],
+                        "body-md": ["Geist"]
+                    },
+                    "fontSize": {
+                        "label-md": ["12px", {"lineHeight": "1.4", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "display-xl": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "caption": ["12px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background">
+<!-- Persistent SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r border-outline-variant/10 bg-surface/80 backdrop-blur-xl flex flex-col py-md px-sm z-50">
+<div class="flex items-center gap-sm px-md mb-xl">
+<span class="material-symbols-outlined text-primary font-headline-md text-headline-md" style="font-variation-settings: 'FILL' 1;">change_history</span>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Plan Self</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant/60">Premium PM</p>
+</div>
+</div>
+<nav class="flex-1 space-y-xs">
+<a class="flex items-center gap-md px-md py-sm text-primary font-bold border-r-2 border-primary bg-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-body-sm text-body-sm">Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant font-medium hover:bg-primary-container/10 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="folder_open">folder_open</span>
+<span class="font-body-sm text-body-sm">Projects</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant font-medium hover:bg-primary-container/10 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="font-body-sm text-body-sm">Teams</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant font-medium hover:bg-primary-container/10 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="star">star</span>
+<span class="font-body-sm text-body-sm">Favorites</span>
+</a>
+<div class="pt-xl pb-xs px-md">
+<span class="font-label-md text-label-md uppercase tracking-widest text-outline/50">System</span>
+</div>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant font-medium hover:bg-primary-container/10 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-body-sm text-body-sm">Settings</span>
+</a>
+</nav>
+<div class="mt-auto px-md py-md">
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md py-sm px-md rounded-xl flex items-center justify-center gap-sm active:scale-[0.98] transition-transform">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                New Project
+            </button>
+</div>
+</aside>
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-256px)] h-16 px-lg flex justify-between items-center bg-surface/80 backdrop-blur-md border-b border-outline-variant/10 z-40">
+<div class="flex items-center gap-lg flex-1">
+<div class="relative w-full max-w-md group">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant/50 group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant/20 rounded-xl py-xs pl-xl pr-sm text-body-sm font-body-sm focus:outline-none focus:border-primary/50 transition-all" placeholder="Buscar tarefas, projetos ou comandos... (⌘K)" type="text"/>
+</div>
+<nav class="hidden lg:flex items-center gap-lg ml-md">
+<a class="text-primary border-b-2 border-primary pb-1 font-label-md text-label-md" href="#">Dashboard</a>
+<a class="text-on-surface-variant hover:text-primary transition-opacity font-label-md text-label-md" href="#">Activity</a>
+<a class="text-on-surface-variant hover:text-primary transition-opacity font-label-md text-label-md" href="#">Analytics</a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-xs text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="terminal">terminal</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:text-primary transition-colors relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-primary rounded-full"></span>
+</button>
+<div class="h-8 w-8 rounded-full overflow-hidden border border-outline-variant/20 ml-sm cursor-pointer active:opacity-70 transition-opacity">
+<img alt="User Profile" class="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0WLAWbyZtpWE-OI9s1gqoEWT6kphdnKxJgFvhs0unGnoGJ7k2cQTsLWD_BviFleGQ1MvZgGR0Lu30a3ilnNJtS3fHvnhmI7zNuCzusU_-KV7tI8PEGqfFbGVhnTXL7dHMeBTEUCeIiQMlnxL0NvZxfxk8gxW1VIEUpESlSapZnddY7JT6ZAzVa9kCukVzssdVnp9luZ8BCBn2-gXfhae4OodgRoTmmAbZo-wBDsF7Zn8xExHV91DTw1sRtlM4B-usg_DwDOlRNzM"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-16 min-h-screen p-lg lg:p-xl space-y-lg">
+<!-- Header Section with Quick Actions -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-md mb-md">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Bom dia, Arquiteto.</h2>
+<p class="font-body-md text-body-md text-on-surface-variant/70">O progresso da sprint está conforme o planejado.</p>
+</div>
+<div class="flex items-center gap-sm">
+<button class="bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant/20 text-on-surface font-label-md text-label-md py-sm px-md rounded-xl flex items-center gap-sm transition-colors">
+<span class="material-symbols-outlined text-[18px]">person_add</span>
+                    Convidar
+                </button>
+<button class="bg-primary text-on-primary font-label-md text-label-md py-sm px-md rounded-xl flex items-center gap-sm active:scale-95 transition-all shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-[18px]">add_task</span>
+                    Nova Tarefa
+                </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Sprint Atual Widget (Span 8) -->
+<section class="col-span-12 lg:col-span-8 glass-panel rounded-full p-lg flex flex-col justify-between overflow-hidden relative group">
+<div class="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors"></div>
+<div class="flex items-center justify-between mb-lg relative z-10">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">bolt</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Sprint Atual</h3>
+<p class="font-caption text-caption text-on-surface-variant">Q4 - Desenvolvimento Core v2.0</p>
+</div>
+</div>
+<span class="bg-secondary/10 text-secondary font-label-md text-label-md px-md py-xs rounded-full">4 dias restantes</span>
+</div>
+<div class="space-y-md relative z-10">
+<div class="flex justify-between items-end">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Progresso Total</span>
+<span class="font-headline-md text-headline-md text-primary">68%</span>
+</div>
+<div class="h-3 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full transition-all duration-1000 ease-out" style="width: 68%;"></div>
+</div>
+<div class="grid grid-cols-3 gap-md pt-md">
+<div class="bg-surface-container-low/50 p-md rounded-xl border border-outline-variant/10">
+<span class="font-label-md text-label-md text-on-surface-variant block mb-xs">Tasks Feitas</span>
+<span class="font-headline-md text-headline-md text-on-surface">24/36</span>
+</div>
+<div class="bg-surface-container-low/50 p-md rounded-xl border border-outline-variant/10">
+<span class="font-label-md text-label-md text-on-surface-variant block mb-xs">Impedimentos</span>
+<span class="font-headline-md text-headline-md text-error">2</span>
+</div>
+<div class="bg-surface-container-low/50 p-md rounded-xl border border-outline-variant/10">
+<span class="font-label-md text-label-md text-on-surface-variant block mb-xs">Estimativa</span>
+<span class="font-headline-md text-headline-md text-on-surface">112h</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Atividade Recente (Span 4) -->
+<section class="col-span-12 lg:col-span-4 glass-panel rounded-full p-lg overflow-hidden flex flex-col">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-lg">Atividade Recente</h3>
+<div class="space-y-lg custom-scrollbar overflow-y-auto flex-1 pr-sm">
+<!-- Activity Item 1 -->
+<div class="flex gap-md">
+<div class="h-10 w-10 shrink-0 rounded-full border border-primary/20 p-[2px]">
+<img alt="Ana" class="rounded-full w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkCiaqthyqtklcDroYPPK0AhYQ4ubS1a40FLqult9-6xxF4qDdiW4RLNnOviw3NJ-dUL6rhUV7Xy8KyT0Zm-WBX7yGRCISNf3Nfs50EUjgcnM-2Jyr5djbd9nzCo9RVNVKwxao_sKlH4oDvX5SL8aAcA1p4aMAZLtYrojwNP65QEAOWLNMf2EnvqnOQiM-TJ_3_5vQDYQ7ALlytkEmNOYZGBikyRzvnV1_TxcyzLmZYIEZb3XS3sxhxTPsgowmR5LHNSOMrNJHVQs"/>
+</div>
+<div class="flex-1">
+<p class="font-body-sm text-body-sm text-on-surface">
+<span class="font-bold">Ana Silva</span> moveu <span class="text-primary italic">Refatoração de API</span> para <span class="bg-primary/10 text-primary px-xs rounded">Pronto</span>
+</p>
+<span class="font-caption text-caption text-on-surface-variant/60 block mt-xs">Hà 12 min</span>
+</div>
+</div>
+<!-- Activity Item 2 -->
+<div class="flex gap-md">
+<div class="h-10 w-10 shrink-0 rounded-full border border-secondary/20 p-[2px]">
+<img alt="Marcos" class="rounded-full w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdQ8xxVvfHg7K5rdV-rFSaRhrqGOUnja63p5oGY2La3EwId8Kp2l4TkeCHmmN1UU95ZNiVeK7ecPP4i-rqLOuXrLJsljJMZIYJm9GEiev2PQ3BxJtGDOkX762xwxZvhECNJPMveVEW_mE8VWZ1QEL4lTQYhpAAhlz__qAN8hRvvn3JMpiK0l8R1_aiV3cS4Im7XsCVanG-wqfrQwitqehluvNinzmLPeS9CYN4Rs-UG8cb6b9TroexJsSaeADEJ7XrbSU61mgRb8s"/>
+</div>
+<div class="flex-1">
+<p class="font-body-sm text-body-sm text-on-surface">
+<span class="font-bold">Marcos Lima</span> comentou em <span class="text-secondary italic">Design de Onboarding</span>
+</p>
+<span class="font-caption text-caption text-on-surface-variant/60 block mt-xs">Hà 45 min</span>
+</div>
+</div>
+<!-- Activity Item 3 -->
+<div class="flex gap-md">
+<div class="h-10 w-10 shrink-0 rounded-full border border-tertiary/20 p-[2px]">
+<img alt="Julia" class="rounded-full w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoaFR5taknRbyn857HYOr6qMcAp81jQnQiOOoEITMJRGSWfSoby07qNNR7EoF_xmVhzK_TiZQT_wd7pFuReUZnXCUr4kJOpwn7fqfvaDtk8dLbHFlsfKc_PQeXvXw3P-AJu00Fln94uDeqPqujW7Vb1AK9pW1pwomHN6mtrA4FSHgri9sfyAejfs4-EhhlEtb_Gso173VaSGpky862Bmt7JUeAXY13q3NlCntLRaziuqiiqqI8WpuvOBE1HB-2qACjWbvyblkalIg"/>
+</div>
+<div class="flex-1">
+<p class="font-body-sm text-body-sm text-on-surface">
+<span class="font-bold">Julia Costa</span> criou uma nova tarefa <span class="text-tertiary italic">Documentação v2</span>
+</p>
+<span class="font-caption text-caption text-on-surface-variant/60 block mt-xs">Hà 2 horas</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Productivity Charts (Span 5) -->
+<section class="col-span-12 lg:col-span-5 glass-panel rounded-full p-lg">
+<div class="flex items-center justify-between mb-lg">
+<h3 class="font-headline-md text-headline-md text-on-surface">Produtividade</h3>
+<select class="bg-transparent border-none text-label-md font-label-md text-on-surface-variant focus:ring-0 cursor-pointer">
+<option>Últimos 7 dias</option>
+<option>Últimos 30 dias</option>
+</select>
+</div>
+<div class="space-y-xl">
+<div>
+<div class="flex justify-between items-center mb-md">
+<span class="font-label-md text-label-md text-on-surface-variant">Lead Time (Médio)</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">3.2 dias</span>
+</div>
+<div class="h-32 w-full flex items-end gap-xs">
+<div class="flex-1 bg-primary/20 rounded-t-lg transition-all hover:bg-primary" style="height: 40%;"></div>
+<div class="flex-1 bg-primary/20 rounded-t-lg transition-all hover:bg-primary" style="height: 60%;"></div>
+<div class="flex-1 bg-primary/20 rounded-t-lg transition-all hover:bg-primary" style="height: 35%;"></div>
+<div class="flex-1 bg-primary/20 rounded-t-lg transition-all hover:bg-primary" style="height: 80%;"></div>
+<div class="flex-1 bg-primary/20 rounded-t-lg transition-all hover:bg-primary" style="height: 55%;"></div>
+<div class="flex-1 bg-primary/20 rounded-t-lg transition-all hover:bg-primary" style="height: 90%;"></div>
+<div class="flex-1 bg-primary rounded-t-lg" style="height: 45%;"></div>
+</div>
+</div>
+<div class="pt-lg border-t border-outline-variant/10">
+<div class="flex justify-between items-center mb-md">
+<span class="font-label-md text-label-md text-on-surface-variant">Throughput</span>
+<span class="font-body-sm text-body-sm font-bold text-secondary">18 tarefas/sem</span>
+</div>
+<!-- Simple Vector Simulation -->
+<div class="relative h-20 w-full overflow-hidden">
+<svg class="absolute inset-0 h-full w-full" preserveaspectratio="none" viewbox="0 0 100 100">
+<path class="text-secondary" d="M0,80 Q20,20 40,60 T80,40 T100,20" fill="none" stroke="currentColor" stroke-width="2"></path>
+<path class="text-secondary/10" d="M0,80 Q20,20 40,60 T80,40 T100,20 L100,100 L0,100 Z" fill="currentColor"></path>
+</svg>
+</div>
+</div>
+</div>
+</section>
+<!-- Minhas Tarefas (Span 7) -->
+<section class="col-span-12 lg:col-span-7 glass-panel rounded-full p-lg overflow-hidden flex flex-col">
+<div class="flex items-center justify-between mb-lg">
+<h3 class="font-headline-md text-headline-md text-on-surface">Minhas Tarefas</h3>
+<div class="flex gap-sm">
+<button class="p-xs text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">filter_list</span></button>
+<button class="p-xs text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">more_vert</span></button>
+</div>
+</div>
+<div class="space-y-sm custom-scrollbar overflow-y-auto flex-1">
+<!-- Task Item 1 -->
+<div class="group flex items-center justify-between p-md bg-surface-container-low/40 rounded-xl border border-outline-variant/10 hover:border-primary/30 transition-all cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-6 h-6 rounded border-2 border-outline-variant group-hover:border-primary flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[16px] opacity-0 group-hover:opacity-100 text-primary">check</span>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface">Otimizar scripts de pré-processamento</p>
+<div class="flex items-center gap-sm mt-xs">
+<span class="font-caption text-caption text-on-surface-variant/60">Sistema Core</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant/40"></span>
+<span class="font-caption text-caption text-on-surface-variant/60">Hoje</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<span class="bg-error-container text-on-error-container font-label-md text-label-md px-sm py-[2px] rounded uppercase tracking-tighter">Alta</span>
+<span class="font-label-md text-label-md text-on-surface-variant bg-surface-container-highest px-sm py-[2px] rounded">Em Progresso</span>
+</div>
+</div>
+<!-- Task Item 2 -->
+<div class="group flex items-center justify-between p-md bg-surface-container-low/40 rounded-xl border border-outline-variant/10 hover:border-primary/30 transition-all cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-6 h-6 rounded border-2 border-outline-variant group-hover:border-primary flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[16px] opacity-0 group-hover:opacity-100 text-primary">check</span>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface">Revisar fluxos de checkout</p>
+<div class="flex items-center gap-sm mt-xs">
+<span class="font-caption text-caption text-on-surface-variant/60">E-commerce UI</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant/40"></span>
+<span class="font-caption text-caption text-on-surface-variant/60">Amanhã</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<span class="bg-on-tertiary-fixed-variant/20 text-tertiary font-label-md text-label-md px-sm py-[2px] rounded uppercase tracking-tighter">Média</span>
+<span class="font-label-md text-label-md text-on-surface-variant bg-surface-container-highest px-sm py-[2px] rounded">A Fazer</span>
+</div>
+</div>
+<!-- Task Item 3 -->
+<div class="group flex items-center justify-between p-md bg-surface-container-low/40 rounded-xl border border-outline-variant/10 hover:border-primary/30 transition-all cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-6 h-6 rounded border-2 border-outline-variant group-hover:border-primary flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[16px] opacity-0 group-hover:opacity-100 text-primary">check</span>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface">Implementar testes de integração</p>
+<div class="flex items-center gap-sm mt-xs">
+<span class="font-caption text-caption text-on-surface-variant/60">Infra</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant/40"></span>
+<span class="font-caption text-caption text-on-surface-variant/60">24 Out</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<span class="bg-secondary-container/20 text-secondary font-label-md text-label-md px-sm py-[2px] rounded uppercase tracking-tighter">Baixa</span>
+<span class="font-label-md text-label-md text-on-surface-variant bg-surface-container-highest px-sm py-[2px] rounded">Review</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Productivity Summary (Bottom Horizontal Bar) -->
+<section class="glass-panel rounded-xl p-md flex flex-wrap items-center justify-around gap-lg">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary">schedule</span>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant">Tempo Ativo Hoje</p>
+<p class="font-headline-md text-headline-md text-on-surface">6h 12m</p>
+</div>
+</div>
+<div class="h-10 w-px bg-outline-variant/10 hidden md:block"></div>
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-secondary">trending_up</span>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant">Eficiência Semanal</p>
+<p class="font-headline-md text-headline-md text-on-surface">+14.2%</p>
+</div>
+</div>
+<div class="h-10 w-px bg-outline-variant/10 hidden md:block"></div>
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-tertiary">check_circle</span>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant">Tarefas Finalizadas</p>
+<p class="font-headline-md text-headline-md text-on-surface">128</p>
+</div>
+</div>
+<div class="h-10 w-px bg-outline-variant/10 hidden md:block"></div>
+<div class="flex -space-x-3">
+<img alt="Team 1" class="w-10 h-10 rounded-full border-2 border-surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBemwLWx1Q6ZFQZrOTrL3R3lB6ZQPfM1xZi9c64vfL8UVQdzkNwwsw_cIq5-8F5Ghu9sBwnoeth8rd1jOYS8CtJCGQJl1HupwkOsIN5j9dpUUCza8SydARcwnFbZyZgPGa8T2DNh6JajoeGl3AfIadOd8jxMjHiLy-qpSda2OMRtnUEsDRSj1XHNPhQvpIRJut3sQDk_anH4Ds2JH5YKCxwUObj3CS3WOnKbUtvGd4K6otHEfrryvADdV9QwHw4fB_H5hRQapzPeMw"/>
+<img alt="Team 2" class="w-10 h-10 rounded-full border-2 border-surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXRzy2cZR-mdxJVlrwpRez24FSVnwkVbojixCuMoKMXUybWHab9BVjTYibQ1mULYgJccZpJ3x26U0KfewIdoJgah7uDYYSgztFX9Fc-FxoOMva-rU83o6KYlLNfNiVj1snnRw3dOztEyxxZDTh8lSjvAKPkfkIkH8sqgYX-r73sDvjImLpXVlzcAvfFbwNeF3RsnOjb8vmDt-9EAX7HFkx7s1lo2UF6y5qgFjQUiEOL7XTU10s2HO3uv0yMuaZGkOVIKs4ZiRq-bw"/>
+<img alt="Team 3" class="w-10 h-10 rounded-full border-2 border-surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZERLmB7lg76h_JaXDO0TXctiCWEAnhFAUwf5ffzIEF-4ETbvSiI1J8mOsvH-5gcN3u3f6uKhmJY8hoH0BwLZcuuLfFO069Xc5-T02ClkaWjVBiZIpmDWNJZ_Ef18cLhwyQbmRMfoJ_6aNM9F1oFGpOpWbrhWreaU02gTvIE_1NdQUX7ymz93AoCto1qyFuuwkVgrBc7ZN1EcXtNKi7mcWs_lf5ZYkv7jLujCT982s9pX1GKkTOL3ZgbLQvheMjqutdeBot_95C_0"/>
+<div class="w-10 h-10 rounded-full border-2 border-surface bg-surface-container-high flex items-center justify-center font-label-md text-label-md text-on-surface">+4</div>
+</div>
+</section>
+</main>
+<!-- Command-K Menu (Hidden by default, triggered by JS) -->
+<div class="fixed inset-0 bg-background/60 backdrop-blur-md z-[100] hidden items-center justify-center" id="command-menu">
+<div class="glass-panel w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+<div class="flex items-center border-b border-outline-variant/10 p-md gap-md">
+<span class="material-symbols-outlined text-primary">search</span>
+<input class="bg-transparent border-none w-full text-body-lg font-body-lg focus:ring-0 text-on-surface placeholder:text-on-surface-variant/40" id="cmd-input" placeholder="Execute um comando ou pesquise..." type="text"/>
+<span class="bg-surface-container-highest text-on-surface-variant font-label-md text-label-md px-sm py-xs rounded">ESC</span>
+</div>
+<div class="p-sm max-h-[400px] overflow-y-auto custom-scrollbar">
+<div class="font-label-md text-label-md text-primary px-md py-xs mt-xs uppercase tracking-widest">Navegação</div>
+<div class="flex items-center justify-between p-md hover:bg-primary-container/10 rounded-xl cursor-pointer transition-colors group">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">folder</span>
+<span class="font-body-md text-body-md text-on-surface">Ir para Projetos</span>
+</div>
+<span class="text-caption text-caption text-outline/40 font-mono">G P</span>
+</div>
+<div class="flex items-center justify-between p-md hover:bg-primary-container/10 rounded-xl cursor-pointer transition-colors group">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">settings</span>
+<span class="font-body-md text-body-md text-on-surface">Configurações de Conta</span>
+</div>
+<span class="text-caption text-caption text-outline/40 font-mono">G S</span>
+</div>
+<div class="font-label-md text-label-md text-primary px-md py-xs mt-lg uppercase tracking-widest">Ações Rápidas</div>
+<div class="flex items-center justify-between p-md hover:bg-primary-container/10 rounded-xl cursor-pointer transition-colors group">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">add_circle</span>
+<span class="font-body-md text-body-md text-on-surface">Criar Nova Tarefa</span>
+</div>
+<span class="text-caption text-caption text-outline/40 font-mono">N T</span>
+</div>
+<div class="flex items-center justify-between p-md hover:bg-primary-container/10 rounded-xl cursor-pointer transition-colors group">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">light_mode</span>
+<span class="font-body-md text-body-md text-on-surface">Alternar Tema</span>
+</div>
+<span class="text-caption text-caption text-outline/40 font-mono">T T</span>
+</div>
+</div>
+</div>
+</div>
+<script>
+        // Command Menu Logic
+        const commandMenu = document.getElementById('command-menu');
+        const cmdInput = document.getElementById('cmd-input');
+
+        window.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                commandMenu.classList.remove('hidden');
+                commandMenu.classList.add('flex');
+                cmdInput.focus();
+            }
+            if (e.key === 'Escape') {
+                commandMenu.classList.add('hidden');
+                commandMenu.classList.remove('flex');
+            }
+        });
+
+        commandMenu.addEventListener('click', (e) => {
+            if (e.target === commandMenu) {
+                commandMenu.classList.add('hidden');
+                commandMenu.classList.remove('flex');
+            }
+        });
+
+        // Hover animations for bento cards (micro-interactions)
+        document.querySelectorAll('.glass-panel').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const { left, top, width, height } = card.getBoundingClientRect();
+                const x = (e.clientX - left) / width;
+                const y = (e.clientY - top) / height;
+                
+                card.style.setProperty('--x', x);
+                card.style.setProperty('--y', y);
+            });
+        });
+    </script>
+</body></html>
