@@ -13,7 +13,8 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "db:generate": "npm run db:generate -w @plan-self/database",
-    "db:migrate": "npm run db:migrate -w @plan-self/database"
+    "db:migrate": "npm run db:migrate -w @plan-self/database",
+    "db:migrate:dev": "npm run db:migrate:dev -w @plan-self/database"
   },
   "devDependencies": {
     "turbo": "^2.1.3",

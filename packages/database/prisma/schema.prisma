@@ -89,6 +89,7 @@ model User {
   messages          Message[]
   sprintMemberships SprintMember[]
   sprintAuditLogs   SprintAuditLog[]
+  projects          Project[]
 }
 
 model AuthSession {
@@ -127,15 +128,28 @@ model TeamMember {
 model Project {
   id              String           @id @default(cuid())
   name            String
+  description     String?
   organizationId  String
+  ownerId         String?
+  owner           User?            @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   teamId          String?
-  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   team            Team?            @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  priority        String?          @default("MEDIUM")
+  status          String?          @default("PLANNED")
+  archived        Boolean          @default(false)
+  progress        Int              @default(0)
+  color           String?
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   epics           Epic[]
   sprints         Sprint[]
   stories         Story[]
   tasks           Task[]
   sprintAuditLogs SprintAuditLog[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([organizationId])
+  @@index([archived])
 }
 
 model Epic {

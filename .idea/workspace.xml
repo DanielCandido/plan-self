@@ -4,7 +4,22 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15f29a31-c143-4c09-909b-801b83a10458" name="Changes" comment="feat: replace UUID validation with CUID in DTOs and add custom CUID validator" />
+    <list default="true" id="15f29a31-c143-4c09-909b-801b83a10458" name="Changes" comment="feat: add design system for Precision Minimalism with color palette, typography, and layout guidelines">
+      <change afterPath="$PROJECT_DIR$/apps/api/src/modules/projects/dto/archive-project.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/api/src/modules/projects/dto/create-project.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/api/src/modules/projects/dto/projects-list-query.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/api/src/modules/projects/dto/update-project.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/api/src/modules/projects/projects.controller.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/api/src/modules/projects/projects.module.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/api/src/modules/projects/projects.repository.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/api/src/modules/projects/projects.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/database/prisma/migrations/20260525221519_project/migration.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/api/src/app.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/app.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/database/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/packages/database/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/database/prisma/schema.prisma" beforeDir="false" afterPath="$PROJECT_DIR$/packages/database/prisma/schema.prisma" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -118,10 +133,11 @@
       <recent name="F:\projects\personal\plan-self" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="F:\projects\personal\plan-self\apps\api\src\modules\projects" />
+      <recent name="F:\projects\personal\plan-self\apps\api\src\modules\projects\dto" />
       <recent name="F:\projects\personal\plan-self\packages\utils" />
       <recent name="F:\projects\personal\plan-self\packages\utils\src" />
       <recent name="F:\projects\personal\plan-self\packages\utils\class-validator" />
-      <recent name="F:\projects\personal\plan-self\packages\database\prisma" />
     </key>
   </component>
   <component name="RunManager">
@@ -164,7 +180,7 @@
       <workItem from="1779550224426" duration="13094000" />
       <workItem from="1779657694495" duration="7481000" />
       <workItem from="1779717915605" duration="1726000" />
-      <workItem from="1779737568279" duration="5408000" />
+      <workItem from="1779737568279" duration="8903000" />
     </task>
     <task id="LOCAL-00001" summary="feat: add initial database migration with tables and enums for organization, team, user, and task management">
       <option name="closed" value="true" />
@@ -190,19 +206,24 @@
       <option name="project" value="LOCAL" />
       <updated>1779742082684</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="feat: add design system for Precision Minimalism with color palette, typography, and layout guidelines">
+      <option name="closed" value="true" />
+      <created>1779743235013</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1779743235013</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
     <option name="exactExcludedFiles">
       <list>
-        <option value="$PROJECT_DIR$/packages/utils/class-validator/index.js" />
-        <option value="$PROJECT_DIR$/packages/utils/class-validator/index.d.ts" />
-        <option value="$PROJECT_DIR$/packages/utils/class-validator/index.js.map" />
         <option value="$PROJECT_DIR$/packages/utils/index.js" />
-        <option value="$PROJECT_DIR$/packages/utils/index.d.ts" />
         <option value="$PROJECT_DIR$/packages/utils/index.js.map" />
+        <option value="$PROJECT_DIR$/packages/utils/index.d.ts" />
       </list>
     </option>
   </component>
@@ -210,7 +231,8 @@
     <MESSAGE value="feat: add initial database migration with tables and enums for organization, team, user, and task management" />
     <MESSAGE value="feat: refactor authentication handling and add PlanSelfLogo component" />
     <MESSAGE value="feat: replace UUID validation with CUID in DTOs and add custom CUID validator" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: replace UUID validation with CUID in DTOs and add custom CUID validator" />
+    <MESSAGE value="feat: add design system for Precision Minimalism with color palette, typography, and layout guidelines" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: add design system for Precision Minimalism with color palette, typography, and layout guidelines" />
   </component>
   <component name="github-copilot-workspace">
     <instructionFileLocations>
