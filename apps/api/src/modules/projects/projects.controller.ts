@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards, Post, Body, Patch, Param } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { CurrentUserPayload } from '../auth/types/current-user.type';
@@ -8,6 +8,10 @@ import { ListProjectsQueryDto } from './dto/projects-list-query.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { ArchiveProjectDto } from './dto/archive-project.dto';
+import { AddProjectMemberDto } from './dto/add-project-member.dto';
+import { ListProjectTasksQueryDto } from './dto/list-project-tasks-query.dto';
+import { CreateProjectTaskDto } from './dto/create-project-task.dto';
+import { ListProjectUsersQueryDto } from './dto/list-project-users-query.dto';
 
 @ApiTags('projects')
 @ApiBearerAuth()
@@ -28,6 +32,12 @@ export class ProjectsController {
     return this.projectsService.getCounts(currentUser.organizationId);
   }
 
+  @Get('projects/:id')
+  @ApiOperation({ summary: 'Detalha um projeto com metadados de progresso' })
+  getProjectById(@Param('id') id: string, @CurrentUser() currentUser: CurrentUserPayload) {
+    return this.projectsService.findById(id, currentUser.organizationId);
+  }
+
   @Post('projects')
   @ApiOperation({ summary: 'Cria um novo projeto' })
   createProject(@CurrentUser() currentUser: CurrentUserPayload, @Body() dto: CreateProjectDto) {
@@ -44,5 +54,61 @@ export class ProjectsController {
   @ApiOperation({ summary: 'Arquiva ou desarquiva um projeto' })
   archiveProject(@Param('id') id: string, @CurrentUser() currentUser: CurrentUserPayload, @Body() dto: ArchiveProjectDto) {
     return this.projectsService.setArchived(id, currentUser, dto.archive);
+  }
+
+  @Get('projects/:id/members')
+  @ApiOperation({ summary: 'Lista membros com acesso ao projeto via equipe' })
+  listProjectMembers(@Param('id') id: string, @CurrentUser() currentUser: CurrentUserPayload) {
+    return this.projectsService.listProjectMembers(id, currentUser);
+  }
+
+  @Post('projects/:id/members')
+  @ApiOperation({ summary: 'Adiciona membro ao acesso do projeto via equipe' })
+  addProjectMember(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: CurrentUserPayload,
+    @Body() dto: AddProjectMemberDto,
+  ) {
+    return this.projectsService.addProjectMember(id, currentUser, dto);
+  }
+
+  @Get('projects/:id/users')
+  @ApiOperation({ summary: 'Lista usuários ativos da organização para concessão de acesso ao projeto' })
+  listProjectUsers(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: CurrentUserPayload,
+    @Query() query: ListProjectUsersQueryDto,
+  ) {
+    return this.projectsService.listAvailableProjectUsers(id, currentUser, query.q);
+  }
+
+  @Delete('projects/:id/members/:userId')
+  @ApiOperation({ summary: 'Remove membro do acesso do projeto via equipe' })
+  removeProjectMember(
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+    @CurrentUser() currentUser: CurrentUserPayload,
+  ) {
+    return this.projectsService.removeProjectMember(id, userId, currentUser);
+  }
+
+  @Get('projects/:id/tasks')
+  @ApiOperation({ summary: 'Lista tarefas do projeto com filtros e paginação' })
+  listProjectTasks(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: CurrentUserPayload,
+    @Query() query: ListProjectTasksQueryDto,
+  ) {
+    return this.projectsService.listProjectTasks(id, currentUser, query as any);
+  }
+
+  @Post('projects/:id/tasks')
+  @ApiOperation({ summary: 'Cria tarefa diretamente no contexto do projeto' })
+  createProjectTask(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: CurrentUserPayload,
+    @Body() dto: CreateProjectTaskDto,
+  ) {
+    return this.projectsService.createProjectTask(id, currentUser, dto as any);
   }
 }

@@ -6,6 +6,7 @@ import { PlanSelfLogo } from './plan-self-logo';
 export interface WorkspaceNavItem {
   label: string;
   active?: boolean;
+  href?: string;
 }
 
 interface WorkspaceLayoutProps {
@@ -15,6 +16,7 @@ interface WorkspaceLayoutProps {
   header?: ReactNode;
   children: ReactNode;
   sidebarFooter?: ReactNode;
+  onNewProject?: () => void;
   sidebarClassName?: string;
   desktopSidebarVisibilityClassName?: string;
   contentOffsetClassName?: string;
@@ -29,6 +31,7 @@ export function WorkspaceLayout({
   header,
   children,
   sidebarFooter,
+  onNewProject,
   sidebarClassName = 'w-64',
   desktopSidebarVisibilityClassName = 'md:block',
   contentOffsetClassName = 'md:ml-64',
@@ -36,7 +39,12 @@ export function WorkspaceLayout({
   mainClassName = 'bg-[#12131a]',
 }: WorkspaceLayoutProps) {
   const sidebarBody = (
-    <SidebarContent navItems={navItems} footer={sidebarFooter} onSelect={onSidebarChange ? () => onSidebarChange(false) : undefined} />
+    <SidebarContent
+      navItems={navItems}
+      footer={sidebarFooter}
+      onSelect={onSidebarChange ? () => onSidebarChange(false) : undefined}
+      onNewProject={onNewProject}
+    />
   );
 
   return (
@@ -72,10 +80,12 @@ function SidebarContent({
   navItems,
   footer,
   onSelect,
+  onNewProject,
 }: {
   navItems: WorkspaceNavItem[];
   footer?: ReactNode;
   onSelect?: () => void;
+  onNewProject?: () => void;
 }) {
   return (
     <div className="flex h-full flex-col">
@@ -89,10 +99,10 @@ function SidebarContent({
 
       <nav className="space-y-1">
         {navItems.map((item) => (
-          <button
+          <a
             key={item.label}
-            type="button"
             onClick={onSelect}
+            href={item.href}
             className={`flex w-full items-center rounded px-3 py-2 text-left text-sm transition ${
               item.active
                 ? 'border border-[#d2bbff]/25 bg-[#d2bbff]/10 text-[#d2bbff]'
@@ -100,9 +110,19 @@ function SidebarContent({
             }`}
           >
             {item.label}
-          </button>
+          </a>
         ))}
       </nav>
+
+      {onNewProject ? (
+        <button
+          type="button"
+          onClick={onNewProject}
+          className="mt-auto mb-4 rounded-md bg-[#d2bbff]/85 px-3 py-3 text-sm font-medium text-[#271a43] transition hover:bg-[#d2bbff]"
+        >
+          New Project
+        </button>
+      ) : null}
 
       {footer ? <div className="mt-auto">{footer}</div> : null}
     </div>

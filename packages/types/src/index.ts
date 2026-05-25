@@ -16,3 +16,5 @@ export interface TenantContext {
 export * from './dashboard.js';
 
 export * from './sprints.js';
+
+export * from './projects.js';

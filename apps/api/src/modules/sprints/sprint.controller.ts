@@ -146,6 +146,12 @@ export class SprintController {
     return this.sprintService.updateTask(taskId, currentUser, dto);
   }
 
+  @Delete('tasks/:id')
+  @ApiOperation({ summary: 'Exclui uma task do projeto' })
+  deleteTask(@Param('id') taskId: string, @CurrentUser() currentUser: CurrentUserPayload) {
+    return this.sprintService.deleteTask(taskId, currentUser);
+  }
+
   @Get('sprints/:id/burndown')
   @ApiOperation({ summary: 'Retorna o burndown da sprint' })
   getBurndown(@Param('id') sprintId: string, @CurrentUser() currentUser: CurrentUserPayload) {

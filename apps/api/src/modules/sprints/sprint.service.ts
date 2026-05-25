@@ -646,6 +646,23 @@ export class SprintService {
     return this.repository.findTaskById(task.id, currentUser.organizationId).then((refreshed) => this.mapTask(refreshed));
   }
 
+  async deleteTask(taskId: string, currentUser: CurrentUserPayload) {
+    const task = await this.repository.findTaskById(taskId, currentUser.organizationId);
+    await this.assertTaskAccess([task], currentUser);
+
+    await this.repository.prisma.task.delete({
+      where: { id: task.id },
+    });
+
+    if (task.sprintId) {
+      await this.syncSprintMetrics(task.sprintId, currentUser.organizationId);
+      this.emitSprintEvent(currentUser.organizationId, 'sprint.updated', task.sprintId);
+    }
+
+    this.emitSprintEvent(currentUser.organizationId, 'task.moved');
+    return { ok: true };
+  }
+
   async getBurndown(sprintId: string, currentUser: CurrentUserPayload) {
     const snapshots = await this.repository.listBurndown(sprintId, currentUser.organizationId);
     return snapshots.map((snapshot) => this.mapBurndown(snapshot));

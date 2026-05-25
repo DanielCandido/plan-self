@@ -23,4 +23,8 @@ export class CreateProjectDto {
   @IsOptional()
   @IsString()
   color?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
 }

@@ -30,11 +30,11 @@ const MyTasksCard = dynamic(
 );
 
 const DASHBOARD_NAV_ITEMS = [
-  { label: 'Dashboard', active: true },
-  { label: 'Projects' },
-  { label: 'Sprints' },
-  { label: 'Reports' },
-  { label: 'Settings' },
+  { label: 'Dashboard', href: '/dashboard', active: true },
+  { label: 'My Tasks', href: '/my-tasks' },
+  { label: 'Projects', href: '/projects' },
+  { label: 'Team', href: '/team' },
+  { label: 'Reports', href: '/reports' },
 ];
 
 export default function DashboardPage() {
