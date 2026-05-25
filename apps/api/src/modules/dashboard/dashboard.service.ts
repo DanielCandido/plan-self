@@ -44,7 +44,7 @@ export class DashboardService {
     const activeSprint = await this.prisma.sprint.findFirst({
       where: {
         project: { organizationId: currentUser.organizationId },
-        status: { in: ['ACTIVE', 'IN_PROGRESS', 'PLANNED'] },
+        status: { in: ['ACTIVE', 'PLANNING'] },
       },
       include: {
         tasks: {

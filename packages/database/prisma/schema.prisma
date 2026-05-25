@@ -29,6 +29,25 @@ enum TaskState {
   BLOCKED
 }
 
+enum SprintStatus {
+  PLANNING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum SprintAuditAction {
+  CREATED
+  UPDATED
+  DELETED
+  TASK_ADDED
+  TASK_REMOVED
+  STARTED
+  COMPLETED
+  CANCELLED
+  DATES_CHANGED
+}
+
 model Organization {
   id        String     @id @default(cuid())
   name      String
@@ -51,23 +70,25 @@ model Team {
 }
 
 model User {
-  id             String         @id @default(cuid())
-  email          String         @unique
-  name           String
-  passwordHash   String?
-  status         UserStatus     @default(ACTIVE)
-  role           Role           @default(MEMBER)
-  avatarUrl      String?
-  onlineStatus   String         @default("offline")
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  organizationId String
-  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  memberships    TeamMember[]
-  authSessions   AuthSession[]
-  taskAssignees  TaskAssignee[]
-  taskComments   TaskComment[]
-  messages       Message[]
+  id                String           @id @default(cuid())
+  email             String           @unique
+  name              String
+  passwordHash      String?
+  status            UserStatus       @default(ACTIVE)
+  role              Role             @default(MEMBER)
+  avatarUrl         String?
+  onlineStatus      String           @default("offline")
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  organizationId    String
+  organization      Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  memberships       TeamMember[]
+  authSessions      AuthSession[]
+  taskAssignees     TaskAssignee[]
+  taskComments      TaskComment[]
+  messages          Message[]
+  sprintMemberships SprintMember[]
+  sprintAuditLogs   SprintAuditLog[]
 }
 
 model AuthSession {
@@ -104,16 +125,17 @@ model TeamMember {
 }
 
 model Project {
-  id             String       @id @default(cuid())
-  name           String
-  organizationId String
-  teamId         String?
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  team           Team?        @relation(fields: [teamId], references: [id], onDelete: SetNull)
-  epics          Epic[]
-  sprints        Sprint[]
-  stories        Story[]
-  tasks          Task[]
+  id              String           @id @default(cuid())
+  name            String
+  organizationId  String
+  teamId          String?
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  team            Team?            @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  epics           Epic[]
+  sprints         Sprint[]
+  stories         Story[]
+  tasks           Task[]
+  sprintAuditLogs SprintAuditLog[]
 }
 
 model Epic {
@@ -129,17 +151,112 @@ model Epic {
 }
 
 model Sprint {
+  id              String             @id @default(cuid())
+  projectId       String
+  name            String
+  goal            String?
+  objective       String?
+  notes           String?
+  startDate       DateTime?
+  endDate         DateTime?
+  capacity        Int                @default(0)
+  velocity        Int                @default(0)
+  storyPoints     Int                @default(0)
+  completedPoints Int                @default(0)
+  remainingPoints Int                @default(0)
+  blockedPoints   Int                @default(0)
+  healthScore     Int                @default(100)
+  burndown        Json?
+  status          SprintStatus       @default(PLANNING)
+  createdBy       String             @default("system")
+  completedAt     DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  project         Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks           Task[]             @relation("TaskSprint")
+  sprintTasks     SprintTask[]
+  metrics         SprintMetric[]
+  snapshots       BurndownSnapshot[]
+  auditLogs       SprintAuditLog[]
+  members         SprintMember[]
+
+  @@index([projectId, status])
+  @@index([projectId, startDate])
+}
+
+model SprintTask {
   id        String    @id @default(cuid())
+  sprintId  String
+  taskId    String    @unique
+  position  Int       @default(0)
+  addedAt   DateTime  @default(now())
+  addedBy   String
+  removedAt DateTime?
+  sprint    Sprint    @relation(fields: [sprintId], references: [id], onDelete: Cascade)
+  task      Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([sprintId, position])
+}
+
+model SprintMetric {
+  id                  String   @id @default(cuid())
+  sprintId            String
+  totalStoryPoints    Int      @default(0)
+  completedPoints     Int      @default(0)
+  remainingPoints     Int      @default(0)
+  blockedPoints       Int      @default(0)
+  progress            Int      @default(0)
+  velocity            Int      @default(0)
+  throughput          Int      @default(0)
+  capacityUtilization Float    @default(0)
+  healthScore         Int      @default(100)
+  createdAt           DateTime @default(now())
+  sprint              Sprint   @relation(fields: [sprintId], references: [id], onDelete: Cascade)
+
+  @@index([sprintId, createdAt])
+}
+
+model BurndownSnapshot {
+  id              String   @id @default(cuid())
+  sprintId        String
+  snapshotDate    DateTime
+  remainingPoints Int      @default(0)
+  completedPoints Int      @default(0)
+  blockedTasks    Int      @default(0)
+  createdAt       DateTime @default(now())
+  sprint          Sprint   @relation(fields: [sprintId], references: [id], onDelete: Cascade)
+
+  @@unique([sprintId, snapshotDate])
+  @@index([sprintId, snapshotDate])
+}
+
+model SprintAuditLog {
+  id        String            @id @default(cuid())
+  sprintId  String
   projectId String
-  name      String
-  goal      String?
-  startDate DateTime?
-  endDate   DateTime?
-  velocity  Int?
-  burndown  Json?
-  status    String    @default("PLANNED")
-  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  tasks     Task[]
+  actorId   String?
+  action    SprintAuditAction
+  metadata  Json?
+  createdAt DateTime          @default(now())
+  sprint    Sprint            @relation(fields: [sprintId], references: [id], onDelete: Cascade)
+  project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  actor     User?             @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([sprintId, createdAt])
+  @@index([projectId, createdAt])
+}
+
+model SprintMember {
+  id                  String @id @default(cuid())
+  sprintId            String
+  userId              String
+  dailyCapacity       Int    @default(8)
+  availabilityPercent Int    @default(100)
+  totalCapacity       Int    @default(0)
+  sprint              Sprint @relation(fields: [sprintId], references: [id], onDelete: Cascade)
+  user                User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([sprintId, userId])
 }
 
 model Story {
@@ -156,24 +273,47 @@ model Story {
 }
 
 model Task {
-  id           String         @id @default(cuid())
-  projectId    String
-  sprintId     String?
-  storyId      String?
-  title        String
-  description  String?
-  state        TaskState      @default(BACKLOG)
-  priority     String         @default("MEDIUM")
-  slaAt        DateTime?
-  dueAt        DateTime?
-  customFields Json?
-  checklist    Json?
-  labels       Json?
-  project      Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  sprint       Sprint?        @relation(fields: [sprintId], references: [id], onDelete: SetNull)
-  story        Story?         @relation(fields: [storyId], references: [id], onDelete: SetNull)
-  assignees    TaskAssignee[]
-  comments     TaskComment[]
+  id                    String           @id @default(cuid())
+  projectId             String
+  sprintId              String?
+  storyId               String?
+  title                 String
+  description           String?
+  state                 TaskState        @default(BACKLOG)
+  priority              String           @default("MEDIUM")
+  storyPoints           Int?
+  sortOrder             Int              @default(0)
+  blockedReason         String?
+  slaAt                 DateTime?
+  dueAt                 DateTime?
+  customFields          Json?
+  checklist             Json?
+  labels                Json?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  project               Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sprint                Sprint?          @relation("TaskSprint", fields: [sprintId], references: [id], onDelete: SetNull)
+  story                 Story?           @relation(fields: [storyId], references: [id], onDelete: SetNull)
+  assignees             TaskAssignee[]
+  comments              TaskComment[]
+  sprintTasks           SprintTask[]
+  blockingDependencies  TaskDependency[] @relation("TaskBlocking")
+  blockedByDependencies TaskDependency[] @relation("TaskBlockedBy")
+
+  @@index([projectId, sprintId, sortOrder])
+  @@index([projectId, state])
+}
+
+model TaskDependency {
+  id            String   @id @default(cuid())
+  blockerTaskId String
+  blockedTaskId String
+  critical      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  blocker       Task     @relation("TaskBlocking", fields: [blockerTaskId], references: [id], onDelete: Cascade)
+  blocked       Task     @relation("TaskBlockedBy", fields: [blockedTaskId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerTaskId, blockedTaskId])
 }
 
 model TaskAssignee {

@@ -5,6 +5,7 @@ import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-q
 import { io, type Socket } from 'socket.io-client';
 import type { DashboardOverviewResponse, DashboardTask, DashboardTaskState } from '@plan-self/types';
 import apiClient, { getAccessToken } from '@/lib/api';
+import { resolveRealtimeUrl } from '@/lib/realtime';
 import { useDashboardStore } from '@/store/dashboard.store';
 
 const DASHBOARD_QUERY_KEY = ['dashboard', 'overview'] as const;
@@ -12,9 +13,6 @@ const REALTIME_EVENTS = ['task.updated', 'task.created', 'sprint.updated'] as co
 const DASHBOARD_STALE_TIME_MS = 20_000;
 const DASHBOARD_GC_TIME_MS = 120_000;
 const REALTIME_THROTTLE_MS = 750;
-
-const getDefaultApiWsUrl = () =>
-  typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001';
 
 export function useDashboard() {
   const queryClient = useQueryClient();
@@ -76,10 +74,7 @@ export function useDashboard() {
       return;
     }
 
-    const dashboardWsUrl =
-      process.env.NEXT_PUBLIC_API_WS_URL ??
-      process.env.NEXT_PUBLIC_API_URL ??
-      getDefaultApiWsUrl();
+    const dashboardWsUrl = resolveRealtimeUrl();
 
     const socket: Socket = io(`${dashboardWsUrl}/dashboard`, {
       transports: ['websocket'],
