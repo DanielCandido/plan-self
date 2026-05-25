@@ -19,7 +19,6 @@ async function bootstrap() {
   });
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-  app.useGlobalGuards(app.get(ThrottlerGuard));
 
   const config = new DocumentBuilder()
     .setTitle('Plan Self API')

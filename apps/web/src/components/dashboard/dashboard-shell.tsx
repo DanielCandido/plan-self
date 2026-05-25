@@ -2,6 +2,7 @@
 
 import { memo, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import {PlanSelfLogo} from "@/components/ui/default-layout/plan-self-logo";
 
 interface DashboardShellProps {
   sidebarOpen: boolean;
@@ -59,9 +60,8 @@ export const DashboardShell = memo(function DashboardShell({
 function SidebarContent({ onSelect }: { onSelect?: () => void }) {
   return (
     <div className="flex h-full flex-col">
-      <div className="mb-6 rounded-lg border border-white/10 bg-white/5 p-3">
-        <p className="text-xs uppercase tracking-[0.2em] text-[#d2bbff]/50">Plan Self</p>
-        <p className="mt-1 text-sm font-semibold text-white">Precision Minimalism</p>
+      <div className="mb-6">
+          <PlanSelfLogo />
       </div>
 
       <nav className="space-y-1">

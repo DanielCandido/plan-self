@@ -9,46 +9,61 @@ const DEFAULT_PRIVATE_ROUTE = '/dashboard';
 const DEFAULT_PUBLIC_ROUTE = '/login';
 
 export function useSession() {
-  const store = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
 
-  // Bootstrap session on mount (calls /auth/me once)
-  useEffect(() => {
-    if (!store.isBootstrapped) {
-      store.bootstrap();
-    }
-  }, [store]);
+  const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const isBootstrapped = useAuthStore((state) => state.isBootstrapped);
 
-  // Handle session expiry event from Axios interceptor
+  const bootstrap = useAuthStore((state) => state.bootstrap);
+  const clearSession = useAuthStore((state) => state.clearSession);
+
+  // Bootstrap session on mount
+  useEffect(() => {
+    if (!isBootstrapped) {
+      bootstrap();
+    }
+  }, [isBootstrapped, bootstrap]);
+
+  // Session expiry handler
   useEffect(() => {
     const handleExpiry = () => {
-      store.clearSession();
+      clearSession();
       router.push(DEFAULT_PUBLIC_ROUTE);
     };
+
     window.addEventListener('auth:session-expired', handleExpiry);
-    return () => window.removeEventListener('auth:session-expired', handleExpiry);
-  }, [store, router]);
 
-  // Client-side route guard (middleware handles SSR/edge, this handles transitions)
+    return () => {
+      window.removeEventListener('auth:session-expired', handleExpiry);
+    };
+  }, [clearSession, router]);
+
+  // Route guard
   useEffect(() => {
-    if (!store.isBootstrapped) return;
+    if (!isBootstrapped) return;
 
-    const isPublicRoute = PUBLIC_ROUTES.some((r) => pathname.startsWith(r));
+    const isPublicRoute = PUBLIC_ROUTES.some((r) =>
+        pathname.startsWith(r),
+    );
 
-    if (!store.isAuthenticated && !isPublicRoute) {
-      router.push(`${DEFAULT_PUBLIC_ROUTE}?redirect=${encodeURIComponent(pathname)}`);
+    if (!isAuthenticated && !isPublicRoute) {
+      router.push(
+          `${DEFAULT_PUBLIC_ROUTE}?redirect=${encodeURIComponent(pathname)}`,
+      );
     }
 
-    if (store.isAuthenticated && isPublicRoute) {
+    if (isAuthenticated && isPublicRoute) {
       router.push(DEFAULT_PRIVATE_ROUTE);
     }
-  }, [store.isBootstrapped, store.isAuthenticated, pathname, router]);
+  }, [isBootstrapped, isAuthenticated, pathname, router]);
 
   return {
-    user: store.user,
-    isAuthenticated: store.isAuthenticated,
-    isLoading: store.isLoading,
-    isBootstrapped: store.isBootstrapped,
+    user,
+    isAuthenticated,
+    isLoading,
+    isBootstrapped,
   };
 }

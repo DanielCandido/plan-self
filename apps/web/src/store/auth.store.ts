@@ -8,7 +8,7 @@ import {
   loginRequest,
   logoutRequest,
 } from '@/lib/auth';
-import { setAccessToken } from '@/lib/api';
+import { setAccessToken as applyAccessToken } from '@/lib/api';
 import { storage } from '@/lib/storage';
 
 interface AuthState {
@@ -39,7 +39,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await loginRequest(payload);
-      setAccessToken(response.accessToken);
+      applyAccessToken(response.accessToken);
 
       if (payload.rememberMe) {
         storage.setRememberMe(true);
@@ -91,7 +91,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   setAccessToken: (token: string | null) => {
-    setAccessToken(token);
+    applyAccessToken(token);
     set({ accessToken: token });
   },
 
