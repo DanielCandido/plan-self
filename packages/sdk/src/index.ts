@@ -1,10 +1,16 @@
+import { DashboardClient } from './dashboard';
+
 export interface PlanSelfClientOptions {
   baseUrl: string;
   token?: string;
 }
 
 export class PlanSelfClient {
-  constructor(private readonly options: PlanSelfClientOptions) {}
+  readonly dashboard: DashboardClient;
+
+  constructor(private readonly options: PlanSelfClientOptions) {
+    this.dashboard = new DashboardClient(() => this.options);
+  }
 
   async getHealth() {
     const response = await fetch(`${this.options.baseUrl}/health`, {
@@ -18,3 +24,5 @@ export class PlanSelfClient {
     return response.json();
   }
 }
+
+export { DashboardClient } from './dashboard';

@@ -10,6 +10,9 @@
     "lint": "tsc --noEmit -p tsconfig.json",
     "test": "node --test"
   },
+  "dependencies": {
+    "@plan-self/types": "*"
+  },
   "devDependencies": {
     "@types/node": "^22.5.5"
   }
