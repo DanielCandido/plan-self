@@ -234,7 +234,7 @@ export function useSprintBoard(projectId: string) {
 
     return Array.from(groups.values()).map((group) => ({
       ...group,
-      totalStoryPoints: group.tasks.reduce((sum, task) => sum + task.storyPoints, 0),
+      totalStoryPoints: group.tasks.reduce((sum, task) => sum + (task.storyPoints ?? 0), 0),
       taskCount: group.tasks.length,
     }));
   }, [backlogItems]);

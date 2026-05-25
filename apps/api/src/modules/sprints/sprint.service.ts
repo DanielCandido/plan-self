@@ -27,6 +27,7 @@ import {
   canManageSprint,
   canMoveTask,
   computeSprintMetrics,
+  validateSprintWindow,
   type SprintMetricTaskInput,
 } from './sprint.rules';
 
@@ -121,7 +122,7 @@ export class SprintService {
       id: group.id,
       name: group.name,
       color: group.color,
-      totalStoryPoints: group.tasks.reduce((sum, task) => sum + task.storyPoints, 0),
+      totalStoryPoints: group.tasks.reduce((sum, task) => sum + (task.storyPoints ?? 0), 0),
       taskCount: group.tasks.length,
       tasks: group.tasks,
     }));
@@ -763,25 +764,7 @@ export class SprintService {
       throw new BadRequestException('Datas inválidas para a sprint');
     }
 
-    if (startDate >= endDate) {
-      throw new BadRequestException('A sprint precisa possuir data válida');
-    }
-
-    const durationDays = calculateDurationDays(startDate, endDate);
-    if (durationDays < 1) {
-      throw new BadRequestException('A sprint precisa ter no mínimo 1 dia');
-    }
-
-    if (durationDays > MAX_SPRINT_DURATION_DAYS) {
-      throw new BadRequestException('A sprint ultrapassa a duração máxima configurada');
-    }
-
-    const now = new Date();
-    if (startDate.getTime() < now.getTime()) {
-      throw new BadRequestException('A sprint não pode iniciar no passado');
-    }
-
-    return durationDays;
+    return validateSprintWindow(startDate, endDate, new Date(), MAX_SPRINT_DURATION_DAYS);
   }
 
   private async getHistoricalVelocity(projectId: string) {

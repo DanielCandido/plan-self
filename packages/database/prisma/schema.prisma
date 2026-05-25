@@ -168,7 +168,7 @@ model Sprint {
   healthScore     Int                @default(100)
   burndown        Json?
   status          SprintStatus       @default(PLANNING)
-  createdBy       String
+  createdBy       String             @default("system")
   completedAt     DateTime?
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
