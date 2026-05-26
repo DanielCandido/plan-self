@@ -6,13 +6,35 @@ import type { CurrentUserPayload } from '../auth/types/current-user.type';
 export class ProjectsService {
   constructor(private readonly repository: ProjectsRepository) {}
 
-  async listProjects(organizationId: string, query: { page?: number; perPage?: number; q?: string; teamId?: string }) {
+  async listProjects(
+    organizationId: string,
+    query: {
+      page?: number;
+      perPage?: number;
+      q?: string;
+      teamId?: string;
+      ownerId?: string;
+      status?: string;
+      priority?: string;
+      sortBy?: string;
+      order?: 'asc' | 'desc';
+    },
+  ) {
     const page = query.page ?? 0;
     const perPage = query.perPage ?? 12;
     const search = query.q ?? '';
     const teamId = query.teamId;
+    const ownerId = query.ownerId;
+    const status = query.status;
+    const priority = query.priority;
+    const sortBy = query.sortBy;
+    const order = query.order ?? 'desc';
 
-    return this.repository.listProjects(organizationId, { page, perPage, search, teamId });
+    return this.repository.listProjects(organizationId, { page, perPage, search, teamId, ownerId, status, priority, sortBy, order });
+  }
+
+  async findById(projectId: string, organizationId: string) {
+    return this.repository.findById(projectId, organizationId);
   }
 
   async getCounts(organizationId: string) {
@@ -46,5 +68,51 @@ export class ProjectsService {
     }
 
     return this.repository.setArchived(projectId, currentUser.organizationId, archive);
+  }
+
+  async listProjectMembers(projectId: string, currentUser: CurrentUserPayload) {
+    return this.repository.listProjectMembers(projectId, currentUser.organizationId);
+  }
+
+  async addProjectMember(projectId: string, currentUser: CurrentUserPayload, dto: { userId: string; role?: string }) {
+    return this.repository.addProjectMember(projectId, currentUser.organizationId, dto);
+  }
+
+  async removeProjectMember(projectId: string, userId: string, currentUser: CurrentUserPayload) {
+    return this.repository.removeProjectMember(projectId, currentUser.organizationId, userId);
+  }
+
+  async listAvailableProjectUsers(projectId: string, currentUser: CurrentUserPayload, search: string) {
+    return this.repository.listAvailableProjectUsers(projectId, currentUser.organizationId, search);
+  }
+
+  async listProjectTasks(
+    projectId: string,
+    currentUser: CurrentUserPayload,
+    query: { page?: number; perPage?: number; q?: string; state?: string; priority?: string; assigneeId?: string },
+  ) {
+    return this.repository.listProjectTasks(projectId, currentUser.organizationId, {
+      page: query.page ?? 0,
+      perPage: query.perPage ?? 20,
+      search: query.q ?? '',
+      state: query.state,
+      priority: query.priority,
+      assigneeId: query.assigneeId,
+    });
+  }
+
+  async createProjectTask(
+    projectId: string,
+    currentUser: CurrentUserPayload,
+    dto: {
+      title: string;
+      description?: string;
+      priority?: string;
+      storyPoints?: number;
+      dueAt?: string;
+      assigneeIds?: string[];
+    },
+  ) {
+    return this.repository.createProjectTask(projectId, currentUser.organizationId, dto);
   }
 }

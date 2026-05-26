@@ -6,6 +6,7 @@ import { PlanSelfLogo } from './plan-self-logo';
 export interface WorkspaceNavItem {
   label: string;
   active?: boolean;
+  href?: string;
 }
 
 interface WorkspaceLayoutProps {
@@ -15,6 +16,7 @@ interface WorkspaceLayoutProps {
   header?: ReactNode;
   children: ReactNode;
   sidebarFooter?: ReactNode;
+  onNewProject?: () => void;
   sidebarClassName?: string;
   desktopSidebarVisibilityClassName?: string;
   contentOffsetClassName?: string;
@@ -29,6 +31,7 @@ export function WorkspaceLayout({
   header,
   children,
   sidebarFooter,
+  onNewProject,
   sidebarClassName = 'w-64',
   desktopSidebarVisibilityClassName = 'md:block',
   contentOffsetClassName = 'md:ml-64',
@@ -36,7 +39,12 @@ export function WorkspaceLayout({
   mainClassName = 'bg-[#12131a]',
 }: WorkspaceLayoutProps) {
   const sidebarBody = (
-    <SidebarContent navItems={navItems} footer={sidebarFooter} onSelect={onSidebarChange ? () => onSidebarChange(false) : undefined} />
+    <SidebarContent
+      navItems={navItems}
+      footer={sidebarFooter}
+      onSelect={onSidebarChange ? () => onSidebarChange(false) : undefined}
+      onNewProject={onNewProject}
+    />
   );
 
   return (
@@ -72,10 +80,12 @@ function SidebarContent({
   navItems,
   footer,
   onSelect,
+  onNewProject,
 }: {
   navItems: WorkspaceNavItem[];
   footer?: ReactNode;
   onSelect?: () => void;
+  onNewProject?: () => void;
 }) {
   return (
     <div className="flex h-full flex-col">
@@ -89,22 +99,49 @@ function SidebarContent({
 
       <nav className="space-y-1">
         {navItems.map((item) => (
-          <button
-            key={item.label}
-            type="button"
-            onClick={onSelect}
-            className={`flex w-full items-center rounded px-3 py-2 text-left text-sm transition ${
-              item.active
-                ? 'border border-[#d2bbff]/25 bg-[#d2bbff]/10 text-[#d2bbff]'
-                : 'border border-transparent text-white/70 hover:border-white/10 hover:bg-white/5 hover:text-white'
-            }`}
-          >
-            {item.label}
-          </button>
+          item.href ? (
+            <a
+              key={item.label}
+              href={item.href}
+              className={`flex w-full items-center rounded px-3 py-2 text-left text-sm transition ${
+                item.active
+                  ? 'border border-[#d2bbff]/25 bg-[#d2bbff]/10 text-[#d2bbff]'
+                  : 'border border-transparent text-white/70 hover:border-white/10 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              {item.label}
+            </a>
+          ) : (
+            <button
+              key={item.label}
+              type="button"
+              onClick={onSelect}
+              className={`flex w-full items-center rounded px-3 py-2 text-left text-sm transition ${
+                item.active
+                  ? 'border border-[#d2bbff]/25 bg-[#d2bbff]/10 text-[#d2bbff]'
+                  : 'border border-transparent text-white/70 hover:border-white/10 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              {item.label}
+            </button>
+          )
         ))}
       </nav>
 
-      {footer ? <div className="mt-auto">{footer}</div> : null}
+      {onNewProject || footer ? (
+        <div className="mt-auto space-y-4">
+          {onNewProject ? (
+            <button
+              type="button"
+              onClick={onNewProject}
+              className="w-full rounded-md bg-[#d2bbff]/85 px-3 py-3 text-sm font-medium text-[#271a43] transition hover:bg-[#d2bbff]"
+            >
+              New Project
+            </button>
+          ) : null}
+          {footer ? <div>{footer}</div> : null}
+        </div>
+      ) : null}
     </div>
   );
 }

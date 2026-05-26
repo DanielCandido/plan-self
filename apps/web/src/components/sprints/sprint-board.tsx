@@ -183,11 +183,11 @@ export function SprintBoard({
   return (
     <WorkspaceLayout
       navItems={[
-        { label: 'Dashboard' },
-        { label: 'My Tasks' },
-        { label: 'Projects', active: true },
-        { label: 'Team' },
-        { label: 'Reports' },
+        { label: 'Dashboard', href: '/dashboard' },
+        { label: 'My Tasks', href: '/my-tasks' },
+        { label: 'Projects', href: '/projects', active: true },
+        { label: 'Team', href: '/team' },
+        { label: 'Reports', href: '/reports' },
       ]}
       sidebarFooter={
         <div className="space-y-3 px-1 text-sm text-white/45">

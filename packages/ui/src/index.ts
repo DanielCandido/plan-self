@@ -7,3 +7,5 @@ export * from './components/pages/dashboard/dashboard-error-state';
 export * from './components/pages/dashboard/dashboard-skeleton';
 export * from './components/pages/sprints/sprint-error-state';
 export * from './components/pages/sprints/sprint-skeleton';
+export * from './components/pages/projects/projects-error-state';
+export * from './components/pages/projects/projects-skeleton';
