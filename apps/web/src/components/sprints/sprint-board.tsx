@@ -28,6 +28,10 @@ import { useBacklogStore } from '@/store/backlog.store';
 import { useDragStore } from '@/store/drag.store';
 import { useSprintStore } from '@/store/sprint.store';
 
+const SPRINT_CONTAINER_ID = 'sprint-container';
+const BACKLOG_CONTAINER_ID = 'backlog-container';
+const SPRINT_DROPZONE_ID = 'sprint-dropzone';
+
 export function SprintBoard({
   projectId,
   board,
@@ -65,10 +69,6 @@ export function SprintBoard({
   fetchNextPage: () => Promise<unknown>;
   isFetchingNextPage?: boolean;
 }) {
-  const SPRINT_CONTAINER_ID = 'sprint-container';
-  const BACKLOG_CONTAINER_ID = 'backlog-container';
-  const SPRINT_DROPZONE_ID = 'sprint-dropzone';
-
   const activeModal = useSprintStore((state) => state.activeModal);
   const setActiveModal = useSprintStore((state) => state.setActiveModal);
   const commandOpen = useSprintStore((state) => state.commandOpen);
