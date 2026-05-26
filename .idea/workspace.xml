@@ -4,21 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15f29a31-c143-4c09-909b-801b83a10458" name="Changes" comment="feat: add design system for Precision Minimalism with color palette, typography, and layout guidelines">
-      <change afterPath="$PROJECT_DIR$/apps/api/src/modules/projects/dto/archive-project.dto.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/api/src/modules/projects/dto/create-project.dto.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/api/src/modules/projects/dto/projects-list-query.dto.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/api/src/modules/projects/dto/update-project.dto.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/api/src/modules/projects/projects.controller.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/api/src/modules/projects/projects.module.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/api/src/modules/projects/projects.repository.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/api/src/modules/projects/projects.service.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/packages/database/prisma/migrations/20260525221519_project/migration.sql" afterDir="false" />
+    <list default="true" id="15f29a31-c143-4c09-909b-801b83a10458" name="Changes" comment="feat: add Projects module with CRUD operations and database migration for project management">
+      <change afterPath="$PROJECT_DIR$/apps/web/src/app/not-found.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/api/src/app.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/app.module.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/database/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/packages/database/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/database/prisma/schema.prisma" beforeDir="false" afterPath="$PROJECT_DIR$/packages/database/prisma/schema.prisma" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/api/src/modules/sprints/dto/move-task.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/modules/sprints/dto/move-task.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/api/src/modules/sprints/dto/reorder-task.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/modules/sprints/dto/reorder-task.dto.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -28,7 +18,7 @@
   <component name="CopilotChats">
     <option name="panelChat">
       <chat>
-        <option name="activeSessionId" value="6cf1be47-725e-4297-b69c-343370154a66" />
+        <option name="activeSessionId" value="1aaba15c-beb9-4433-b5f6-fe5270dbae30" />
         <option name="sessions">
           <session>
             <option name="chatType" value="PANEL" />
@@ -181,6 +171,7 @@
       <workItem from="1779657694495" duration="7481000" />
       <workItem from="1779717915605" duration="1726000" />
       <workItem from="1779737568279" duration="8903000" />
+      <workItem from="1779817138416" duration="3897000" />
     </task>
     <task id="LOCAL-00001" summary="feat: add initial database migration with tables and enums for organization, team, user, and task management">
       <option name="closed" value="true" />

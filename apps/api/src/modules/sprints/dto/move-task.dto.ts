@@ -1,4 +1,4 @@
-import { IsArray, IsInt, IsOptional, Min } from 'class-validator';
+import {IsArray, IsInt, IsOptional, IsString, Min} from 'class-validator';
 import { IsCuid } from '@plan-self/utils';
 
 export class MoveTaskDto {
@@ -6,7 +6,6 @@ export class MoveTaskDto {
   projectId!: string;
 
   @IsArray()
-  @IsCuid()
   taskIds!: string[];
 
   @IsOptional()
