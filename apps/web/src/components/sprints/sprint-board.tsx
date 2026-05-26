@@ -14,6 +14,7 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { toast } from 'sonner';
 import type { CreateSprintPayload, ProjectSprintBoardResponse, SprintTask, SprintSummary } from '@plan-self/types';
 import { BacklogPanel } from './backlog-panel';
 import { CompleteSprintModal } from './complete-sprint-modal';
@@ -153,6 +154,7 @@ export function SprintBoard({
     const movingIds = draggingTaskIds.length > 0 ? draggingTaskIds : [activeId];
 
     if (overContainer === 'sprint' && !activeSprint?.id) {
+      toast.info('Please create a sprint first to move tasks from the backlog.');
       setDraggingTaskIds([]);
       return;
     }
@@ -162,8 +164,10 @@ export function SprintBoard({
       const currentIds = source.map((task) => task.id);
       const oldIndex = currentIds.indexOf(activeId);
       let newIndex = currentIds.indexOf(overId);
-      if (newIndex === -1) {
-        newIndex = Math.max(currentIds.length - 1, 0);
+      const droppedOnContainer =
+        overId === SPRINT_CONTAINER_ID || overId === BACKLOG_CONTAINER_ID || overId === SPRINT_DROPZONE_ID;
+      if (newIndex === -1 && droppedOnContainer) {
+        newIndex = currentIds.length;
       }
       if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
         const orderedTaskIds = arrayMove(currentIds, oldIndex, newIndex);

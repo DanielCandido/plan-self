@@ -22,6 +22,18 @@ type FormOutput = z.output<typeof schema>;
 
 const COLOR_PRESETS = ['#7c3aed', '#0ea5e9', '#f59e0b', '#10b981', '#ef4444', '#ec4899', '#6366f1', '#14b8a6'];
 
+function resolveInitialOption(
+  enabled: boolean,
+  initialId: string | null | undefined,
+  initialName: string | null | undefined,
+) {
+  if (!enabled || !initialId || !initialName) {
+    return null;
+  }
+
+  return { id: initialId, name: initialName };
+}
+
 export function ProjectFormModal({
   open,
   title,
@@ -45,6 +57,22 @@ export function ProjectFormModal({
     ownerSearch,
     teamSearch,
     open,
+  );
+  const shouldShowInitialOwnerOption =
+    Boolean(initialProject?.ownerId && initialProject?.owner?.name) &&
+    !ownerOptions.some((item) => item.id === initialProject?.ownerId);
+  const shouldShowInitialTeamOption =
+    Boolean(initialProject?.teamId && initialProject?.team?.name) &&
+    !teamOptions.some((item) => item.id === initialProject?.teamId);
+  const initialOwnerOption = resolveInitialOption(
+    shouldShowInitialOwnerOption,
+    initialProject?.ownerId,
+    initialProject?.owner?.name,
+  );
+  const initialTeamOption = resolveInitialOption(
+    shouldShowInitialTeamOption,
+    initialProject?.teamId,
+    initialProject?.team?.name,
   );
   const form = useForm<FormValues, unknown, FormOutput>({
     resolver: zodResolver(schema),
@@ -166,10 +194,8 @@ export function ProjectFormModal({
                 />
                 <select {...form.register('ownerId')} className={inputClass}>
                   <option value="">No owner</option>
-                  {initialProject?.ownerId && initialProject?.owner?.name && !ownerOptions.some((item) => item.id === initialProject.ownerId) ? (
-                    <option value={initialProject.ownerId}>
-                      {initialProject.owner.name}
-                    </option>
+                  {initialOwnerOption ? (
+                    <option value={initialOwnerOption.id}>{initialOwnerOption.name}</option>
                   ) : null}
                   {ownerOptions.map((owner) => (
                     <option key={owner.id} value={owner.id}>
@@ -190,10 +216,8 @@ export function ProjectFormModal({
                 />
                 <select {...form.register('teamId')} className={inputClass}>
                   <option value="">No team</option>
-                  {initialProject?.teamId && initialProject?.team?.name && !teamOptions.some((item) => item.id === initialProject.teamId) ? (
-                    <option value={initialProject.teamId}>
-                      {initialProject.team.name}
-                    </option>
+                  {initialTeamOption ? (
+                    <option value={initialTeamOption.id}>{initialTeamOption.name}</option>
                   ) : null}
                   {teamOptions.map((team) => (
                     <option key={team.id} value={team.id}>

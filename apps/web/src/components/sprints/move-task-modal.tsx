@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { SprintSummary, SprintTask } from '@plan-self/types';
 
 export function MoveTaskModal({
