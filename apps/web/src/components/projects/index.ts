@@ -4,6 +4,7 @@ export * from './edit-project-modal';
 export * from './project-card';
 export * from './project-filters';
 export * from './project-grid';
+export * from './projects-header';
 export * from './project-members-modal';
 export * from './project-progress-bar';
 export * from './project-status-badge';

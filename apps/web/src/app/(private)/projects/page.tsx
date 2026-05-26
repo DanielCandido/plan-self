@@ -10,22 +10,14 @@ import {
   EditProjectModal,
   ProjectFilters,
   ProjectGrid,
+  ProjectsHeader,
   ProjectMembersModal,
 } from '@/components/projects';
 import {
   ClientErrorBoundary,
   ProjectsErrorState,
   ProjectsSkeleton,
-  WorkspaceLayout,
 } from '@plan-self/ui';
-
-const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/dashboard' },
-  { label: 'My Tasks', href: '/my-tasks' },
-  { label: 'Projects', href: '/projects', active: true },
-  { label: 'Team', href: '/team' },
-  { label: 'Reports', href: '/reports' },
-];
 
 export default function ProjectsPage() {
   useSession();
@@ -82,54 +74,9 @@ function ProjectsPageContent() {
   if (isError) return <ProjectsErrorState />;
 
   return (
-    <WorkspaceLayout
-      navItems={NAV_ITEMS}
-      onNewProject={() => setActiveModal('create')}
-      sidebarFooter={
-        <div className="space-y-4 border-t border-white/10 pt-6 text-sm text-white/55">
-          <button type="button" className="block hover:text-white">
-            Help
-          </button>
-          <button type="button" className="block hover:text-white">
-            Logout
-          </button>
-        </div>
-      }
-      mainClassName="bg-[#0b0d16]"
-      header={
-        <div className="mx-auto mb-8 flex max-w-[1600px] items-start justify-between gap-4 border-b border-white/10 pb-6">
-          <div className="max-w-3xl">
-            <h1 className="text-6xl font-semibold tracking-tight text-white">Projects</h1>
-            <p className="mt-3 text-3xl text-white/65">
-              Overview of all active organizational initiatives and their current trajectory.
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <button
-              type="button"
-              className="rounded-md border border-white/15 bg-white/[0.03] px-4 py-3 text-base text-white/80"
-              onClick={() => setSearchTerm('')}
-            >
-              Clear
-            </button>
-          </div>
-        </div>
-      }
-      contentClassName="py-8 xl:px-8"
-      sidebarClassName="w-80"
-      desktopSidebarVisibilityClassName="xl:flex xl:flex-col"
-      contentOffsetClassName="xl:ml-80"
-    >
+    <>
+      <ProjectsHeader searchTerm={searchTerm} onSearchChange={setSearchTerm} onClear={() => setSearchTerm('')} />
       <div className="mx-auto max-w-[1600px]">
-        <div className="mb-5">
-          <input
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Search projects, files..."
-            className="w-full max-w-[540px] rounded-md border border-white/10 bg-white/[0.03] px-5 py-3 text-xl text-white/85 outline-none"
-          />
-        </div>
-
         <ProjectFilters
           totalCount={totalCount}
           status={filterStatus}
@@ -203,6 +150,6 @@ function ProjectsPageContent() {
           await members.removeMember(userId);
         }}
       />
-    </WorkspaceLayout>
+    </>
   );
 }

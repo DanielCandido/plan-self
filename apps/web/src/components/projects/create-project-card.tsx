@@ -10,7 +10,7 @@ export function CreateProjectCard({ onClick }: { onClick: () => void }) {
       <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 text-2xl text-white/80">
         +
       </div>
-      <p className="text-3xl font-semibold text-white">Create New Project</p>
+      <p className="text-2xl font-semibold text-white">Create New Project</p>
       <p className="mt-2 text-xl text-white/65">Start a new initiative from template</p>
     </button>
   );

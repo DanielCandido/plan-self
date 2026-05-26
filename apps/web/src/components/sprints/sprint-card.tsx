@@ -10,12 +10,14 @@ export function SprintCard({
   onSelectTask,
   onQuickEditTask,
   isDropActive,
+  dropzoneId,
 }: {
   sprint: SprintSummary | null;
   selectedTaskIds: string[];
   onSelectTask: (taskId: string, multi?: boolean) => void;
   onQuickEditTask: (taskId: string) => void;
   isDropActive: boolean;
+  dropzoneId?: string;
 }) {
   if (!sprint) {
     return (
@@ -33,7 +35,7 @@ export function SprintCard({
         <div>
           <div className="flex items-center gap-3">
             <span className="text-[#d7c4ff]">⚡</span>
-            <h2 className="text-4xl font-semibold tracking-tight text-white">{sprint.name}</h2>
+            <h2 className="text-2xl font-semibold tracking-tight text-white">{sprint.name}</h2>
             <span className="rounded-full bg-[#8ad4ff]/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[#8ad4ff]">
               {sprint.status}
             </span>
@@ -72,7 +74,7 @@ export function SprintCard({
             onQuickEdit={onQuickEditTask}
           />
         ))}
-        <SprintDropzone isOver={isDropActive} />
+        <SprintDropzone id={dropzoneId} isOver={isDropActive} />
       </div>
     </section>
   );

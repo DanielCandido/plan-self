@@ -1,5 +1,6 @@
 export * from './components/kanban-column';
 export * from './components/layout/plan-self-logo';
+export * from './components/layout/page-header-shell';
 export * from './components/layout/workspace-layout';
 export * from './components/common/client-error-boundary';
 export * from './components/pages/dashboard/dashboard-command-palette';

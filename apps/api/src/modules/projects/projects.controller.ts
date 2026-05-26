@@ -12,6 +12,7 @@ import { AddProjectMemberDto } from './dto/add-project-member.dto';
 import { ListProjectTasksQueryDto } from './dto/list-project-tasks-query.dto';
 import { CreateProjectTaskDto } from './dto/create-project-task.dto';
 import { ListProjectUsersQueryDto } from './dto/list-project-users-query.dto';
+import { ListProjectOptionsQueryDto } from './dto/list-project-options-query.dto';
 
 @ApiTags('projects')
 @ApiBearerAuth()
@@ -30,6 +31,24 @@ export class ProjectsController {
   @ApiOperation({ summary: 'Retorna contagens agregadas para a visão de Projects' })
   getCounts(@CurrentUser() currentUser: CurrentUserPayload) {
     return this.projectsService.getCounts(currentUser.organizationId);
+  }
+
+  @Get('projects/options/owners')
+  @ApiOperation({ summary: 'Lista owners elegíveis para formulários de projeto' })
+  listProjectOwnerOptions(
+    @CurrentUser() currentUser: CurrentUserPayload,
+    @Query() query: ListProjectOptionsQueryDto,
+  ) {
+    return this.projectsService.listProjectOwners(currentUser.organizationId, query.q, query.limit);
+  }
+
+  @Get('projects/options/teams')
+  @ApiOperation({ summary: 'Lista equipes da organização para formulários de projeto' })
+  listProjectTeamOptions(
+    @CurrentUser() currentUser: CurrentUserPayload,
+    @Query() query: ListProjectOptionsQueryDto,
+  ) {
+    return this.projectsService.listProjectTeams(currentUser.organizationId, query.q, query.limit);
   }
 
   @Get('projects/:id')

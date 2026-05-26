@@ -39,7 +39,7 @@ export default function LoginPage() {
           transition={{ duration: 0.35, delay: 0.1 }}
           className="mb-6 text-center"
         >
-          <h1 className="text-[22px] font-semibold tracking-tight text-white">
+          <h1 className="text-2xl font-semibold tracking-tight text-white">
             Bem-vindo de volta
           </h1>
           <p className="mt-1 text-sm text-[#d2bbff]/55">
@@ -64,7 +64,7 @@ export default function LoginPage() {
           className="my-5 flex items-center gap-3"
         >
           <div className="h-px flex-1 bg-white/[0.07]" />
-          <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#d2bbff]/35">
+          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[#d2bbff]/35">
             OU USE E-MAIL
           </span>
           <div className="h-px flex-1 bg-white/[0.07]" />
@@ -91,7 +91,7 @@ export default function LoginPage() {
           <a
             key={link}
             href="#"
-            className="text-[10px] font-medium uppercase tracking-[0.1em] text-[#d2bbff]/30 transition-colors hover:text-[#d2bbff]/60"
+            className="text-xs font-medium uppercase tracking-[0.1em] text-[#d2bbff]/30 transition-colors hover:text-[#d2bbff]/60"
           >
             {link}
           </a>

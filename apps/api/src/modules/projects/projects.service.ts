@@ -41,6 +41,14 @@ export class ProjectsService {
     return this.repository.getCounts(organizationId);
   }
 
+  async listProjectOwners(organizationId: string, search = '', limit = 25) {
+    return this.repository.listProjectOwnerOptions(organizationId, search, limit);
+  }
+
+  async listProjectTeams(organizationId: string, search = '', limit = 25) {
+    return this.repository.listProjectTeamOptions(organizationId, search, limit);
+  }
+
   async createProject(currentUser: CurrentUserPayload, dto: any) {
     const project = await this.repository.createProject(currentUser.organizationId, dto);
     return project;

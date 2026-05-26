@@ -100,6 +100,18 @@ export interface ProjectAvailableUser extends ProjectMember {
   isMember: boolean;
 }
 
+export interface ProjectOwnerOption {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+  role: string;
+}
+
+export interface ProjectTeamOption {
+  id: string;
+  name: string;
+}
+
 export interface ProjectTaskItem {
   id: string;
   title: string;

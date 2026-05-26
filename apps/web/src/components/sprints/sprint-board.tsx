@@ -26,7 +26,6 @@ import { SprintMetrics } from './sprint-metrics';
 import { useBacklogStore } from '@/store/backlog.store';
 import { useDragStore } from '@/store/drag.store';
 import { useSprintStore } from '@/store/sprint.store';
-import { WorkspaceLayout } from '@plan-self/ui';
 
 export function SprintBoard({
   projectId,
@@ -65,6 +64,10 @@ export function SprintBoard({
   fetchNextPage: () => Promise<unknown>;
   isFetchingNextPage?: boolean;
 }) {
+  const SPRINT_CONTAINER_ID = 'sprint-container';
+  const BACKLOG_CONTAINER_ID = 'backlog-container';
+  const SPRINT_DROPZONE_ID = 'sprint-dropzone';
+
   const activeModal = useSprintStore((state) => state.activeModal);
   const setActiveModal = useSprintStore((state) => state.setActiveModal);
   const commandOpen = useSprintStore((state) => state.commandOpen);
@@ -114,8 +117,14 @@ export function SprintBoard({
   }, [setCommandOpen]);
 
   const getContainer = (id: string) => {
-    if (id === 'backlog-container' || backlogItems.some((task) => task.id === id)) return 'backlog';
-    if (id === 'sprint-container' || sprintTasks.some((task) => task.id === id)) return 'sprint';
+    if (id === BACKLOG_CONTAINER_ID || backlogItems.some((task) => task.id === id)) return 'backlog';
+    if (
+      id === SPRINT_CONTAINER_ID ||
+      id === SPRINT_DROPZONE_ID ||
+      sprintTasks.some((task) => task.id === id)
+    ) {
+      return 'sprint';
+    }
     return null;
   };
 
@@ -143,11 +152,19 @@ export function SprintBoard({
 
     const movingIds = draggingTaskIds.length > 0 ? draggingTaskIds : [activeId];
 
+    if (overContainer === 'sprint' && !activeSprint?.id) {
+      setDraggingTaskIds([]);
+      return;
+    }
+
     if (activeContainer === overContainer) {
       const source = activeContainer === 'sprint' ? sprintTasks : backlogItems;
       const currentIds = source.map((task) => task.id);
       const oldIndex = currentIds.indexOf(activeId);
-      const newIndex = currentIds.indexOf(overId);
+      let newIndex = currentIds.indexOf(overId);
+      if (newIndex === -1) {
+        newIndex = Math.max(currentIds.length - 1, 0);
+      }
       if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
         const orderedTaskIds = arrayMove(currentIds, oldIndex, newIndex);
         await reorderTasks({
@@ -181,39 +198,18 @@ export function SprintBoard({
   };
 
   return (
-    <WorkspaceLayout
-      navItems={[
-        { label: 'Dashboard', href: '/dashboard' },
-        { label: 'My Tasks', href: '/my-tasks' },
-        { label: 'Projects', href: '/projects', active: true },
-        { label: 'Team', href: '/team' },
-        { label: 'Reports', href: '/reports' },
-      ]}
-      sidebarFooter={
-        <div className="space-y-3 px-1 text-sm text-white/45">
-          <div>Settings</div>
-          <div>Support</div>
-        </div>
-      }
-      mainClassName="bg-[#0d0e14]"
-      sidebarClassName="w-72"
-      desktopSidebarVisibilityClassName="xl:flex xl:flex-col"
-      contentOffsetClassName="xl:ml-72"
-      contentClassName="py-5 xl:px-8"
-      header={
-        <div className="mx-auto max-w-[1600px]">
-          <SprintHeader
-            projectName={board?.projectName ?? 'Sprint board'}
-            backlogCount={board?.backlogCount ?? backlogItems.length}
-            search={search}
-            onSearchChange={setSearch}
-            onOpenCreateSprint={() => setActiveModal('create')}
-            onOpenHistory={() => setActiveModal('history')}
-            onOpenCommand={() => setCommandOpen(true)}
-          />
-        </div>
-      }
-    >
+    <>
+      <div className="mx-auto max-w-[1600px]">
+        <SprintHeader
+          projectName={board?.projectName ?? 'Sprint board'}
+          backlogCount={board?.backlogCount ?? backlogItems.length}
+          search={search}
+          onSearchChange={setSearch}
+          onOpenCreateSprint={() => setActiveModal('create')}
+          onOpenHistory={() => setActiveModal('history')}
+          onOpenCommand={() => setCommandOpen(true)}
+        />
+      </div>
       <div className="mx-auto max-w-[1600px]">
         <div className="mb-4 flex gap-2 xl:hidden">
           <MobileTab active={mobileTab === 'sprint'} onClick={() => setMobileTab('sprint')}>Sprint</MobileTab>
@@ -224,7 +220,7 @@ export function SprintBoard({
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.85fr)]">
             <div className={`${mobileTab === 'backlog' ? 'hidden xl:block' : 'block'} space-y-4`}>
               <SortableContext items={sprintTasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
-                <div id="sprint-container">
+                <div id={SPRINT_CONTAINER_ID}>
                   <SprintCard
                     sprint={activeSprint}
                     selectedTaskIds={selectedTaskIds}
@@ -234,6 +230,7 @@ export function SprintBoard({
                       setActiveModal('move');
                     }}
                     isDropActive={draggingTaskIds.length > 0}
+                    dropzoneId={SPRINT_DROPZONE_ID}
                   />
                 </div>
               </SortableContext>
@@ -247,7 +244,7 @@ export function SprintBoard({
 
             <div className={`${mobileTab === 'sprint' ? 'hidden xl:block' : 'block'}`}>
               <SortableContext items={backlogItems.map((task) => task.id)} strategy={verticalListSortingStrategy}>
-                <div id="backlog-container">
+                <div id={BACKLOG_CONTAINER_ID}>
                   <BacklogPanel
                     groups={groupedBacklog}
                     selectedTaskIds={selectedTaskIds}
@@ -334,7 +331,7 @@ export function SprintBoard({
       >
         +
       </button>
-    </WorkspaceLayout>
+    </>
   );
 }
 

@@ -51,7 +51,7 @@ export function BacklogPanel({
     <aside className="rounded-[32px] border border-white/10 bg-[#101118] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.3)]">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-4xl font-semibold tracking-tight text-white">Backlog</h2>
+          <h2 className="text-2xl font-semibold tracking-tight text-white">Backlog</h2>
           <p className="mt-2 text-sm text-white/55">{total} tasks prontas para planejamento.</p>
         </div>
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-white/70">{total} items</div>
