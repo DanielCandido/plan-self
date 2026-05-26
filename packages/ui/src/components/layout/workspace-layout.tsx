@@ -10,6 +10,7 @@ export interface WorkspaceNavItem {
 }
 
 interface WorkspaceLayoutProps {
+  showSidebar?: boolean;
   sidebarOpen?: boolean;
   onSidebarChange?: (open: boolean) => void;
   navItems: WorkspaceNavItem[];
@@ -25,6 +26,7 @@ interface WorkspaceLayoutProps {
 }
 
 export function WorkspaceLayout({
+  showSidebar = true,
   sidebarOpen = false,
   onSidebarChange,
   navItems,
@@ -49,26 +51,30 @@ export function WorkspaceLayout({
 
   return (
     <main className={`min-h-screen text-white ${mainClassName}`}>
-      <aside
-        className={`fixed inset-y-0 left-0 z-30 hidden border-r border-white/10 bg-[#12131a]/95 p-4 backdrop-blur-xl ${sidebarClassName} ${desktopSidebarVisibilityClassName}`}
-      >
-        {sidebarBody}
-      </aside>
-
-      {onSidebarChange && sidebarOpen ? (
+      {showSidebar ? (
         <>
-          <button type="button" className="fixed inset-0 z-40 bg-black/60 md:hidden" onClick={() => onSidebarChange(false)}>
-            <span className="sr-only">Fechar barra lateral</span>
-          </button>
           <aside
-            className={`fixed inset-y-0 left-0 z-50 border-r border-white/10 bg-[#12131a]/95 p-4 backdrop-blur-xl md:hidden ${sidebarClassName}`}
+            className={`fixed inset-y-0 left-0 z-30 hidden border-r border-white/10 bg-[#12131a]/95 p-4 backdrop-blur-xl ${sidebarClassName} ${desktopSidebarVisibilityClassName}`}
           >
             {sidebarBody}
           </aside>
+
+          {onSidebarChange && sidebarOpen ? (
+            <>
+              <button type="button" className="fixed inset-0 z-40 bg-black/60 md:hidden" onClick={() => onSidebarChange(false)}>
+                <span className="sr-only">Fechar barra lateral</span>
+              </button>
+              <aside
+                className={`fixed inset-y-0 left-0 z-50 border-r border-white/10 bg-[#12131a]/95 p-4 backdrop-blur-xl md:hidden ${sidebarClassName}`}
+              >
+                {sidebarBody}
+              </aside>
+            </>
+          ) : null}
         </>
       ) : null}
 
-      <section className={`px-4 py-4 md:px-6 md:py-6 ${contentOffsetClassName} ${contentClassName ?? ''}`}>
+      <section className={`px-4 py-4 md:px-6 md:py-6 ${showSidebar ? contentOffsetClassName : ''} ${contentClassName ?? ''}`}>
         {header}
         {children}
       </section>

@@ -108,6 +108,67 @@ export class ProjectsRepository {
     return { total, withBacklog, completed };
   }
 
+  async listProjectOwnerOptions(organizationId: string, search = '', limit = 25) {
+    const searchTerm = search.trim();
+    const owners = await this.prisma.user.findMany({
+      where: {
+        organizationId,
+        status: 'ACTIVE',
+        ...(searchTerm
+          ? {
+              name: {
+                contains: searchTerm,
+                mode: 'insensitive',
+              },
+            }
+          : {}),
+      },
+      select: {
+        id: true,
+        name: true,
+        avatarUrl: true,
+        role: true,
+      },
+      orderBy: { name: 'asc' },
+      take: limit,
+    });
+
+    return owners.map((owner) => ({
+      id: owner.id,
+      name: owner.name,
+      avatarUrl: owner.avatarUrl,
+      role: owner.role,
+    }));
+  }
+
+  async listProjectTeamOptions(organizationId: string, search = '', limit = 25) {
+    const searchTerm = search.trim();
+    const teams = await this.prisma.team.findMany({
+      where: {
+        organizationId,
+        ...(searchTerm
+          ? {
+              name: {
+                contains: searchTerm,
+                mode: 'insensitive',
+              },
+            }
+          : {}),
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+      orderBy: { name: 'asc' },
+      take: limit,
+    });
+
+    return teams.map((team) => ({
+      id: team.id,
+      name: team.name,
+    }));
+  }
+
   async createProject(organizationId: string, data: { name: string; description?: string; teamId?: string; ownerId?: string; priority?: string; color?: string; status?: string }) {
     const project = await this.prisma.project.create({
       data: { ...data, organizationId },

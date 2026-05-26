@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { CreateProjectPayload, ProjectItem } from '@plan-self/types';
+import { useProjectFormOptions } from '@/hooks/use-projects';
 
 const schema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -20,6 +21,18 @@ type FormValues = z.input<typeof schema>;
 type FormOutput = z.output<typeof schema>;
 
 const COLOR_PRESETS = ['#7c3aed', '#0ea5e9', '#f59e0b', '#10b981', '#ef4444', '#ec4899', '#6366f1', '#14b8a6'];
+
+function resolveInitialOption(
+  enabled: boolean,
+  initialId: string | null | undefined,
+  initialName: string | null | undefined,
+) {
+  if (!enabled || !initialId || !initialName) {
+    return null;
+  }
+
+  return { id: initialId, name: initialName };
+}
 
 export function ProjectFormModal({
   open,
@@ -38,6 +51,29 @@ export function ProjectFormModal({
   onOpenChange: (open: boolean) => void;
   onSubmit: (payload: CreateProjectPayload) => Promise<void>;
 }) {
+  const [ownerSearch, setOwnerSearch] = useState('');
+  const [teamSearch, setTeamSearch] = useState('');
+  const { ownerOptions, teamOptions, isLoadingOwnerOptions, isLoadingTeamOptions } = useProjectFormOptions(
+    ownerSearch,
+    teamSearch,
+    open,
+  );
+  const shouldShowInitialOwnerOption =
+    Boolean(initialProject?.ownerId && initialProject?.owner?.name) &&
+    !ownerOptions.some((item) => item.id === initialProject?.ownerId);
+  const shouldShowInitialTeamOption =
+    Boolean(initialProject?.teamId && initialProject?.team?.name) &&
+    !teamOptions.some((item) => item.id === initialProject?.teamId);
+  const initialOwnerOption = resolveInitialOption(
+    shouldShowInitialOwnerOption,
+    initialProject?.ownerId,
+    initialProject?.owner?.name,
+  );
+  const initialTeamOption = resolveInitialOption(
+    shouldShowInitialTeamOption,
+    initialProject?.teamId,
+    initialProject?.team?.name,
+  );
   const form = useForm<FormValues, unknown, FormOutput>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -64,6 +100,13 @@ export function ProjectFormModal({
     });
   }, [initialProject, open, resetForm]);
 
+  useEffect(() => {
+    if (!open) {
+      setOwnerSearch('');
+      setTeamSearch('');
+    }
+  }, [open]);
+
   if (!open) return null;
 
   return (
@@ -71,7 +114,7 @@ export function ProjectFormModal({
       <button type="button" className="absolute inset-0" aria-label="Close" onClick={() => onOpenChange(false)} />
       <div className="relative z-10 w-full max-w-2xl rounded-[28px] border border-white/10 bg-[#101118] p-6">
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-3xl font-semibold text-white">{title}</h2>
+          <h2 className="text-2xl font-semibold text-white">{title}</h2>
           <button
             type="button"
             onClick={() => onOpenChange(false)}
@@ -141,11 +184,49 @@ export function ProjectFormModal({
           </Field>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Owner ID">
-              <input {...form.register('ownerId')} className={inputClass} placeholder="Optional" />
+            <Field label="Owner">
+              <div className="space-y-2">
+                <input
+                  value={ownerSearch}
+                  onChange={(event) => setOwnerSearch(event.target.value)}
+                  className={inputClass}
+                  placeholder="Search owner..."
+                />
+                <select {...form.register('ownerId')} className={inputClass}>
+                  <option value="">No owner</option>
+                  {initialOwnerOption ? (
+                    <option value={initialOwnerOption.id}>{initialOwnerOption.name}</option>
+                  ) : null}
+                  {ownerOptions.map((owner) => (
+                    <option key={owner.id} value={owner.id}>
+                      {owner.name}
+                    </option>
+                  ))}
+                </select>
+                {isLoadingOwnerOptions ? <p className="text-xs text-white/45">Loading owners...</p> : null}
+              </div>
             </Field>
-            <Field label="Team ID">
-              <input {...form.register('teamId')} className={inputClass} placeholder="Optional" />
+            <Field label="Team">
+              <div className="space-y-2">
+                <input
+                  value={teamSearch}
+                  onChange={(event) => setTeamSearch(event.target.value)}
+                  className={inputClass}
+                  placeholder="Search team..."
+                />
+                <select {...form.register('teamId')} className={inputClass}>
+                  <option value="">No team</option>
+                  {initialTeamOption ? (
+                    <option value={initialTeamOption.id}>{initialTeamOption.name}</option>
+                  ) : null}
+                  {teamOptions.map((team) => (
+                    <option key={team.id} value={team.id}>
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
+                {isLoadingTeamOptions ? <p className="text-xs text-white/45">Loading teams...</p> : null}
+              </div>
             </Field>
           </div>
 

@@ -16,7 +16,6 @@ import {
   DashboardCommandPalette,
   DashboardErrorState,
   DashboardSkeleton,
-  WorkspaceLayout,
 } from '@plan-self/ui';
 
 const ActivityFeed = dynamic(
@@ -29,14 +28,6 @@ const MyTasksCard = dynamic(
   { ssr: false },
 );
 
-const DASHBOARD_NAV_ITEMS = [
-  { label: 'Dashboard', href: '/dashboard', active: true },
-  { label: 'My Tasks', href: '/my-tasks' },
-  { label: 'Projects', href: '/projects' },
-  { label: 'Team', href: '/team' },
-  { label: 'Reports', href: '/reports' },
-];
-
 export default function DashboardPage() {
   useSession();
 
@@ -48,8 +39,6 @@ export default function DashboardPage() {
     isAuthenticated,
   } = useAuth();
 
-  const sidebarOpen = useDashboardStore((state) => state.sidebarOpen);
-  const setSidebarOpen = useDashboardStore((state) => state.setSidebarOpen);
   const searchTerm = useDashboardStore((state) => state.searchTerm);
   const setSearchTerm = useDashboardStore((state) => state.setSearchTerm);
   const commandOpen = useDashboardStore((state) => state.commandOpen);
@@ -73,8 +62,6 @@ export default function DashboardPage() {
           userName={user?.name}
           onLogout={logout}
           isLoggingOut={isAuthLoading}
-          sidebarOpen={sidebarOpen}
-          onSidebarChange={setSidebarOpen}
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
           commandOpen={commandOpen}
@@ -89,8 +76,6 @@ const DashboardContent = memo(function DashboardContent({
   userName,
   onLogout,
   isLoggingOut,
-  sidebarOpen,
-  onSidebarChange,
   searchTerm,
   onSearchChange,
   commandOpen,
@@ -99,8 +84,6 @@ const DashboardContent = memo(function DashboardContent({
   userName?: string;
   onLogout: () => Promise<void>;
   isLoggingOut: boolean;
-  sidebarOpen: boolean;
-  onSidebarChange: (open: boolean) => void;
   searchTerm: string;
   onSearchChange: (value: string) => void;
   commandOpen: boolean;
@@ -109,28 +92,15 @@ const DashboardContent = memo(function DashboardContent({
   const { data, rawData, isUpdatingTask, updateTaskStatus } = useDashboard();
 
   return (
-    <WorkspaceLayout
-      sidebarOpen={sidebarOpen}
-      onSidebarChange={onSidebarChange}
-      navItems={DASHBOARD_NAV_ITEMS}
-      sidebarFooter={
-        <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
-          <p className="text-xs text-white/60">Modo escuro ativo</p>
-          <p className="mt-1 text-xs text-[#89ceff]/85">Realtime conectado</p>
-        </div>
-      }
-      header={
-        <DashboardHeader
-          userName={userName}
-          searchTerm={searchTerm}
-          onSearchChange={onSearchChange}
-          onOpenCommand={() => onCommandChange(true)}
-          onToggleSidebar={() => onSidebarChange(!sidebarOpen)}
-          onLogout={onLogout}
-          isLoggingOut={isLoggingOut}
-        />
-      }
-    >
+    <>
+      <DashboardHeader
+        userName={userName}
+        searchTerm={searchTerm}
+        onSearchChange={onSearchChange}
+        onOpenCommand={() => onCommandChange(true)}
+        onLogout={onLogout}
+        isLoggingOut={isLoggingOut}
+      />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-12">
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="xl:col-span-5">
           <SprintCard sprint={data.sprint} />
@@ -185,6 +155,6 @@ const DashboardContent = memo(function DashboardContent({
         taskTitles={rawData.myTasks.map((task) => task.title)}
         activityTitles={rawData.recentActivities.map((activity) => activity.task ?? activity.type)}
       />
-    </WorkspaceLayout>
+    </>
   );
 });

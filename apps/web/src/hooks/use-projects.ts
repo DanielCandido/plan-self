@@ -9,6 +9,8 @@ import type {
   ListProjectsQuery,
   ProjectCountsResponse,
   ProjectItem,
+  ProjectOwnerOption,
+  ProjectTeamOption,
   ProjectListResponse,
   ProjectMember,
   ProjectAvailableUser,
@@ -21,6 +23,8 @@ const projectsQueryKey = (query: ListProjectsQuery) => ['projects', query] as co
 const projectCountsQueryKey = ['projects', 'counts'] as const;
 const projectMembersQueryKey = (projectId: string) => ['projects', projectId, 'members'] as const;
 const projectUsersQueryKey = (projectId: string, search: string) => ['projects', projectId, 'users', search] as const;
+const projectOwnerOptionsQueryKey = (search: string) => ['projects', 'options', 'owners', search] as const;
+const projectTeamOptionsQueryKey = (search: string) => ['projects', 'options', 'teams', search] as const;
 
 export function useProjects() {
   const queryClient = useQueryClient();
@@ -194,5 +198,38 @@ export function useProjectMembers(projectId: string | null, search = '') {
     isAddingMember: addMember.isPending,
     removeMember: removeMember.mutateAsync,
     isRemovingMember: removeMember.isPending,
+  };
+}
+
+export function useProjectFormOptions(ownerSearch = '', teamSearch = '', enabled = true) {
+  const owners = useQuery({
+    queryKey: projectOwnerOptionsQueryKey(ownerSearch),
+    queryFn: async () => {
+      const { data } = await apiClient.get<ProjectOwnerOption[]>('/projects/options/owners', {
+        params: { q: ownerSearch, limit: 50 },
+      });
+      return data;
+    },
+    staleTime: 20_000,
+    enabled,
+  });
+
+  const teams = useQuery({
+    queryKey: projectTeamOptionsQueryKey(teamSearch),
+    queryFn: async () => {
+      const { data } = await apiClient.get<ProjectTeamOption[]>('/projects/options/teams', {
+        params: { q: teamSearch, limit: 50 },
+      });
+      return data;
+    },
+    staleTime: 20_000,
+    enabled,
+  });
+
+  return {
+    ownerOptions: owners.data ?? [],
+    teamOptions: teams.data ?? [],
+    isLoadingOwnerOptions: owners.isLoading,
+    isLoadingTeamOptions: teams.isLoading,
   };
 }

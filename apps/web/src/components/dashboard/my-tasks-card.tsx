@@ -35,7 +35,7 @@ export const MyTasksCard = memo(function MyTasksCard({
                     {task.dueDate ? ` • Vence em ${new Date(task.dueDate).toLocaleDateString('pt-BR')}` : ''}
                   </p>
                 </div>
-                <span className={`rounded px-2 py-0.5 text-[10px] font-semibold ${statusClass(task.status)}`}>
+                <span className={`rounded px-2 py-0.5 text-xs font-semibold ${statusClass(task.status)}`}>
                   {task.status}
                 </span>
               </div>
@@ -48,7 +48,7 @@ export const MyTasksCard = memo(function MyTasksCard({
                     onClick={() => {
                       void onUpdateStatus({ taskId: task.id, status: 'IN_PROGRESS' });
                     }}
-                    className="rounded border border-white/10 bg-white/5 px-2 py-1 text-[10px] text-white/80 transition hover:bg-white/10 disabled:opacity-60"
+                    className="rounded border border-white/10 bg-white/5 px-2 py-1 text-xs text-white/80 transition hover:bg-white/10 disabled:opacity-60"
                   >
                     Em andamento
                   </button>
@@ -60,7 +60,7 @@ export const MyTasksCard = memo(function MyTasksCard({
                     onClick={() => {
                       void onUpdateStatus({ taskId: task.id, status: 'DONE' });
                     }}
-                    className="rounded border border-emerald-400/35 bg-emerald-400/10 px-2 py-1 text-[10px] text-emerald-300 transition hover:bg-emerald-400/20 disabled:opacity-60"
+                    className="rounded border border-emerald-400/35 bg-emerald-400/10 px-2 py-1 text-xs text-emerald-300 transition hover:bg-emerald-400/20 disabled:opacity-60"
                   >
                     Concluir
                   </button>

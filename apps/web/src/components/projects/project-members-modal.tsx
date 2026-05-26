@@ -36,7 +36,7 @@ export function ProjectMembersModal({
       <div className="relative z-10 w-full max-w-3xl rounded-[28px] border border-white/10 bg-[#101118] p-6">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-semibold text-white">Project members</h2>
+            <h2 className="text-2xl font-semibold text-white">Project members</h2>
             <p className="mt-1 text-sm text-white/60">{projectName}</p>
           </div>
           <button

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { SprintSummary, SprintTask } from '@plan-self/types';
 
 export function MoveTaskModal({
@@ -20,10 +20,27 @@ export function MoveTaskModal({
   onUpdate: (taskId: string, payload: { title?: string; priority?: string; storyPoints?: number }) => Promise<void>;
   isSaving: boolean;
 }) {
-  const [title, setTitle] = useState(task?.title ?? '');
-  const [priority, setPriority] = useState(task?.priority ?? 'MEDIUM');
-  const [storyPoints, setStoryPoints] = useState(task?.storyPoints ?? 0);
-  const [targetSprintId, setTargetSprintId] = useState<string | null>(task?.sprintId ?? null);
+  const [title, setTitle] = useState('');
+  const [priority, setPriority] = useState('MEDIUM');
+  const [storyPoints, setStoryPoints] = useState(0);
+  const [targetSprintId, setTargetSprintId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open && task) {
+      setTitle(task.title ?? '');
+      setPriority(task.priority ?? 'MEDIUM');
+      setStoryPoints(task.storyPoints ?? 0);
+      setTargetSprintId(task.sprintId ?? null);
+      return;
+    }
+
+    if (!open) {
+      setTitle('');
+      setPriority('MEDIUM');
+      setStoryPoints(0);
+      setTargetSprintId(null);
+    }
+  }, [open, task]);
 
   if (!open || !task) return null;
 

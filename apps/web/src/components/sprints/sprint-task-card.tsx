@@ -58,7 +58,7 @@ export function SprintTaskCard({
           </button>
           <div className="min-w-14 rounded-2xl bg-white/[0.05] px-3 py-2 text-center text-sm font-semibold text-white/85">
             {task.storyPoints}
-            <p className="text-[10px] font-medium text-white/45">PTS</p>
+            <p className="text-xs font-medium text-white/45">PTS</p>
           </div>
           <button
             type="button"
