@@ -2,6 +2,8 @@
 
 import {
   closestCorners,
+  pointerWithin,
+  type CollisionDetection,
   DndContext,
   DragOverlay,
   KeyboardSensor,
@@ -14,7 +16,7 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import type { BoardTask, KanbanBoardResponse, MoveBoardTaskPayload, ReorderBoardTaskPayload } from '@plan-self/types';
 import { KanbanColumnPanel } from './kanban-column-panel';
@@ -39,12 +41,18 @@ export function KanbanBoard({
 
   const [activeTask, setActiveTask] = useState<BoardTask | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
+  const lastOverIdRef = useRef<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 120, tolerance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
+
+  const collisionDetection: CollisionDetection = (args) => {
+    const collisions = pointerWithin(args);
+    return collisions.length > 0 ? collisions : closestCorners(args);
+  };
 
   const allTasks = board.tasks;
   const taskMap = new Map(allTasks.map((task) => [task.id, task]));
@@ -59,19 +67,25 @@ export function KanbanBoard({
   const onDragStart = (event: DragStartEvent) => {
     const task = taskMap.get(String(event.active.id));
     setActiveTask(task ?? null);
+    lastOverIdRef.current = null;
   };
 
   const onDragOver = (event: DragOverEvent) => {
-    setOverId(event.over ? String(event.over.id) : null);
+    const nextOverId = event.over ? String(event.over.id) : null;
+    setOverId(nextOverId);
+
+    if (nextOverId) {
+      lastOverIdRef.current = nextOverId;
+    }
   };
 
   const onDragEnd = async (event: DragEndEvent) => {
+    const overIdStr = event.over ? String(event.over.id) : lastOverIdRef.current;
     setActiveTask(null);
     setOverId(null);
+    lastOverIdRef.current = null;
 
     const activeId = String(event.active.id);
-    const overIdStr = event.over ? String(event.over.id) : null;
-
     if (!overIdStr) return;
 
     const sourceColumnId = getColumnForId(activeId);
@@ -134,7 +148,7 @@ export function KanbanBoard({
       <div className="mx-auto max-w-[1600px]">
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCorners}
+          collisionDetection={collisionDetection}
           autoScroll
           onDragStart={onDragStart}
           onDragOver={onDragOver}
