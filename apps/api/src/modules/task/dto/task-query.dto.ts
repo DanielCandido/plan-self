@@ -1,6 +1,7 @@
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsCuid, IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsBoolean, IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 import { TaskState } from '@prisma/client';
+import { IsCuid } from '@plan-self/utils';
 
 export class TaskQueryDto {
   @IsCuid()

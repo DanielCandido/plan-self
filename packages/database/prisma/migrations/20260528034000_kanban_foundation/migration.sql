@@ -19,14 +19,22 @@ ALTER TABLE "Task"
   ADD COLUMN "deletedAt" TIMESTAMP(3);
 
 -- Backfill
-UPDATE "Task"
+WITH numbered_tasks AS (
+  SELECT
+    "id",
+    ROW_NUMBER() OVER (ORDER BY "createdAt", "id") AS "code_order"
+  FROM "Task"
+)
+UPDATE "Task" t
 SET
-  "status" = "state",
-  "position" = "sortOrder",
-  "points" = COALESCE("storyPoints", 0),
-  "blocked" = CASE WHEN "blockedReason" IS NULL OR LENGTH(TRIM("blockedReason")) = 0 THEN false ELSE true END,
-  "dueDate" = "dueAt",
-  "code" = CONCAT('PS-', UPPER(SUBSTRING("id" FROM GREATEST(LENGTH("id") - 3, 1) FOR 4)));
+  "status" = t."state",
+  "position" = t."sortOrder",
+  "points" = t."storyPoints",
+  "blocked" = CASE WHEN t."blockedReason" IS NULL OR LENGTH(TRIM(t."blockedReason")) = 0 THEN false ELSE true END,
+  "dueDate" = t."dueAt",
+  "code" = CONCAT('TSK-', LPAD(numbered_tasks."code_order"::text, 6, '0'))
+FROM numbered_tasks
+WHERE numbered_tasks."id" = t."id";
 
 -- CreateTable
 CREATE TABLE "Board" (

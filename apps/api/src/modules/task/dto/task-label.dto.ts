@@ -1,4 +1,5 @@
-import { IsCuid, IsHexColor, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsHexColor, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsCuid } from '@plan-self/utils';
 
 export class LabelQueryDto {
   @IsCuid()

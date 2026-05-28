@@ -106,8 +106,7 @@ export class BoardService {
           data: {
             position: index,
             sortOrder: index,
-            status: this.columnTypeToState(column.type),
-            state: this.columnTypeToState(column.type),
+            updatedBy: currentUser.id,
           },
         });
       }
@@ -163,6 +162,7 @@ export class BoardService {
           projectId: dto.projectId,
           boardColumnId: targetColumn.id,
           deletedAt: null,
+          ...(task.boardColumnId === targetColumn.id ? { id: { not: task.id } } : {}),
         },
       });
       if (activeCount >= targetColumn.wipLimit) {
@@ -191,6 +191,7 @@ export class BoardService {
           sortOrder: targetPosition,
           status: nextState,
           state: nextState,
+          updatedBy: currentUser.id,
         },
       });
 

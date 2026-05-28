@@ -3,7 +3,6 @@ import {
   ArrayMaxSize,
   IsArray,
   IsBoolean,
-  IsCuid,
   IsDateString,
   IsIn,
   IsInt,
@@ -13,6 +12,7 @@ import {
   Min,
 } from 'class-validator';
 import { TaskState } from '@prisma/client';
+import { IsCuid } from '@plan-self/utils';
 
 export class CreateTaskDto {
   @IsCuid()

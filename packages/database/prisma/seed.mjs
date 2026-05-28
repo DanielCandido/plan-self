@@ -2,6 +2,8 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
+const SPRINT_ELAPSED_DAYS = 2;
+const SPRINT_REMAINING_DAYS = 10;
 
 async function main() {
   const organization = await prisma.organization.upsert({
@@ -289,8 +291,8 @@ async function main() {
       projectId: project.id,
       name: 'Sprint 24 - Premium Kanban',
       status: 'ACTIVE',
-      startDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      endDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+      startDate: new Date(Date.now() - SPRINT_ELAPSED_DAYS * 24 * 60 * 60 * 1000),
+      endDate: new Date(Date.now() + SPRINT_REMAINING_DAYS * 24 * 60 * 60 * 1000),
       velocity: 34,
       storyPoints: 21,
       completedPoints: 8,
@@ -304,8 +306,8 @@ async function main() {
       projectId: project.id,
       name: 'Sprint 24 - Premium Kanban',
       status: 'ACTIVE',
-      startDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      endDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+      startDate: new Date(Date.now() - SPRINT_ELAPSED_DAYS * 24 * 60 * 60 * 1000),
+      endDate: new Date(Date.now() + SPRINT_REMAINING_DAYS * 24 * 60 * 60 * 1000),
       velocity: 34,
       storyPoints: 21,
       completedPoints: 8,

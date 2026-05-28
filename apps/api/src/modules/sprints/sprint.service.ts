@@ -947,7 +947,7 @@ export class SprintService {
   private mapTask(task: HydratedTask) {
     return {
       id: task.id,
-      code: task.code ?? `PS-${task.id.slice(-4).toUpperCase()}`,
+      code: task.code ?? `TSK-${task.id.slice(-4).toUpperCase()}`,
       projectId: task.projectId,
       title: task.title,
       description: task.description,
@@ -956,7 +956,6 @@ export class SprintService {
       priority: task.priority,
       storyPoints: task.storyPoints ?? task.story?.storyPoints ?? 0,
       sortOrder: task.sortOrder,
-      position: task.position,
       blockedReason: task.blockedReason,
       labels: this.parseLabels(task.labels),
       assignees: task.assignees.map(({ user }) => ({

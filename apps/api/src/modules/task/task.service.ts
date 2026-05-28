@@ -9,11 +9,52 @@ import { BoardColumnType, Prisma, TaskHistoryAction, TaskState } from '@prisma/c
 import type { CurrentUserPayload } from '../auth/types/current-user.type';
 import { PrismaService } from '../prisma/prisma.service';
 import { SprintGateway } from '../sprints/sprint.gateway';
+import type { CreateTaskCommentDto } from './dto/create-task-comment.dto';
 import type { CreateTaskDto } from './dto/create-task.dto';
+import type { CreateLabelDto, LabelQueryDto } from './dto/task-label.dto';
 import type { TaskQueryDto } from './dto/task-query.dto';
 import type { UpdateTaskRestDto } from './dto/update-task.dto';
-import type { CreateTaskCommentDto } from './dto/create-task-comment.dto';
-import type { CreateLabelDto, LabelQueryDto } from './dto/task-label.dto';
+
+const taskInclude = {
+  assignees: {
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          avatarUrl: true,
+        },
+      },
+    },
+  },
+  comments: {
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' as const },
+    take: 3,
+  },
+  boardColumn: {
+    select: {
+      id: true,
+      name: true,
+      type: true,
+    },
+  },
+  history: {
+    orderBy: { createdAt: 'desc' as const },
+    take: 10,
+  },
+} satisfies Prisma.TaskInclude;
+
+type TaskWithRelations = Prisma.TaskGetPayload<{ include: typeof taskInclude }>;
+const OPTIMISTIC_LOCK_TOLERANCE_MS = 1_000;
+const MAX_CODE_GENERATION_ATTEMPTS = 5;
 
 @Injectable()
 export class TaskService {
@@ -42,7 +83,7 @@ export class TaskService {
             }
           : {}),
       },
-      include: this.taskInclude,
+      include: taskInclude,
       orderBy: [{ position: 'asc' }, { createdAt: 'asc' }],
       take: query.limit,
     });
@@ -56,7 +97,7 @@ export class TaskService {
         id: taskId,
         project: { organizationId: currentUser.organizationId },
       },
-      include: this.taskInclude,
+      include: taskInclude,
     });
 
     if (!task) {
@@ -75,41 +116,36 @@ export class TaskService {
     const status = dto.status ?? this.columnTypeToState(boardColumn?.type);
     const position = dto.position ?? (await this.nextTaskPosition(dto.projectId, dto.boardColumnId ?? null));
 
-    const task = await this.prisma.task.create({
-      data: {
-        projectId: dto.projectId,
-        boardId: project.board?.id ?? null,
-        boardColumnId: dto.boardColumnId ?? null,
-        sprintId: dto.sprintId,
-        code: dto.code ?? this.generateTaskCode(),
-        title: dto.title,
-        description: dto.description,
-        status,
-        state: status,
-        position,
-        sortOrder: position,
-        priority: dto.priority ?? 'MEDIUM',
-        points: dto.points,
-        storyPoints: dto.points,
-        blocked: dto.blocked ?? Boolean(dto.blockedReason),
-        blockedReason: dto.blockedReason,
-        dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
-        dueAt: dto.dueDate ? new Date(dto.dueDate) : null,
-        labels: dto.labels ? (dto.labels.map((name) => ({ name })) as Prisma.InputJsonValue) : undefined,
-        createdBy: currentUser.id,
-        updatedBy: currentUser.id,
-        assignees:
-          dto.assigneeIds && dto.assigneeIds.length > 0
-            ? {
-                createMany: {
-                  data: dto.assigneeIds.map((userId) => ({ userId })),
-                  skipDuplicates: true,
-                },
-              }
-            : undefined,
-      },
-      include: this.taskInclude,
+    const task = await this.createTaskWithUniqueCode({
+      projectId: dto.projectId,
+      boardId: project.board?.id ?? null,
+      boardColumnId: dto.boardColumnId ?? null,
+      sprintId: dto.sprintId,
+      code: dto.code ?? this.generateTaskCode(),
+      title: dto.title,
+      description: dto.description,
+      status,
+      state: status,
+      position,
+      sortOrder: position,
+      priority: dto.priority ?? 'MEDIUM',
+      points: dto.points,
+      storyPoints: dto.points,
+      blocked: dto.blocked ?? Boolean(dto.blockedReason),
+      blockedReason: dto.blockedReason,
+      dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
+      dueAt: dto.dueDate ? new Date(dto.dueDate) : null,
+      labels: this.serializeLabels(dto.labels),
+      createdBy: currentUser.id,
+      updatedBy: currentUser.id,
     });
+
+    if (dto.assigneeIds && dto.assigneeIds.length > 0) {
+      await this.prisma.taskAssignee.createMany({
+        data: dto.assigneeIds.map((userId) => ({ taskId: task.id, userId })),
+        skipDuplicates: true,
+      });
+    }
 
     await this.persistLabelCatalog(currentUser, dto.projectId, dto.labels ?? []);
     await this.writeTaskHistory(task.id, currentUser.id, TaskHistoryAction.CREATED, {
@@ -131,7 +167,7 @@ export class TaskService {
         id: taskId,
         project: { organizationId: currentUser.organizationId },
       },
-      include: this.taskInclude,
+      include: taskInclude,
     });
 
     if (!current) {
@@ -142,8 +178,12 @@ export class TaskService {
       throw new BadRequestException('Task excluída não pode ser alterada');
     }
 
-    if (dto.updatedAt && new Date(dto.updatedAt).getTime() !== current.updatedAt.getTime()) {
-      throw new ConflictException('Task foi alterada por outro usuário');
+    if (dto.updatedAt) {
+      const requestUpdatedAt = new Date(dto.updatedAt).getTime();
+      const currentUpdatedAt = current.updatedAt.getTime();
+      if (Math.abs(requestUpdatedAt - currentUpdatedAt) > OPTIMISTIC_LOCK_TOLERANCE_MS) {
+        throw new ConflictException('Task foi alterada por outro usuário');
+      }
     }
 
     if (
@@ -175,7 +215,7 @@ export class TaskService {
         await this.persistLabelCatalog(currentUser, current.projectId, dto.labels, tx);
       }
 
-      const result = await tx.task.update({
+      return tx.task.update({
         where: { id: current.id },
         data: {
           title: dto.title,
@@ -193,12 +233,10 @@ export class TaskService {
           dueAt: dto.dueDate === undefined ? undefined : dto.dueDate ? new Date(dto.dueDate) : null,
           boardColumnId: dto.boardColumnId === undefined ? undefined : dto.boardColumnId,
           updatedBy: currentUser.id,
-          labels: dto.labels ? (dto.labels.map((name) => ({ name })) as Prisma.InputJsonValue) : undefined,
+          labels: this.serializeLabels(dto.labels),
         },
-        include: this.taskInclude,
+        include: taskInclude,
       });
-
-      return result;
     });
 
     await this.writeTaskHistory(updated.id, currentUser.id, TaskHistoryAction.UPDATED, {
@@ -315,12 +353,10 @@ export class TaskService {
   async listLabels(currentUser: CurrentUserPayload, query: LabelQueryDto) {
     await this.assertProjectScope(query.projectId, currentUser.organizationId);
 
-    const labels = await this.prisma.label.findMany({
+    return this.prisma.label.findMany({
       where: { projectId: query.projectId },
       orderBy: [{ name: 'asc' }],
     });
-
-    return labels;
   }
 
   async createLabel(currentUser: CurrentUserPayload, dto: CreateLabelDto) {
@@ -344,43 +380,6 @@ export class TaskService {
       },
     });
   }
-
-  private readonly taskInclude = {
-    assignees: {
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            avatarUrl: true,
-          },
-        },
-      },
-    },
-    comments: {
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' as const },
-      take: 3,
-    },
-    boardColumn: {
-      select: {
-        id: true,
-        name: true,
-        type: true,
-      },
-    },
-    history: {
-      orderBy: { createdAt: 'desc' as const },
-      take: 10,
-    },
-  } satisfies Prisma.TaskInclude;
 
   private async assertProjectScope(projectId: string, organizationId: string) {
     const project = await this.prisma.project.findFirst({
@@ -447,7 +446,9 @@ export class TaskService {
   }
 
   private generateTaskCode() {
-    return `TSK-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+    const timestamp = Date.now().toString(36).toUpperCase().slice(-4);
+    const random = Math.random().toString(36).slice(2, 6).toUpperCase();
+    return `TSK-${timestamp}${random}`;
   }
 
   private columnTypeToState(type?: BoardColumnType | null): TaskState {
@@ -512,7 +513,7 @@ export class TaskService {
     });
   }
 
-  private mapTask(task: Prisma.TaskGetPayload<{ include: typeof this.taskInclude }>) {
+  private mapTask(task: TaskWithRelations) {
     const labels = Array.isArray(task.labels)
       ? task.labels
           .map((item) => {
@@ -565,5 +566,38 @@ export class TaskService {
       updatedAt: task.updatedAt.toISOString(),
       createdAt: task.createdAt.toISOString(),
     };
+  }
+
+  private async createTaskWithUniqueCode(data: Prisma.TaskUncheckedCreateInput): Promise<TaskWithRelations> {
+    let nextCode = data.code as string;
+
+    for (let attempt = 0; attempt < MAX_CODE_GENERATION_ATTEMPTS; attempt += 1) {
+      try {
+        return await this.prisma.task.create({
+          data: {
+            ...data,
+            code: nextCode,
+          },
+          include: taskInclude,
+        });
+      } catch (error) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2002' &&
+          `${error.meta?.target}`.includes('code')
+        ) {
+          nextCode = this.generateTaskCode();
+          continue;
+        }
+
+        throw error;
+      }
+    }
+
+    throw new ConflictException('Não foi possível gerar um código único para a task');
+  }
+
+  private serializeLabels(labels?: string[]) {
+    return labels?.length ? (labels.map((name) => ({ name })) as Prisma.InputJsonValue) : undefined;
   }
 }

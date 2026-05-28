@@ -1,5 +1,6 @@
 import { Transform } from 'class-transformer';
-import { IsCuid, IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsCuid } from '@plan-self/utils';
 
 export class KanbanBacklogQueryDto {
   @IsCuid()
