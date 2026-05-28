@@ -12,6 +12,6 @@ import { SprintService } from './sprint.service';
   imports: [PrismaModule, AuthModule],
   controllers: [SprintController],
   providers: [SprintService, SprintRepository, SprintGateway, SprintScheduler, JwtAuthGuard],
-  exports: [SprintService],
+  exports: [SprintService, SprintGateway],
 })
 export class SprintModule {}

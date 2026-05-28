@@ -92,6 +92,19 @@ export class SprintService {
     return this.mapSprint(sprint);
   }
 
+  async getCurrentSprint(currentUser: CurrentUserPayload, projectId?: string) {
+    if (projectId) {
+      return this.getActiveSprint(projectId, currentUser);
+    }
+
+    const sprint = await this.repository.findCurrentActiveSprint(currentUser.organizationId);
+    if (!sprint) {
+      throw new NotFoundException('Nenhuma sprint ativa encontrada');
+    }
+
+    return this.mapSprint(sprint);
+  }
+
   async getBacklog(projectId: string, currentUser: CurrentUserPayload, query: BacklogQueryDto) {
     const backlog = await this.repository.listBacklogTasks(projectId, currentUser.organizationId, {
       page: query.page,
@@ -496,7 +509,7 @@ export class SprintService {
         dto.orderedTaskIds.map((orderedTaskId, index) =>
           tx.task.update({
             where: { id: orderedTaskId },
-            data: { sortOrder: index },
+            data: { sortOrder: index, position: index, updatedBy: currentUser.id },
           }),
         ),
       );
@@ -557,7 +570,10 @@ export class SprintService {
               data: {
                 sprintId: targetSprint.id,
                 state: task.state === TaskState.BACKLOG ? TaskState.TODO : task.state,
+                status: task.state === TaskState.BACKLOG ? TaskState.TODO : task.state,
                 sortOrder: dto.targetIndex != null ? dto.targetIndex + index : existingCount + index,
+                position: dto.targetIndex != null ? dto.targetIndex + index : existingCount + index,
+                updatedBy: currentUser.id,
               },
             }),
           ),
@@ -591,6 +607,8 @@ export class SprintService {
           data: {
             sprintId: null,
             state: TaskState.BACKLOG,
+            status: TaskState.BACKLOG,
+            updatedBy: currentUser.id,
           },
         });
         await tx.sprintTask.deleteMany({ where: { taskId: { in: taskIds } } });
@@ -622,8 +640,11 @@ export class SprintService {
         data: {
           title: dto.title,
           priority: dto.priority,
+          points: dto.storyPoints,
           storyPoints: dto.storyPoints,
+          blocked: dto.blockedReason !== undefined ? Boolean(dto.blockedReason) : undefined,
           blockedReason: dto.blockedReason,
+          updatedBy: currentUser.id,
           labels: labelPayload ? (labelPayload as Prisma.InputJsonValue) : undefined,
         },
       });
@@ -650,8 +671,12 @@ export class SprintService {
     const task = await this.repository.findTaskById(taskId, currentUser.organizationId);
     await this.assertTaskAccess([task], currentUser);
 
-    await this.repository.prisma.task.delete({
+    await this.repository.prisma.task.update({
       where: { id: task.id },
+      data: {
+        deletedAt: new Date(),
+        updatedBy: currentUser.id,
+      },
     });
 
     if (task.sprintId) {
@@ -922,14 +947,16 @@ export class SprintService {
   private mapTask(task: HydratedTask) {
     return {
       id: task.id,
-      code: `PS-${task.id.slice(-4).toUpperCase()}`,
+      code: task.code ?? `PS-${task.id.slice(-4).toUpperCase()}`,
       projectId: task.projectId,
       title: task.title,
       description: task.description,
-      state: task.state,
+      state: task.status ?? task.state,
+      status: task.status ?? task.state,
       priority: task.priority,
       storyPoints: task.storyPoints ?? task.story?.storyPoints ?? 0,
       sortOrder: task.sortOrder,
+      position: task.position,
       blockedReason: task.blockedReason,
       labels: this.parseLabels(task.labels),
       assignees: task.assignees.map(({ user }) => ({
@@ -956,6 +983,7 @@ export class SprintService {
       isBlocked: this.isTaskBlocked(task),
       isDone: task.state === TaskState.DONE,
       dueAt: task.dueAt ? task.dueAt.toISOString() : null,
+      dueDate: task.dueDate ? task.dueDate.toISOString() : null,
       updatedAt: task.updatedAt.toISOString(),
     };
   }

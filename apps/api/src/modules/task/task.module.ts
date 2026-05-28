@@ -2,13 +2,13 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { SprintModule } from '../sprints/sprint.module';
-import { KanbanController } from './kanban.controller';
-import { KanbanService } from './kanban.service';
+import { TaskController } from './task.controller';
+import { TaskService } from './task.service';
 
 @Module({
   imports: [PrismaModule, AuthModule, SprintModule],
-  controllers: [KanbanController],
-  providers: [KanbanService],
-  exports: [KanbanService],
+  controllers: [TaskController],
+  providers: [TaskService],
+  exports: [TaskService],
 })
-export class KanbanModule {}
+export class TaskModule {}
