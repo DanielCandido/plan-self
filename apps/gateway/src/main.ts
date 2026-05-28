@@ -1,12 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { Module } from '@nestjs/common';
 import { GatewayServer } from './socket.gateway';
+import { InternalEventsController } from './internal-events.controller';
 import { loadGatewayConfig, loadRootEnv } from '@plan-self/config';
 
 loadRootEnv();
 const gatewayConfig = loadGatewayConfig();
 
-@Module({ providers: [GatewayServer] })
+@Module({ providers: [GatewayServer], controllers: [InternalEventsController] })
 class GatewayModule {}
 
 async function bootstrap() {

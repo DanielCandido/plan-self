@@ -18,3 +18,4 @@ export * from './dashboard.js';
 export * from './sprints.js';
 
 export * from './projects.js';
+export * from './teams.js';

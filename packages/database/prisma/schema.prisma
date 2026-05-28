@@ -48,25 +48,56 @@ enum SprintAuditAction {
   DATES_CHANGED
 }
 
+enum TeamVisibility {
+  PUBLIC
+  PRIVATE
+  SECRET
+}
+
+enum MemberStatus {
+  ONLINE
+  OFFLINE
+  AWAY
+  BUSY
+  IN_MEETING
+}
+
 model Organization {
-  id        String     @id @default(cuid())
+  id        String       @id @default(cuid())
   name      String
-  slug      String     @unique
-  createdAt DateTime   @default(now())
+  slug      String       @unique
+  createdAt DateTime     @default(now())
   teams     Team[]
   users     User[]
   projects  Project[]
   channels  Channel[]
   auditLogs AuditLog[]
+  invites   TeamInvite[]
 }
 
 model Team {
-  id             String       @id @default(cuid())
-  name           String
+  id             String           @id @default(cuid())
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  slug           String
+  description    String?
+  avatarUrl      String?
+  color          String?
+  visibility     TeamVisibility   @default(PRIVATE)
+  ownerId        String
+  archivedAt     DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  owner          User             @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   memberships    TeamMember[]
   projects       Project[]
+  invites        TeamInvite[]
+  permissions    TeamPermission[]
+  activities     TeamActivity[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId, archivedAt])
 }
 
 model User {
@@ -83,6 +114,9 @@ model User {
   organizationId    String
   organization      Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   memberships       TeamMember[]
+  ownedTeams        Team[]           @relation("TeamOwner")
+  teamInvitesSent   TeamInvite[]     @relation("TeamInviteSentBy")
+  teamActivities    TeamActivity[]
   authSessions      AuthSession[]
   taskAssignees     TaskAssignee[]
   taskComments      TaskComment[]
@@ -115,14 +149,68 @@ model AuthSession {
 }
 
 model TeamMember {
-  id     String @id @default(cuid())
-  teamId String
-  userId String
-  role   Role
-  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String       @id @default(cuid())
+  teamId      String
+  userId      String
+  role        Role
+  status      MemberStatus @default(OFFLINE)
+  workload    Int          @default(0)
+  joinedAt    DateTime     @default(now())
+  suspendedAt DateTime?
+  team        Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([teamId, userId])
+  @@index([teamId, role])
+}
+
+model TeamInvite {
+  id             String       @id @default(cuid())
+  email          String
+  token          String       @unique
+  organizationId String
+  teamId         String
+  invitedById    String
+  role           Role         @default(MEMBER)
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  revokedAt      DateTime?
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  team           Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  invitedBy      User         @relation("TeamInviteSentBy", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@unique([email, teamId])
+  @@index([token])
+  @@index([organizationId, teamId, revokedAt])
+}
+
+model TeamPermission {
+  id        String   @id @default(cuid())
+  teamId    String
+  role      Role
+  resource  String
+  action    String
+  allowed   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, role, resource, action])
+  @@index([teamId, role])
+}
+
+model TeamActivity {
+  id        String   @id @default(cuid())
+  teamId    String
+  actorId   String?
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([teamId, createdAt])
 }
 
 model Project {
@@ -376,7 +464,12 @@ model AuditLog {
   organizationId String
   actorId        String?
   action         String
+  entity         String?
+  entityId       String?
   metadata       Json?
+  ipAddress      String?
   createdAt      DateTime     @default(now())
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([entity, entityId])
 }
