@@ -4,15 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15f29a31-c143-4c09-909b-801b83a10458" name="Changes" comment="feat: add NotFound component and update task DTOs to remove CUID validation">
+    <list default="true" id="15f29a31-c143-4c09-909b-801b83a10458" name="Changes" comment="feat: add Team Management page with directory and project cards, and implement design system styles">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/web/src/app/globals.css" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/globals.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/web/src/components/projects/create-project-card.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/components/projects/create-project-card.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/web/src/components/projects/project-card.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/components/projects/project-card.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/web/src/components/projects/project-filters.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/components/projects/project-filters.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/web/src/components/team/member-directory.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/components/team/member-directory.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/apps/web/src/components/team/team-card.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/components/team/team-card.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/web/src/components/team/teams-header.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/components/team/teams-header.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -176,7 +170,7 @@
       <workItem from="1779717915605" duration="1726000" />
       <workItem from="1779737568279" duration="8903000" />
       <workItem from="1779817138416" duration="5815000" />
-      <workItem from="1779932670159" duration="2900000" />
+      <workItem from="1779932670159" duration="4810000" />
     </task>
     <task id="LOCAL-00001" summary="feat: add initial database migration with tables and enums for organization, team, user, and task management">
       <option name="closed" value="true" />
@@ -218,7 +212,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779824750622</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="feat: add Team Management page with directory and project cards, and implement design system styles">
+      <option name="closed" value="true" />
+      <created>1779936718535</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1779936718536</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -237,7 +239,8 @@
     <MESSAGE value="feat: replace UUID validation with CUID in DTOs and add custom CUID validator" />
     <MESSAGE value="feat: add design system for Precision Minimalism with color palette, typography, and layout guidelines" />
     <MESSAGE value="feat: add NotFound component and update task DTOs to remove CUID validation" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: add NotFound component and update task DTOs to remove CUID validation" />
+    <MESSAGE value="feat: add Team Management page with directory and project cards, and implement design system styles" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: add Team Management page with directory and project cards, and implement design system styles" />
   </component>
   <component name="github-copilot-workspace">
     <instructionFileLocations>

@@ -29,12 +29,16 @@ export function TeamCard({
       className="rounded-2xl border border-white/10 bg-[linear-gradient(120deg,rgba(255,255,255,0.03),rgba(124,58,237,0.06))] p-6 backdrop-blur-xl shadow-[0_16px_48px_rgba(0,0,0,0.35)] transition hover:border-[#7c3aed]/40 hover:shadow-[0_0_0_1px_rgba(124,58,237,0.2),0_24px_60px_rgba(0,0,0,0.5)]"
     >
       <div className="mb-6 flex items-start justify-between">
+        {team.avatarUrl ? (
+            <img src={team.avatarUrl} alt={team.name} className="w-14 h-14 rounded-lg border border-white/15" />
+            ) : (
         <div
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/15 text-sm font-semibold text-white"
+          className="flex h-14 w-14 items-center justify-center rounded-lg border border-white/15 text-sm font-semibold text-white"
           style={{ backgroundColor: team.color ?? '#2b2e3f' }}
         >
           {team.name.slice(0, 2).toUpperCase()}
         </div>
+          )}
         <span className={`rounded-md px-3 py-1 text-sm font-semibold ${badgeStyle[team.color ?? ''] ?? 'bg-white/10 text-white/80'}`}>
           {team.visibility}
         </span>
