@@ -8,6 +8,7 @@ import { KanbanModule } from './modules/kanban/kanban.module';
 import { MessagingModule } from './modules/messaging/messaging.module';
 import { SprintModule } from './modules/sprints/sprint.module';
 import { ProjectsModule } from './modules/projects/projects.module';
+import { TeamModule } from './modules/team/team.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ProjectsModule } from './modules/projects/projects.module';
     MessagingModule,
     SprintModule,
     ProjectsModule,
+    TeamModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

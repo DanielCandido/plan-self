@@ -25,4 +25,14 @@ export class GatewayServer implements OnGatewayConnection {
     client.join(`task:${payload.taskId}`);
     return { ok: true, room: `task:${payload.taskId}` };
   }
+
+  @SubscribeMessage('team:subscribe')
+  subscribeTeam(@ConnectedSocket() client: Socket, @MessageBody() payload: { teamId: string }) {
+    client.join(`team:${payload.teamId}`);
+    return { ok: true, room: `team:${payload.teamId}` };
+  }
+
+  emitTeamEvent(event: string, teamId: string, data: Record<string, unknown>) {
+    this.server.to(`team:${teamId}`).emit(event, data);
+  }
 }
