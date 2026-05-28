@@ -32,7 +32,7 @@ export function ProjectWorkspaceHeader({ projectId }: { projectId: string }) {
             {isLoading ? (
               <span className="inline-block h-8 w-48 animate-pulse rounded-xl bg-white/[0.06]" />
             ) : (
-              (project?.name ?? 'Projeto')
+              (project?.name ?? 'Project')
             )}
           </h1>
         </div>
