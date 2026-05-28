@@ -2,6 +2,8 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
+const SPRINT_ELAPSED_DAYS = 2;
+const SPRINT_REMAINING_DAYS = 10;
 
 async function main() {
   const organization = await prisma.organization.upsert({
@@ -223,7 +225,215 @@ async function main() {
     },
   });
 
-  console.log('seeded', { organizationId: organization.id, userEmail: user.email, teams: 3 });
+  const project = await prisma.project.upsert({
+    where: { id: 'seed-kanban-project' },
+    update: {
+      name: 'Kanban Transformation',
+      description: 'Roadmap incremental para board/sprint/task',
+      organizationId: organization.id,
+      ownerId: user.id,
+      teamId: coreEngineering.id,
+      archived: false,
+      progress: 42,
+    },
+    create: {
+      id: 'seed-kanban-project',
+      name: 'Kanban Transformation',
+      description: 'Roadmap incremental para board/sprint/task',
+      organizationId: organization.id,
+      ownerId: user.id,
+      teamId: coreEngineering.id,
+      status: 'IN_PROGRESS',
+      priority: 'HIGH',
+      progress: 42,
+      color: '#22c55e',
+    },
+  });
+
+  const board = await prisma.board.upsert({
+    where: { projectId: project.id },
+    update: {},
+    create: { projectId: project.id },
+  });
+
+  const columnDefinitions = [
+    { name: 'Backlog', order: 0, type: 'BACKLOG' },
+    { name: 'Todo', order: 1, type: 'TODO' },
+    { name: 'In Progress', order: 2, type: 'IN_PROGRESS', wipLimit: 6 },
+    { name: 'Review', order: 3, type: 'REVIEW', wipLimit: 5 },
+    { name: 'Done', order: 4, type: 'DONE' },
+    { name: 'Blocked', order: 5, type: 'BLOCKED', wipLimit: 4 },
+  ];
+
+  const columns = await Promise.all(
+    columnDefinitions.map((column) =>
+      prisma.boardColumn.upsert({
+        where: { boardId_name: { boardId: board.id, name: column.name } },
+        update: {
+          order: column.order,
+          type: column.type,
+          wipLimit: column.wipLimit ?? null,
+        },
+        create: {
+          boardId: board.id,
+          name: column.name,
+          order: column.order,
+          type: column.type,
+          wipLimit: column.wipLimit ?? null,
+        },
+      }),
+    ),
+  );
+
+  const activeSprint = await prisma.sprint.upsert({
+    where: { id: 'seed-active-sprint' },
+    update: {
+      projectId: project.id,
+      name: 'Sprint 24 - Premium Kanban',
+      status: 'ACTIVE',
+      startDate: new Date(Date.now() - SPRINT_ELAPSED_DAYS * 24 * 60 * 60 * 1000),
+      endDate: new Date(Date.now() + SPRINT_REMAINING_DAYS * 24 * 60 * 60 * 1000),
+      velocity: 34,
+      storyPoints: 21,
+      completedPoints: 8,
+      remainingPoints: 13,
+      blockedPoints: 3,
+      goal: 'Entregar base de board por colunas com realtime',
+      createdBy: user.id,
+    },
+    create: {
+      id: 'seed-active-sprint',
+      projectId: project.id,
+      name: 'Sprint 24 - Premium Kanban',
+      status: 'ACTIVE',
+      startDate: new Date(Date.now() - SPRINT_ELAPSED_DAYS * 24 * 60 * 60 * 1000),
+      endDate: new Date(Date.now() + SPRINT_REMAINING_DAYS * 24 * 60 * 60 * 1000),
+      velocity: 34,
+      storyPoints: 21,
+      completedPoints: 8,
+      remainingPoints: 13,
+      blockedPoints: 3,
+      goal: 'Entregar base de board por colunas com realtime',
+      createdBy: user.id,
+    },
+  });
+
+  const columnByType = new Map(columns.map((column) => [column.type, column]));
+
+  const taskSeeds = [
+    {
+      id: 'seed-task-backlog',
+      code: 'KAN-001',
+      title: 'Criar endpoint GET /boards/:projectId',
+      status: 'BACKLOG',
+      points: 5,
+      position: 0,
+    },
+    {
+      id: 'seed-task-progress',
+      code: 'KAN-002',
+      title: 'Adicionar controle de concorrência no move/reorder',
+      status: 'IN_PROGRESS',
+      points: 8,
+      position: 0,
+      sprintId: activeSprint.id,
+    },
+    {
+      id: 'seed-task-done',
+      code: 'KAN-003',
+      title: 'Implementar soft delete de task',
+      status: 'DONE',
+      points: 3,
+      position: 0,
+      sprintId: activeSprint.id,
+    },
+  ];
+
+  await Promise.all(
+    taskSeeds.map((item) => {
+      const column = columnByType.get(item.status);
+      return prisma.task.upsert({
+        where: { id: item.id },
+        update: {
+          projectId: project.id,
+          boardId: board.id,
+          boardColumnId: column?.id ?? null,
+          sprintId: item.sprintId ?? null,
+          title: item.title,
+          code: item.code,
+          status: item.status,
+          state: item.status,
+          points: item.points,
+          storyPoints: item.points,
+          position: item.position,
+          sortOrder: item.position,
+          createdBy: user.id,
+          updatedBy: user.id,
+        },
+        create: {
+          id: item.id,
+          projectId: project.id,
+          boardId: board.id,
+          boardColumnId: column?.id ?? null,
+          sprintId: item.sprintId ?? null,
+          title: item.title,
+          code: item.code,
+          status: item.status,
+          state: item.status,
+          points: item.points,
+          storyPoints: item.points,
+          position: item.position,
+          sortOrder: item.position,
+          createdBy: user.id,
+          updatedBy: user.id,
+        },
+      });
+    }),
+  );
+
+  await prisma.sprintMetric.create({
+    data: {
+      sprintId: activeSprint.id,
+      totalStoryPoints: 21,
+      completedPoints: 8,
+      remainingPoints: 13,
+      blockedPoints: 3,
+      progress: 38,
+      velocity: 34,
+      throughput: 1,
+      capacityUtilization: 0.72,
+      healthScore: 82,
+    },
+  });
+
+  await prisma.burndownSnapshot.upsert({
+    where: {
+      sprintId_snapshotDate: {
+        sprintId: activeSprint.id,
+        snapshotDate: new Date(new Date().setHours(0, 0, 0, 0)),
+      },
+    },
+    update: {
+      remainingPoints: 13,
+      completedPoints: 8,
+      blockedTasks: 1,
+    },
+    create: {
+      sprintId: activeSprint.id,
+      snapshotDate: new Date(new Date().setHours(0, 0, 0, 0)),
+      remainingPoints: 13,
+      completedPoints: 8,
+      blockedTasks: 1,
+    },
+  });
+
+  console.log('seeded', {
+    organizationId: organization.id,
+    userEmail: user.email,
+    teams: 3,
+    projectId: project.id,
+    sprintId: activeSprint.id,
+  });
 }
 
 main().finally(async () => {

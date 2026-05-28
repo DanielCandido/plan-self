@@ -18,6 +18,7 @@ import { AddSprintTasksDto } from './dto/add-sprint-tasks.dto';
 import { BacklogQueryDto } from './dto/backlog-query.dto';
 import { CompleteSprintDto } from './dto/complete-sprint.dto';
 import { CreateSprintDto } from './dto/create-sprint.dto';
+import { CurrentSprintQueryDto } from './dto/current-sprint-query.dto';
 import { MoveTaskDto } from './dto/move-task.dto';
 import { ReorderTaskDto } from './dto/reorder-task.dto';
 import { UpdateSprintDto } from './dto/update-sprint.dto';
@@ -40,6 +41,12 @@ export class SprintController {
   @ApiOperation({ summary: 'Retorna a sprint ativa do projeto' })
   getActiveSprint(@Param('id') projectId: string, @CurrentUser() currentUser: CurrentUserPayload) {
     return this.sprintService.getActiveSprint(projectId, currentUser);
+  }
+
+  @Get('sprints/current')
+  @ApiOperation({ summary: 'Retorna a sprint ativa atual (projeto opcional)' })
+  getCurrentSprint(@Query() query: CurrentSprintQueryDto, @CurrentUser() currentUser: CurrentUserPayload) {
+    return this.sprintService.getCurrentSprint(currentUser, query.projectId);
   }
 
   @Get('projects/:id/backlog')

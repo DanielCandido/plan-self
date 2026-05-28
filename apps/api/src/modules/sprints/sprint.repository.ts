@@ -57,6 +57,9 @@ export const sprintInclude = {
     },
   },
   tasks: {
+    where: {
+      deletedAt: null,
+    },
     include: taskInclude,
     orderBy: {
       sortOrder: 'asc',
@@ -192,6 +195,18 @@ export class SprintRepository {
     });
   }
 
+  async findCurrentActiveSprint(organizationId: string, projectId?: string) {
+    return this.prisma.sprint.findFirst({
+      where: {
+        project: { organizationId },
+        status: 'ACTIVE',
+        ...(projectId ? { projectId } : {}),
+      },
+      include: sprintInclude,
+      orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+    });
+  }
+
   async listProjectSprints(projectId: string, organizationId: string) {
     return this.prisma.sprint.findMany({
       where: {
@@ -240,6 +255,7 @@ export class SprintRepository {
     const where: Prisma.TaskWhereInput = {
       projectId,
       sprintId: null,
+      deletedAt: null,
       project: { organizationId },
       ...(options.search.trim()
         ? {
@@ -304,6 +320,7 @@ export class SprintRepository {
       where: {
         id: { in: taskIds },
         projectId,
+        deletedAt: null,
         project: { organizationId },
       },
       include: taskInclude,
@@ -382,6 +399,7 @@ export class SprintRepository {
     const task = await this.prisma.task.findFirst({
       where: {
         id: taskId,
+        deletedAt: null,
         project: { organizationId },
       },
       include: taskInclude,
@@ -399,6 +417,7 @@ export class SprintRepository {
       where: {
         id: taskId,
         projectId,
+        deletedAt: null,
         project: { organizationId },
       },
       include: taskInclude,
@@ -439,6 +458,7 @@ export class SprintRepository {
       where: {
         projectId,
         sprintId: null,
+        deletedAt: null,
         state: { not: TaskState.DONE },
       },
     });

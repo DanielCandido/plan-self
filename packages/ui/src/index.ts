@@ -10,3 +10,5 @@ export * from './components/pages/sprints/sprint-error-state';
 export * from './components/pages/sprints/sprint-skeleton';
 export * from './components/pages/projects/projects-error-state';
 export * from './components/pages/projects/projects-skeleton';
+export * from './components/pages/kanban/kanban-skeleton';
+export * from './components/pages/kanban/kanban-error-state';
