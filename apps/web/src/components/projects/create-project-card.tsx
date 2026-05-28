@@ -11,7 +11,7 @@ export function CreateProjectCard({ onClick }: { onClick: () => void }) {
         +
       </div>
       <p className="text-2xl font-semibold text-white">Create New Project</p>
-      <p className="mt-2 text-xl text-white/65">Start a new initiative from template</p>
+      <p className="mt-2 text-md text-white/65">Start a new initiative from template</p>
     </button>
   );
 }

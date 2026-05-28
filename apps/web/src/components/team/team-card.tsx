@@ -40,8 +40,8 @@ export function TeamCard({
         </span>
       </div>
 
-      <h3 className="mb-2 text-5xl font-semibold leading-tight text-white">{team.name}</h3>
-      <p className="mb-6 min-h-[72px] text-xl text-white/70">
+      <h3 className="mb-2 text-2xl font-semibold leading-tight text-white">{team.name}</h3>
+      <p className="mb-6 min-h-[72px] text-md text-white/70">
         {team.description ?? 'Sem descrição para este time.'}
       </p>
 

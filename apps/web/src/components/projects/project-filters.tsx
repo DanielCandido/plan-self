@@ -89,7 +89,7 @@ export function ProjectFilters({
         />
       </div>
 
-      <p className="text-2xl text-white/75">Showing {totalCount} Projects</p>
+      <p className="text-md text-white/75">Showing {totalCount} Projects</p>
     </div>
   );
 }

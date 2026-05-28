@@ -29,7 +29,7 @@ export function MemberDirectory({
   return (
     <section className="overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(120deg,rgba(255,255,255,0.03),rgba(124,58,237,0.05))] backdrop-blur-xl">
       <div className="flex items-center justify-between px-6 py-5">
-        <h2 className="text-5xl font-semibold text-white">Directory</h2>
+        <h2 className="text-3xl font-semibold text-white">Directory</h2>
         <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-1">
           {tabs.map((tab) => (
             <button

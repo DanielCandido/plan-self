@@ -34,10 +34,10 @@ export function ProjectCard({
         <ProjectStatusBadge status={project.status} />
       </div>
 
-      <h3 className="mb-2 line-clamp-2 text-[2.1rem] font-semibold leading-tight text-white">
+      <h3 className="mb-2 line-clamp-2 text-2xl font-semibold leading-tight text-white">
         {project.name}
       </h3>
-      <p className="mb-8 line-clamp-3 min-h-[84px] text-xl text-white/70">
+      <p className="mb-8 line-clamp-3 min-h-[84px] text-md text-white/70">
         {project.description || 'Sem descrição definida para este projeto.'}
       </p>
 

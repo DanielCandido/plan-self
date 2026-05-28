@@ -4,11 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15f29a31-c143-4c09-909b-801b83a10458" name="Changes" comment="feat: add Projects module with CRUD operations and database migration for project management">
-      <change afterPath="$PROJECT_DIR$/apps/web/src/app/not-found.tsx" afterDir="false" />
+    <list default="true" id="15f29a31-c143-4c09-909b-801b83a10458" name="Changes" comment="feat: add NotFound component and update task DTOs to remove CUID validation">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/api/src/modules/sprints/dto/move-task.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/modules/sprints/dto/move-task.dto.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/api/src/modules/sprints/dto/reorder-task.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/modules/sprints/dto/reorder-task.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/web/src/app/globals.css" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/globals.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/web/src/components/projects/create-project-card.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/components/projects/create-project-card.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/web/src/components/projects/project-card.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/components/projects/project-card.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/web/src/components/projects/project-filters.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/components/projects/project-filters.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/web/src/components/team/member-directory.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/components/team/member-directory.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/web/src/components/team/team-card.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/components/team/team-card.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/web/src/components/team/teams-header.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/components/team/teams-header.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -171,7 +175,8 @@
       <workItem from="1779657694495" duration="7481000" />
       <workItem from="1779717915605" duration="1726000" />
       <workItem from="1779737568279" duration="8903000" />
-      <workItem from="1779817138416" duration="3897000" />
+      <workItem from="1779817138416" duration="5815000" />
+      <workItem from="1779932670159" duration="2900000" />
     </task>
     <task id="LOCAL-00001" summary="feat: add initial database migration with tables and enums for organization, team, user, and task management">
       <option name="closed" value="true" />
@@ -205,7 +210,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779743235013</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="feat: add NotFound component and update task DTOs to remove CUID validation">
+      <option name="closed" value="true" />
+      <created>1779824750622</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1779824750622</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -223,7 +236,8 @@
     <MESSAGE value="feat: refactor authentication handling and add PlanSelfLogo component" />
     <MESSAGE value="feat: replace UUID validation with CUID in DTOs and add custom CUID validator" />
     <MESSAGE value="feat: add design system for Precision Minimalism with color palette, typography, and layout guidelines" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: add design system for Precision Minimalism with color palette, typography, and layout guidelines" />
+    <MESSAGE value="feat: add NotFound component and update task DTOs to remove CUID validation" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: add NotFound component and update task DTOs to remove CUID validation" />
   </component>
   <component name="github-copilot-workspace">
     <instructionFileLocations>
