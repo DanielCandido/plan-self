@@ -21,6 +21,7 @@ import { useProjectsStore } from '@/store/projects.store';
 
 const projectsQueryKey = (query: ListProjectsQuery) => ['projects', query] as const;
 const projectCountsQueryKey = ['projects', 'counts'] as const;
+const projectDetailQueryKey = (projectId: string) => ['projects', projectId, 'detail'] as const;
 const projectMembersQueryKey = (projectId: string) => ['projects', projectId, 'members'] as const;
 const projectUsersQueryKey = (projectId: string, search: string) => ['projects', projectId, 'users', search] as const;
 const projectOwnerOptionsQueryKey = (search: string) => ['projects', 'options', 'owners', search] as const;
@@ -232,4 +233,16 @@ export function useProjectFormOptions(ownerSearch = '', teamSearch = '', enabled
     isLoadingOwnerOptions: owners.isLoading,
     isLoadingTeamOptions: teams.isLoading,
   };
+}
+
+export function useProjectById(projectId: string) {
+  return useQuery({
+    queryKey: projectDetailQueryKey(projectId),
+    queryFn: async () => {
+      const { data } = await apiClient.get<ProjectItem>(`/projects/${projectId}`);
+      return data;
+    },
+    staleTime: 30_000,
+    enabled: Boolean(projectId),
+  });
 }
