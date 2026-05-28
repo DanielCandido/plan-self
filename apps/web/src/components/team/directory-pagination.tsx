@@ -11,11 +11,15 @@ export function DirectoryPagination({
 }) {
   const pageCount = Math.max(1, Math.ceil(totalCount / perPage));
   const current = page + 1;
+  const shownCount = Math.max(
+    0,
+    Math.min((page + 1) * perPage, totalCount) - Math.min(page * perPage, totalCount),
+  );
 
   return (
     <div className="flex items-center justify-between border-t border-white/10 px-6 py-4">
       <span className="text-lg text-white/70">
-        Showing {Math.min(totalCount, perPage)} of {totalCount} members
+        Showing {shownCount} of {totalCount} members
       </span>
       <div className="flex items-center gap-2">
         <button

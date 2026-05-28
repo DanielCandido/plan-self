@@ -590,9 +590,10 @@ export class TeamRepository {
   }
 
   async ensureUniqueSlug(organizationId: string, base: string, excludedTeamId?: string) {
+    const maxAttempts = 100;
     let suffix = 0;
     let slug = base;
-    while (true) {
+    while (suffix <= maxAttempts) {
       const existing = await this.prisma.team.findFirst({
         where: {
           organizationId,
@@ -608,6 +609,8 @@ export class TeamRepository {
       suffix += 1;
       slug = `${base}-${suffix}`;
     }
+
+    throw new BadRequestException('Não foi possível gerar slug único para o time');
   }
 
   private async ensureTeam(teamId: string, organizationId: string) {

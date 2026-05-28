@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { io, type Socket } from 'socket.io-client';
 
@@ -15,10 +15,12 @@ const EVENTS = [
 
 export function useTeamsSocket(teamId: string | null) {
   const queryClient = useQueryClient();
+  const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
     const gatewayUrl = process.env.NEXT_PUBLIC_GATEWAY_URL ?? 'http://localhost:3010';
     const socket: Socket = io(`${gatewayUrl}/events`, { withCredentials: true, transports: ['websocket'] });
+    socketRef.current = socket;
 
     socket.on('connect', () => {
       if (teamId) {
@@ -37,6 +39,7 @@ export function useTeamsSocket(teamId: string | null) {
         socket.off(event);
       }
       socket.disconnect();
+      socketRef.current = null;
     };
   }, [teamId, queryClient]);
 }
