@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { BoardColumnType, TaskHistoryAction, TaskState } from '@prisma/client';
+import { BoardColumnType, type Prisma, TaskHistoryAction, TaskState } from '@prisma/client';
 import type { CurrentUserPayload } from '../auth/types/current-user.type';
 import { PrismaService } from '../prisma/prisma.service';
 import { SprintGateway } from '../sprints/sprint.gateway';
@@ -31,12 +31,10 @@ export class BoardService {
     await this.assertProjectScope(projectId, currentUser.organizationId);
 
     const board = await this.ensureBoard(projectId);
+    const activeSprintId = await this.getActiveSprintId(projectId);
 
     const tasks = await this.prisma.task.findMany({
-      where: {
-        projectId,
-        deletedAt: null,
-      },
+      where: this.getBoardTaskScope(projectId, activeSprintId),
       select: {
         id: true,
         code: true,
@@ -73,23 +71,29 @@ export class BoardService {
   async reorderTasks(currentUser: CurrentUserPayload, dto: ReorderBoardTaskDto) {
     await this.assertProjectScope(dto.projectId, currentUser.organizationId);
 
-    const column = await this.prisma.boardColumn.findFirst({
-      where: {
-        id: dto.columnId,
-        board: { projectId: dto.projectId },
-      },
-      select: { id: true, type: true },
-    });
+    const [column, activeSprintId] = await Promise.all([
+      this.prisma.boardColumn.findFirst({
+        where: {
+          id: dto.columnId,
+          board: { projectId: dto.projectId },
+        },
+        select: { id: true, type: true },
+      }),
+      this.getActiveSprintId(dto.projectId),
+    ]);
 
     if (!column) {
       throw new NotFoundException('Coluna não encontrada');
     }
+
+    const sprintId = this.getColumnSprintScope(column.type, activeSprintId);
 
     const tasks = await this.prisma.task.findMany({
       where: {
         id: { in: dto.orderedTaskIds },
         projectId: dto.projectId,
         boardColumnId: column.id,
+        sprintId,
         deletedAt: null,
       },
       select: { id: true },
@@ -124,7 +128,7 @@ export class BoardService {
   async moveTask(currentUser: CurrentUserPayload, dto: MoveBoardTaskDto) {
     await this.assertProjectScope(dto.projectId, currentUser.organizationId);
 
-    const [task, targetColumn] = await Promise.all([
+    const [task, targetColumn, activeSprintId] = await Promise.all([
       this.prisma.task.findFirst({
         where: {
           id: dto.taskId,
@@ -146,6 +150,7 @@ export class BoardService {
         },
         select: { id: true, type: true, wipLimit: true },
       }),
+      this.getActiveSprintId(dto.projectId),
     ]);
 
     if (!task) {
@@ -156,11 +161,14 @@ export class BoardService {
       throw new NotFoundException('Coluna de destino não encontrada');
     }
 
+    const targetSprintId = this.getColumnSprintScope(targetColumn.type, activeSprintId);
+
     if (targetColumn.wipLimit !== null) {
       const activeCount = await this.prisma.task.count({
         where: {
           projectId: dto.projectId,
           boardColumnId: targetColumn.id,
+          sprintId: targetSprintId,
           deletedAt: null,
           ...(task.boardColumnId === targetColumn.id ? { id: { not: task.id } } : {}),
         },
@@ -176,6 +184,7 @@ export class BoardService {
         where: {
           projectId: dto.projectId,
           boardColumnId: targetColumn.id,
+          sprintId: targetSprintId,
           deletedAt: null,
         },
       }));
@@ -187,6 +196,7 @@ export class BoardService {
         where: { id: task.id },
         data: {
           boardColumnId: targetColumn.id,
+          sprintId: targetSprintId,
           position: targetPosition,
           sortOrder: targetPosition,
           status: nextState,
@@ -256,6 +266,43 @@ export class BoardService {
     }
 
     return project;
+  }
+
+  private async getActiveSprintId(projectId: string) {
+    const activeSprint = await this.prisma.sprint.findFirst({
+      where: {
+        projectId,
+        status: 'ACTIVE',
+      },
+      select: { id: true },
+      orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+    });
+
+    return activeSprint?.id ?? null;
+  }
+
+  private getBoardTaskScope(projectId: string, activeSprintId: string | null): Prisma.TaskWhereInput {
+    return {
+      projectId,
+      deletedAt: null,
+      ...(activeSprintId
+        ? {
+            OR: [{ sprintId: activeSprintId }, { sprintId: null }],
+          }
+        : { sprintId: null }),
+    };
+  }
+
+  private getColumnSprintScope(type: BoardColumnType, activeSprintId: string | null) {
+    if (type === 'BACKLOG') {
+      return null;
+    }
+
+    if (!activeSprintId) {
+      throw new BadRequestException('Não existe sprint ativa para mover tarefas para o board');
+    }
+
+    return activeSprintId;
   }
 
   private columnTypeToState(type: BoardColumnType): TaskState {
