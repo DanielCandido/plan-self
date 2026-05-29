@@ -21,8 +21,6 @@ import { toast } from 'sonner';
 import type { BoardTask, KanbanBoardResponse, MoveBoardTaskPayload, ReorderBoardTaskPayload } from '@plan-self/types';
 import { KanbanColumnPanel } from './kanban-column-panel';
 import { KanbanTaskCard } from './kanban-task-card';
-import { PageHeaderShell } from '@plan-self/ui';
-import { usePrivateShell } from '@/components/layout/private-shell-context';
 
 export function KanbanBoard({
   projectId,
@@ -37,8 +35,6 @@ export function KanbanBoard({
   moveTask: (payload: MoveBoardTaskPayload) => Promise<unknown>;
   reorderTasks: (payload: ReorderBoardTaskPayload) => Promise<unknown>;
 }) {
-  const { toggleSidebar } = usePrivateShell();
-
   const [activeTask, setActiveTask] = useState<BoardTask | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
   const lastOverIdRef = useRef<string | null>(null);
@@ -132,17 +128,11 @@ export function KanbanBoard({
   return (
     <>
       <div className="mx-auto max-w-[1600px]">
-        <PageHeaderShell
-          eyebrow="Projetos"
-          title="Kanban Board"
-          description="Visualize e gerencie o fluxo de trabalho do projeto."
-          onToggleSidebar={toggleSidebar}
-          actions={
-            <div className="flex items-center rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/65">
-              <span>{totalTasks} task{totalTasks !== 1 ? 's' : ''}</span>
-            </div>
-          }
-        />
+        <div className="mb-4 flex items-center">
+          <div className="flex items-center rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/65">
+            <span>{totalTasks} task{totalTasks !== 1 ? 's' : ''}</span>
+          </div>
+        </div>
       </div>
 
       <div className="mx-auto max-w-[1600px]">

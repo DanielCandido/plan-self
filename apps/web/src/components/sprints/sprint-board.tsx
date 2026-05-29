@@ -205,7 +205,6 @@ export function SprintBoard({
     <>
       <div className="mx-auto max-w-[1600px]">
         <SprintHeader
-          projectName={board?.projectName ?? 'Sprint board'}
           backlogCount={board?.backlogCount ?? backlogItems.length}
           search={search}
           onSearchChange={setSearch}
