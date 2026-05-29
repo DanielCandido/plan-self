@@ -275,7 +275,6 @@ export class BoardService {
         status: 'ACTIVE',
       },
       select: { id: true },
-      orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
     });
 
     return activeSprint?.id ?? null;
@@ -299,7 +298,9 @@ export class BoardService {
     }
 
     if (!activeSprintId) {
-      throw new BadRequestException('Não existe sprint ativa para mover tarefas para o board');
+      throw new BadRequestException(
+        'Não existe sprint ativa para colunas do workflow. Uma sprint ativa é obrigatória para essa movimentação.',
+      );
     }
 
     return activeSprintId;
