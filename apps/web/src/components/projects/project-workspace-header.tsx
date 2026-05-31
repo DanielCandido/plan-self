@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 import { useProjectById } from '@/hooks/use-projects';
 import { usePrivateShell } from '@/components/layout/private-shell-context';
 
@@ -13,7 +14,8 @@ const tabs = [
 export function ProjectWorkspaceHeader({ projectId }: { projectId: string }) {
   const pathname = usePathname();
   const { toggleSidebar } = usePrivateShell();
-  const { data: project, isLoading } = useProjectById(projectId);
+  const { isBootstrapped, isAuthenticated } = useAuth();
+  const { data: project, isLoading } = useProjectById(projectId, isBootstrapped && isAuthenticated);
 
   return (
     <header className="mb-6 overflow-hidden rounded-[32px] border border-white/10 bg-[#111219] shadow-[0_20px_80px_rgba(0,0,0,0.35)]">
