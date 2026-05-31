@@ -602,12 +602,23 @@ export class SprintService {
           taskIds,
         });
       } else {
+        const backlogColumn = await tx.boardColumn.findFirst({
+          where: {
+            board: {
+              projectId: dto.projectId,
+            },
+            type: 'BACKLOG',
+          },
+          select: { id: true },
+        });
+
         await tx.task.updateMany({
           where: { id: { in: taskIds } },
           data: {
             sprintId: null,
             state: TaskState.BACKLOG,
             status: TaskState.BACKLOG,
+            boardColumnId: backlogColumn?.id ?? null,
             updatedBy: currentUser.id,
           },
         });
