@@ -1,5 +1,6 @@
 'use client';
 
+import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
@@ -42,7 +43,7 @@ export function ProjectWorkspaceHeader({ projectId }: { projectId: string }) {
 
       <nav className="flex items-center gap-1 px-5 py-3" aria-label="Workspace tabs">
         {tabs.map((tab) => {
-          const href = `/projects/${projectId}/${tab.slug}`;
+          const href = `/projects/${projectId}/${tab.slug}` as Route;
           const isActive = pathname.startsWith(href);
           return (
             <Link
