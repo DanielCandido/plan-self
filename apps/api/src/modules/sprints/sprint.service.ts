@@ -618,7 +618,7 @@ export class SprintService {
             sprintId: null,
             state: TaskState.BACKLOG,
             status: TaskState.BACKLOG,
-            boardColumnId: backlogColumn?.id ?? null,
+            ...(backlogColumn?.id ? { boardColumnId: backlogColumn.id } : {}),
             updatedBy: currentUser.id,
           },
         });
