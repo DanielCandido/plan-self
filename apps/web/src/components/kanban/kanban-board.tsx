@@ -195,7 +195,6 @@ export function KanbanBoard({
       <TaskDetailModal
         open={Boolean(selectedTaskId)}
         taskId={selectedTaskId}
-        projectId={projectId}
         projectName={projectName}
         members={members}
         task={detailTask}

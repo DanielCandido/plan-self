@@ -71,18 +71,21 @@ function historyLabel(item: TaskActivityItem) {
 }
 
 function Avatar({ name, avatarUrl, size = 8 }: { name: string; avatarUrl: string | null; size?: number }) {
+  const sizeStyle = { width: size * 4, height: size * 4 };
   if (avatarUrl) {
     return (
       <img
         src={avatarUrl}
         alt={name}
-        className={`h-${size} w-${size} rounded-full object-cover`}
+        style={sizeStyle}
+        className="rounded-full object-cover"
       />
     );
   }
   return (
     <div
-      className={`flex h-${size} w-${size} items-center justify-center rounded-full bg-[#8b5cf6]/30 text-xs font-semibold text-[#c4b5fd]`}
+      style={sizeStyle}
+      className="flex items-center justify-center rounded-full bg-[#8b5cf6]/30 text-xs font-semibold text-[#c4b5fd]"
     >
       {name.charAt(0).toUpperCase()}
     </div>
@@ -601,7 +604,6 @@ function TrashIcon() {
 export interface TaskDetailModalProps {
   open: boolean;
   taskId: string | null;
-  projectId: string;
   projectName: string;
   members: Array<{ userId: string; name: string; avatarUrl: string | null }>;
   task: TaskDetail | null;
@@ -618,7 +620,6 @@ export interface TaskDetailModalProps {
 export function TaskDetailModal({
   open,
   taskId,
-  projectId: _projectId,
   projectName,
   members,
   task,
@@ -676,7 +677,7 @@ export function TaskDetailModal({
     if (!task) return;
     const next = [
       ...task.checklist,
-      { id: `cl-${Date.now()}`, title, done: false },
+      { id: crypto.randomUUID(), title, done: false },
     ];
     onUpdate({ checklist: next });
   };
@@ -688,8 +689,10 @@ export function TaskDetailModal({
   };
 
   const handleShare = () => {
-    void navigator.clipboard.writeText(`${task?.code ?? taskId ?? ''}`);
-    toast.success('Task ID copiado!');
+    navigator.clipboard.writeText(`${task?.code ?? taskId ?? ''}`).then(
+      () => toast.success('Task ID copiado!'),
+      () => toast.error('Não foi possível copiar o ID.'),
+    );
   };
 
   const handleDelete = () => {

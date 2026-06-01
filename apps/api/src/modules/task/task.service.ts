@@ -661,12 +661,13 @@ export class TaskService {
           item !== null &&
           typeof item === 'object' &&
           typeof (item as Record<string, unknown>).id === 'string' &&
-          typeof (item as Record<string, unknown>).title === 'string',
+          typeof (item as Record<string, unknown>).title === 'string' &&
+          typeof (item as Record<string, unknown>).done === 'boolean',
       )
       .map((item) => ({
         id: item.id,
         title: item.title,
-        done: Boolean(item.done),
+        done: item.done,
       }));
   }
 
