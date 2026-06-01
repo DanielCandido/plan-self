@@ -982,7 +982,7 @@ export class SprintService {
     event: string,
     payload: Record<string, unknown> = {},
   ) {
-    this.sprintGateway.emitProjectEvent(organizationId, projectId, event, {
+    this.sprintGateway.emitProjectEvent(projectId, event, {
       projectId,
       at: new Date().toISOString(),
       ...payload,

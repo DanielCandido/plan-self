@@ -46,7 +46,7 @@ export class KanbanService {
       ),
     );
 
-    this.sprintGateway.emitProjectEvent(currentUser.organizationId, dto.projectId, 'backlog.updated', {
+    this.sprintGateway.emitProjectEvent(dto.projectId, 'backlog.updated', {
       projectId: dto.projectId,
       reason: 'backlog.prioritized',
       at: new Date().toISOString(),

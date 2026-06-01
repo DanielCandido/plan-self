@@ -119,8 +119,7 @@ export class SprintGateway implements OnGatewayConnection {
     this.server.to(`organization:${organizationId}`).emit(event, payload);
   }
 
-  emitProjectEvent(organizationId: string, projectId: string, event: string, payload: unknown) {
-    void organizationId;
+  emitProjectEvent(projectId: string, event: string, payload: unknown) {
     this.server.to(`project:${projectId}`).emit(event, payload);
   }
 

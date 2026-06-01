@@ -88,14 +88,14 @@ export class BoardService {
       throw new NotFoundException('Coluna não encontrada');
     }
 
-    const sprintId = this.getColumnSprintScope(column.type, activeSprintId);
+    const columnSprintScope = this.getColumnSprintScope(column.type, activeSprintId);
 
     const tasks = await this.prisma.task.findMany({
       where: {
         id: { in: dto.orderedTaskIds },
         projectId: dto.projectId,
         boardColumnId: column.id,
-        sprintId,
+        sprintId: columnSprintScope,
         deletedAt: null,
       },
       select: { id: true },
@@ -118,8 +118,8 @@ export class BoardService {
       }
     });
 
-    if (sprintId === null) {
-      this.sprintGateway.emitProjectEvent(currentUser.organizationId, dto.projectId, 'backlog.updated', {
+    if (columnSprintScope === null) {
+      this.sprintGateway.emitProjectEvent(dto.projectId, 'backlog.updated', {
         projectId: dto.projectId,
         columnId: column.id,
         taskIds: dto.orderedTaskIds,
@@ -236,7 +236,7 @@ export class BoardService {
     });
 
     if (task.sprintId === null || targetSprintId === null) {
-      this.sprintGateway.emitProjectEvent(currentUser.organizationId, dto.projectId, 'backlog.updated', {
+      this.sprintGateway.emitProjectEvent(dto.projectId, 'backlog.updated', {
         projectId: dto.projectId,
         sprintId: targetSprintId,
         taskId: task.id,

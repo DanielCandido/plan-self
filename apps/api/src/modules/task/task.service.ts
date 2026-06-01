@@ -154,7 +154,7 @@ export class TaskService {
     });
 
     if (task.sprintId) {
-      this.sprintGateway.emitProjectEvent(currentUser.organizationId, task.projectId, 'sprint.updated', {
+      this.sprintGateway.emitProjectEvent(task.projectId, 'sprint.updated', {
         projectId: task.projectId,
         sprintId: task.sprintId,
         taskId: task.id,
@@ -162,7 +162,7 @@ export class TaskService {
         at: new Date().toISOString(),
       });
     } else {
-      this.sprintGateway.emitProjectEvent(currentUser.organizationId, task.projectId, 'backlog.updated', {
+      this.sprintGateway.emitProjectEvent(task.projectId, 'backlog.updated', {
         projectId: task.projectId,
         taskId: task.id,
         reason: 'task.created',
@@ -258,7 +258,7 @@ export class TaskService {
       toColumnId: updated.boardColumnId,
     });
 
-    this.sprintGateway.emitProjectEvent(currentUser.organizationId, updated.projectId, 'backlog.updated', {
+    this.sprintGateway.emitProjectEvent(updated.projectId, 'backlog.updated', {
       projectId: updated.projectId,
       sprintId: updated.sprintId,
       taskId: updated.id,
@@ -267,7 +267,7 @@ export class TaskService {
     });
 
     if (updated.sprintId) {
-      this.sprintGateway.emitProjectEvent(currentUser.organizationId, updated.projectId, 'sprint.updated', {
+      this.sprintGateway.emitProjectEvent(updated.projectId, 'sprint.updated', {
         projectId: updated.projectId,
         sprintId: updated.sprintId,
         taskId: updated.id,
@@ -303,7 +303,7 @@ export class TaskService {
 
     await this.writeTaskHistory(task.id, currentUser.id, TaskHistoryAction.DELETED, {});
 
-    this.sprintGateway.emitProjectEvent(currentUser.organizationId, task.projectId, 'backlog.updated', {
+    this.sprintGateway.emitProjectEvent(task.projectId, 'backlog.updated', {
       projectId: task.projectId,
       sprintId: task.sprintId,
       taskId: task.id,
@@ -312,7 +312,7 @@ export class TaskService {
     });
 
     if (task.sprintId) {
-      this.sprintGateway.emitProjectEvent(currentUser.organizationId, task.projectId, 'sprint.updated', {
+      this.sprintGateway.emitProjectEvent(task.projectId, 'sprint.updated', {
         projectId: task.projectId,
         sprintId: task.sprintId,
         taskId: task.id,
