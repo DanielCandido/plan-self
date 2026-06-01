@@ -1,15 +1,15 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, Min } from 'class-validator';
+import {IsInt, IsOptional, IsString, Min} from 'class-validator';
 import { IsCuid } from '@plan-self/utils';
 
 export class MoveBoardTaskDto {
-  @IsCuid()
+  @IsString()
   projectId!: string;
 
-  @IsCuid()
+  @IsString()
   taskId!: string;
 
-  @IsCuid()
+  @IsString()
   targetColumnId!: string;
 
   @IsOptional()

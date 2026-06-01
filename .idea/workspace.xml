@@ -6,7 +6,14 @@
   <component name="ChangeListManager">
     <list default="true" id="15f29a31-c143-4c09-909b-801b83a10458" name="Changes" comment="feat: add Team Management page with directory and project cards, and implement design system styles">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/web/src/components/team/team-card.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/components/team/team-card.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/api/src/modules/board/board.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/modules/board/board.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/api/src/modules/board/board.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/modules/board/board.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/api/src/modules/board/dto/move-board-task.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/modules/board/dto/move-board-task.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/api/src/modules/sprints/dto/move-task.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/modules/sprints/dto/move-task.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/database/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/packages/database/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/database/prisma/migrations/20260528022207_team_fix/migration.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/database/prisma/seed.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/database/prisma/seed.mjs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -100,7 +107,7 @@
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;copilot/sync-backlog-kanban-sprint&quot;,
     &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;F:/projects/personal/plan-self&quot;,
@@ -171,6 +178,8 @@
       <workItem from="1779737568279" duration="8903000" />
       <workItem from="1779817138416" duration="5815000" />
       <workItem from="1779932670159" duration="4810000" />
+      <workItem from="1780196649404" duration="696000" />
+      <workItem from="1780324820539" duration="1528000" />
     </task>
     <task id="LOCAL-00001" summary="feat: add initial database migration with tables and enums for organization, team, user, and task management">
       <option name="closed" value="true" />

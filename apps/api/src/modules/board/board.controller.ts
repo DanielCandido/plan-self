@@ -4,9 +4,9 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import type { CurrentUserPayload } from '../auth/types/current-user.type';
-import type { MoveBoardTaskDto } from './dto/move-board-task.dto';
-import type { ReorderBoardTaskDto } from './dto/reorder-board-task.dto';
+import { CurrentUserPayload } from '../auth/types/current-user.type';
+import { MoveBoardTaskDto } from './dto/move-board-task.dto';
+import { ReorderBoardTaskDto } from './dto/reorder-board-task.dto';
 import { BoardService } from './board.service';
 
 @ApiTags('boards')
@@ -33,6 +33,7 @@ export class BoardController {
   @Roles('OWNER', 'ADMIN', 'MANAGER', 'MEMBER')
   @ApiOperation({ summary: 'Move task entre colunas do board' })
   moveTask(@CurrentUser() currentUser: CurrentUserPayload, @Body() dto: MoveBoardTaskDto) {
+    console.log(dto);
     return this.boardService.moveTask(currentUser, dto);
   }
 }

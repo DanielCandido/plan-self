@@ -208,6 +208,8 @@ export class BoardService {
 
     const nextState = this.columnTypeToState(targetColumn.type);
 
+    console.log(targetSprintId);
+
     await this.prisma.$transaction(async (tx) => {
       await tx.task.update({
         where: { id: task.id },
