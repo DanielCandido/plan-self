@@ -33,11 +33,11 @@ const taskInclude = {
         select: {
           id: true,
           name: true,
+          avatarUrl: true,
         },
       },
     },
-    orderBy: { createdAt: 'desc' as const },
-    take: 3,
+    orderBy: { createdAt: 'asc' as const },
   },
   boardColumn: {
     select: {
@@ -46,9 +46,24 @@ const taskInclude = {
       type: true,
     },
   },
+  sprint: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
   history: {
+    include: {
+      actor: {
+        select: {
+          id: true,
+          name: true,
+          avatarUrl: true,
+        },
+      },
+    },
     orderBy: { createdAt: 'desc' as const },
-    take: 10,
+    take: 30,
   },
 } satisfies Prisma.TaskInclude;
 
@@ -246,6 +261,10 @@ export class TaskService {
           boardColumnId: dto.boardColumnId === undefined ? undefined : dto.boardColumnId,
           updatedBy: currentUser.id,
           labels: this.serializeLabels(dto.labels),
+          checklist:
+            dto.checklist === undefined
+              ? undefined
+              : (dto.checklist as unknown as Prisma.InputJsonValue),
         },
         include: taskInclude,
       });
@@ -386,6 +405,89 @@ export class TaskService {
       createdAt: comment.createdAt.toISOString(),
       author: comment.author,
     };
+  }
+
+  async getTaskActivity(currentUser: CurrentUserPayload, taskId: string) {
+    await this.assertTaskScope(taskId, currentUser.organizationId);
+
+    const [comments, history] = await Promise.all([
+      this.prisma.taskComment.findMany({
+        where: { taskId },
+        include: {
+          author: { select: { id: true, name: true, avatarUrl: true } },
+        },
+        orderBy: { createdAt: 'asc' },
+      }),
+      this.prisma.taskHistory.findMany({
+        where: { taskId },
+        include: {
+          actor: { select: { id: true, name: true, avatarUrl: true } },
+        },
+        orderBy: { createdAt: 'asc' },
+      }),
+    ]);
+
+    type ActivityItem =
+      | { type: 'comment'; createdAt: Date; id: string; taskId: string; content: string; author: { id: string; name: string; avatarUrl: string | null } }
+      | { type: 'history'; createdAt: Date; id: string; action: string; fromStatus: string | null; toStatus: string | null; fromColumnId: string | null; toColumnId: string | null; actor: { id: string; name: string; avatarUrl: string | null } | null };
+
+    const commentItems: ActivityItem[] = comments.map((c) => ({
+      type: 'comment' as const,
+      createdAt: c.createdAt,
+      id: c.id,
+      taskId: c.taskId,
+      content: c.content,
+      author: { id: c.author.id, name: c.author.name, avatarUrl: c.author.avatarUrl ?? null },
+    }));
+
+    const historyItems: ActivityItem[] = history.map((h) => ({
+      type: 'history' as const,
+      createdAt: h.createdAt,
+      id: h.id,
+      action: h.action,
+      fromStatus: h.fromStatus,
+      toStatus: h.toStatus,
+      fromColumnId: h.fromColumnId,
+      toColumnId: h.toColumnId,
+      actor: h.actor
+        ? { id: h.actor.id, name: h.actor.name, avatarUrl: h.actor.avatarUrl ?? null }
+        : null,
+    }));
+
+    const timeline = [...commentItems, ...historyItems].sort(
+      (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+    );
+
+    return timeline.map((item) => ({
+      ...item,
+      createdAt: item.createdAt.toISOString(),
+    }));
+  }
+
+  async deleteTaskComment(currentUser: CurrentUserPayload, taskId: string, commentId: string) {
+    const comment = await this.prisma.taskComment.findFirst({
+      where: {
+        id: commentId,
+        taskId,
+        task: { project: { organizationId: currentUser.organizationId } },
+      },
+      select: { id: true, authorId: true, task: { select: { projectId: true } } },
+    });
+
+    if (!comment) {
+      throw new NotFoundException('Comentário não encontrado');
+    }
+
+    const canDelete =
+      comment.authorId === currentUser.id || ['OWNER', 'ADMIN'].includes(currentUser.role);
+
+    if (!canDelete) {
+      throw new ForbiddenException('Sem permissão para deletar este comentário');
+    }
+
+    await this.prisma.taskComment.delete({ where: { id: comment.id } });
+
+    return { ok: true };
   }
 
   async listLabels(currentUser: CurrentUserPayload, query: LabelQueryDto) {
@@ -551,6 +653,23 @@ export class TaskService {
     });
   }
 
+  private parseChecklist(raw: unknown): Array<{ id: string; title: string; done: boolean }> {
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .filter(
+        (item): item is { id: string; title: string; done: boolean } =>
+          item !== null &&
+          typeof item === 'object' &&
+          typeof (item as Record<string, unknown>).id === 'string' &&
+          typeof (item as Record<string, unknown>).title === 'string',
+      )
+      .map((item) => ({
+        id: item.id,
+        title: item.title,
+        done: Boolean(item.done),
+      }));
+  }
+
   private mapTask(task: TaskWithRelations) {
     const labels = Array.isArray(task.labels)
       ? task.labels
@@ -584,13 +703,19 @@ export class TaskService {
       blockedReason: task.blockedReason,
       dueDate: task.dueDate ? task.dueDate.toISOString() : null,
       labels,
+      checklist: this.parseChecklist(task.checklist),
       deletedAt: task.deletedAt ? task.deletedAt.toISOString() : null,
       assignees: task.assignees.map((assignee) => assignee.user),
       comments: task.comments.map((comment) => ({
         id: comment.id,
+        taskId: comment.taskId,
         content: comment.content,
         createdAt: comment.createdAt.toISOString(),
-        author: comment.author,
+        author: {
+          id: comment.author.id,
+          name: comment.author.name,
+          avatarUrl: (comment.author as { avatarUrl?: string | null }).avatarUrl ?? null,
+        },
       })),
       history: task.history.map((entry) => ({
         id: entry.id,
@@ -600,7 +725,27 @@ export class TaskService {
         fromColumnId: entry.fromColumnId,
         toColumnId: entry.toColumnId,
         createdAt: entry.createdAt.toISOString(),
+        actor: entry.actor
+          ? {
+              id: entry.actor.id,
+              name: entry.actor.name,
+              avatarUrl: entry.actor.avatarUrl ?? null,
+            }
+          : null,
       })),
+      boardColumn: task.boardColumn
+        ? {
+            id: task.boardColumn.id,
+            name: task.boardColumn.name,
+            type: task.boardColumn.type,
+          }
+        : null,
+      sprint: (task as unknown as { sprint?: { id: string; name: string } | null }).sprint
+        ? {
+            id: (task as unknown as { sprint: { id: string; name: string } }).sprint.id,
+            name: (task as unknown as { sprint: { id: string; name: string } }).sprint.name,
+          }
+        : null,
       updatedAt: task.updatedAt.toISOString(),
       createdAt: task.createdAt.toISOString(),
     };

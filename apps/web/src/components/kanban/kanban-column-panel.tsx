@@ -18,10 +18,12 @@ export function KanbanColumnPanel({
   column,
   tasks,
   isOver,
+  onOpenTask,
 }: {
   column: BoardColumn;
   tasks: BoardTask[];
   isOver: boolean;
+  onOpenTask?: (taskId: string) => void;
 }) {
   const { setNodeRef } = useDroppable({ id: column.id });
 
@@ -54,7 +56,7 @@ export function KanbanColumnPanel({
         <SortableContext items={tasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">
             {tasks.map((task) => (
-              <KanbanTaskCard key={task.id} task={task} />
+              <KanbanTaskCard key={task.id} task={task} onOpenTask={onOpenTask} />
             ))}
           </div>
         </SortableContext>

@@ -4,7 +4,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useSortable } from '@dnd-kit/sortable';
 import type { BoardTask } from '@plan-self/types';
 
-export function KanbanTaskCard({ task }: { task: BoardTask }) {
+export function KanbanTaskCard({ task, onOpenTask }: { task: BoardTask; onOpenTask?: (taskId: string) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
 
   return (
@@ -14,6 +14,9 @@ export function KanbanTaskCard({ task }: { task: BoardTask }) {
       className={`rounded-[20px] border p-4 transition ${
         isDragging ? 'opacity-50 shadow-2xl' : 'border-white/8 bg-[#14151c] hover:border-white/15'
       }`}
+      onClick={() => {
+        if (!isDragging && onOpenTask) onOpenTask(task.id);
+      }}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1 space-y-2">
@@ -45,6 +48,7 @@ export function KanbanTaskCard({ task }: { task: BoardTask }) {
             type="button"
             aria-label="Arrastar task"
             className="cursor-grab rounded-lg border border-white/10 bg-white/[0.04] p-1.5 text-white/50 active:cursor-grabbing"
+            onClick={(e) => e.stopPropagation()}
             {...attributes}
             {...listeners}
           >
@@ -68,3 +72,4 @@ function DragIcon() {
     </svg>
   );
 }
+

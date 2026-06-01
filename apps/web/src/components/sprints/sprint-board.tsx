@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   closestCorners,
   DndContext,
@@ -27,6 +27,10 @@ import { SprintMetrics } from './sprint-metrics';
 import { useBacklogStore } from '@/store/backlog.store';
 import { useDragStore } from '@/store/drag.store';
 import { useSprintStore } from '@/store/sprint.store';
+import { useTaskDetail } from '@/hooks/use-task-detail';
+import { useProjectById, useProjectMembers } from '@/hooks/use-projects';
+import { useAuth } from '@/hooks/useAuth';
+import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
 
 const SPRINT_CONTAINER_ID = 'sprint-container';
 const BACKLOG_CONTAINER_ID = 'backlog-container';
@@ -77,6 +81,29 @@ export function SprintBoard({
   const setMobileTab = useSprintStore((state) => state.setMobileTab);
   const focusedTaskId = useSprintStore((state) => state.focusedTaskId);
   const setFocusedTaskId = useSprintStore((state) => state.setFocusedTaskId);
+
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+
+  const projectQuery = useProjectById(projectId);
+  const membersQuery = useProjectMembers(projectId);
+  const { user } = useAuth();
+
+  const {
+    task: detailTask,
+    isLoading: isDetailLoading,
+    activity,
+    updateTask: updateDetailTask,
+    createComment,
+    deleteComment,
+    deleteTask,
+  } = useTaskDetail(selectedTaskId, projectId);
+
+  const projectName = projectQuery.data?.name ?? '';
+  const members = (membersQuery.data ?? []).map((m) => ({
+    userId: m.userId,
+    name: m.name,
+    avatarUrl: m.avatarUrl,
+  }));
 
   const search = useBacklogStore((state) => state.search);
   const setSearch = useBacklogStore((state) => state.setSearch);
@@ -232,6 +259,7 @@ export function SprintBoard({
                       setFocusedTaskId(taskId);
                       setActiveModal('move');
                     }}
+                    onOpenTask={setSelectedTaskId}
                     isDropActive={draggingTaskIds.length > 0}
                     dropzoneId={SPRINT_DROPZONE_ID}
                   />
@@ -258,6 +286,7 @@ export function SprintBoard({
                       setFocusedTaskId(taskId);
                       setActiveModal('move');
                     }}
+                    onOpenTask={setSelectedTaskId}
                     onSearchChange={setSearch}
                     search={search}
                     onCreateQuickTask={async (title) => {
@@ -326,6 +355,27 @@ export function SprintBoard({
       <SprintHistoryModal open={activeModal === 'history'} onOpenChange={(open) => setActiveModal(open ? 'history' : null)} entries={board?.history ?? []} />
 
       {commandOpen ? <CommandPalette onClose={() => setCommandOpen(false)} onOpenCreateSprint={() => setActiveModal('create')} onOpenHistory={() => setActiveModal('history')} onOpenComplete={() => setActiveModal('complete')} /> : null}
+
+      <TaskDetailModal
+        open={!!selectedTaskId}
+        taskId={selectedTaskId}
+        projectName={projectName}
+        members={members}
+        task={detailTask}
+        isLoading={isDetailLoading}
+        activity={activity}
+        currentUserId={user?.id ?? null}
+        onClose={() => setSelectedTaskId(null)}
+        onUpdate={(payload) => {
+          if (!selectedTaskId) return;
+          updateDetailTask.mutate(payload as Parameters<typeof updateDetailTask.mutate>[0]);
+        }}
+        onAddComment={async (content) => {
+          await createComment.mutateAsync(content);
+        }}
+        onDeleteComment={(commentId) => deleteComment.mutate(commentId)}
+        onDelete={() => deleteTask.mutate()}
+      />
 
       <button
         type="button"

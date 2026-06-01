@@ -73,6 +73,23 @@ export class TaskController {
     return this.taskService.createTaskComment(currentUser, taskId, dto);
   }
 
+  @Get('tasks/:id/activity')
+  @ApiOperation({ summary: 'Retorna timeline de atividade da task (histórico + comentários)' })
+  getTaskActivity(@CurrentUser() currentUser: CurrentUserPayload, @Param('id') taskId: string) {
+    return this.taskService.getTaskActivity(currentUser, taskId);
+  }
+
+  @Delete('tasks/:id/comments/:commentId')
+  @Roles('OWNER', 'ADMIN', 'MANAGER', 'MEMBER')
+  @ApiOperation({ summary: 'Deleta comentário de uma task' })
+  deleteComment(
+    @CurrentUser() currentUser: CurrentUserPayload,
+    @Param('id') taskId: string,
+    @Param('commentId') commentId: string,
+  ) {
+    return this.taskService.deleteTaskComment(currentUser, taskId, commentId);
+  }
+
   @Get('labels')
   @ApiOperation({ summary: 'Lista labels de um projeto' })
   listLabels(@CurrentUser() currentUser: CurrentUserPayload, @Query() query: LabelQueryDto) {

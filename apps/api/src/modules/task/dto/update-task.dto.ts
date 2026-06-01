@@ -10,9 +10,21 @@ import {
   IsString,
   Max,
   Min,
+  ValidateNested,
 } from 'class-validator';
 import { TaskState } from '@prisma/client';
 import { IsCuid } from '@plan-self/utils';
+
+export class ChecklistItemDto {
+  @IsString()
+  id!: string;
+
+  @IsString()
+  title!: string;
+
+  @IsBoolean()
+  done!: boolean;
+}
 
 export class UpdateTaskRestDto {
   @IsOptional()
@@ -76,6 +88,13 @@ export class UpdateTaskRestDto {
   @ArrayMaxSize(20)
   @IsCuid({ each: true })
   assigneeIds?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(100)
+  @ValidateNested({ each: true })
+  @Type(() => ChecklistItemDto)
+  checklist?: ChecklistItemDto[];
 
   @IsOptional()
   @IsDateString()

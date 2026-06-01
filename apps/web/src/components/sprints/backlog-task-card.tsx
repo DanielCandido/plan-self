@@ -9,11 +9,13 @@ export function BacklogTaskCard({
   selected,
   onSelect,
   onQuickEdit,
+  onOpenTask,
 }: {
   task: SprintTask;
   selected: boolean;
   onSelect: (taskId: string, multi?: boolean) => void;
   onQuickEdit: (taskId: string) => void;
+  onOpenTask?: (taskId: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
 
@@ -24,7 +26,13 @@ export function BacklogTaskCard({
       className={`rounded-[24px] border p-4 transition ${
         selected ? 'border-[#b794ff]/70 bg-[#1f1830]' : 'border-white/8 bg-[#14151c] hover:border-white/15'
       } ${isDragging ? 'opacity-60 shadow-2xl' : ''}`}
-      onClick={(event) => onSelect(task.id, event.metaKey || event.ctrlKey || event.shiftKey)}
+      onClick={(event) => {
+        if (event.metaKey || event.ctrlKey || event.shiftKey) {
+          onSelect(task.id, true);
+        } else {
+          onOpenTask?.(task.id);
+        }
+      }}
     >
       <div className="flex items-start justify-between gap-4">
         <div>

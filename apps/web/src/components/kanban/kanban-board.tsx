@@ -21,6 +21,10 @@ import { toast } from 'sonner';
 import type { BoardTask, KanbanBoardResponse, MoveBoardTaskPayload, ReorderBoardTaskPayload } from '@plan-self/types';
 import { KanbanColumnPanel } from './kanban-column-panel';
 import { KanbanTaskCard } from './kanban-task-card';
+import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
+import { useTaskDetail } from '@/hooks/use-task-detail';
+import { useProjectById, useProjectMembers } from '@/hooks/use-projects';
+import { useAuth } from '@/hooks/useAuth';
 
 export function KanbanBoard({
   projectId,
@@ -37,7 +41,22 @@ export function KanbanBoard({
 }) {
   const [activeTask, setActiveTask] = useState<BoardTask | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const lastOverIdRef = useRef<string | null>(null);
+
+  const { user } = useAuth();
+  const projectQuery = useProjectById(projectId);
+  const membersQuery = useProjectMembers(projectId);
+
+  const {
+    task: detailTask,
+    isLoading: isDetailLoading,
+    activity,
+    updateTask,
+    createComment,
+    deleteComment,
+    deleteTask,
+  } = useTaskDetail(selectedTaskId, projectId);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -124,6 +143,12 @@ export function KanbanBoard({
   };
 
   const totalTasks = board.tasks.length;
+  const projectName = projectQuery.data?.name ?? '';
+  const members = (membersQuery.data ?? []).map((m) => ({
+    userId: m.userId,
+    name: m.name,
+    avatarUrl: m.avatarUrl,
+  }));
 
   return (
     <>
@@ -151,6 +176,7 @@ export function KanbanBoard({
                 column={column}
                 tasks={tasksByColumn.get(column.id) ?? []}
                 isOver={overId !== null && getColumnForId(overId) === column.id}
+                onOpenTask={(taskId) => setSelectedTaskId(taskId)}
               />
             ))}
           </div>
@@ -165,6 +191,29 @@ export function KanbanBoard({
           </DragOverlay>
         </DndContext>
       </div>
+
+      <TaskDetailModal
+        open={Boolean(selectedTaskId)}
+        taskId={selectedTaskId}
+        projectId={projectId}
+        projectName={projectName}
+        members={members}
+        task={detailTask}
+        isLoading={isDetailLoading}
+        activity={activity}
+        currentUserId={user?.id ?? null}
+        onClose={() => setSelectedTaskId(null)}
+        onUpdate={(payload) => {
+          if (!selectedTaskId) return;
+          updateTask.mutate(payload as Parameters<typeof updateTask.mutate>[0]);
+        }}
+        onAddComment={async (content) => {
+          await createComment.mutateAsync(content);
+        }}
+        onDeleteComment={(commentId) => deleteComment.mutate(commentId)}
+        onDelete={() => deleteTask.mutate()}
+      />
     </>
   );
 }
+

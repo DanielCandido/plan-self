@@ -9,6 +9,7 @@ export function SprintCard({
   selectedTaskIds,
   onSelectTask,
   onQuickEditTask,
+  onOpenTask,
   isDropActive,
   dropzoneId,
 }: {
@@ -16,6 +17,7 @@ export function SprintCard({
   selectedTaskIds: string[];
   onSelectTask: (taskId: string, multi?: boolean) => void;
   onQuickEditTask: (taskId: string) => void;
+  onOpenTask?: (taskId: string) => void;
   isDropActive: boolean;
   dropzoneId?: string;
 }) {
@@ -72,6 +74,7 @@ export function SprintCard({
             selected={selectedTaskIds.includes(task.id)}
             onSelect={onSelectTask}
             onQuickEdit={onQuickEditTask}
+            onOpenTask={onOpenTask}
           />
         ))}
         <SprintDropzone id={dropzoneId} isOver={isDropActive} />

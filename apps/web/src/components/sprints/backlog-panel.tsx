@@ -20,6 +20,7 @@ export function BacklogPanel({
   onToggleEpic,
   onSelectTask,
   onQuickEditTask,
+  onOpenTask,
   onSearchChange,
   search,
   onCreateQuickTask,
@@ -35,6 +36,7 @@ export function BacklogPanel({
   onToggleEpic: (epicId: string) => void;
   onSelectTask: (taskId: string, multi?: boolean) => void;
   onQuickEditTask: (taskId: string) => void;
+  onOpenTask?: (taskId: string) => void;
   onSearchChange: (value: string) => void;
   search: string;
   onCreateQuickTask: (title: string) => Promise<void>;
@@ -97,6 +99,7 @@ export function BacklogPanel({
                       selected={selectedTaskIds.includes(task.id)}
                       onSelect={onSelectTask}
                       onQuickEdit={onQuickEditTask}
+                      onOpenTask={onOpenTask}
                     />
                   ))}
                 </div>
