@@ -235,7 +235,7 @@ export function useProjectFormOptions(ownerSearch = '', teamSearch = '', enabled
   };
 }
 
-export function useProjectById(projectId: string) {
+export function useProjectById(projectId: string, enabled = true) {
   return useQuery({
     queryKey: projectDetailQueryKey(projectId),
     queryFn: async () => {
@@ -243,6 +243,6 @@ export function useProjectById(projectId: string) {
       return data;
     },
     staleTime: 30_000,
-    enabled: Boolean(projectId),
+    enabled: enabled && Boolean(projectId),
   });
 }

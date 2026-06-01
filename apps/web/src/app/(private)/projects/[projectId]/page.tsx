@@ -1,5 +1,7 @@
+import { use } from 'react';
 import { redirect } from 'next/navigation';
 
-export default function ProjectIndexPage({ params }: { params: { projectId: string } }) {
-  redirect(`/projects/${params.projectId}/sprints`);
+export default function ProjectIndexPage({ params }: { params: Promise<{ projectId: string }> }) {
+  const { projectId } = use(params);
+  redirect(`/projects/${projectId}/sprints`);
 }

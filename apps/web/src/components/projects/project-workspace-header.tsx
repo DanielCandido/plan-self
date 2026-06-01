@@ -1,7 +1,9 @@
 'use client';
 
+import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 import { useProjectById } from '@/hooks/use-projects';
 import { usePrivateShell } from '@/components/layout/private-shell-context';
 
@@ -13,7 +15,8 @@ const tabs = [
 export function ProjectWorkspaceHeader({ projectId }: { projectId: string }) {
   const pathname = usePathname();
   const { toggleSidebar } = usePrivateShell();
-  const { data: project, isLoading } = useProjectById(projectId);
+  const { isBootstrapped, isAuthenticated } = useAuth();
+  const { data: project, isLoading } = useProjectById(projectId, isBootstrapped && isAuthenticated);
 
   return (
     <header className="mb-6 overflow-hidden rounded-[32px] border border-white/10 bg-[#111219] shadow-[0_20px_80px_rgba(0,0,0,0.35)]">
@@ -40,7 +43,7 @@ export function ProjectWorkspaceHeader({ projectId }: { projectId: string }) {
 
       <nav className="flex items-center gap-1 px-5 py-3" aria-label="Workspace tabs">
         {tabs.map((tab) => {
-          const href = `/projects/${projectId}/${tab.slug}`;
+          const href = `/projects/${projectId}/${tab.slug}` as Route;
           const isActive = pathname.startsWith(href);
           return (
             <Link

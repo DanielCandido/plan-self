@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import {createId} from "@paralleldrive/cuid2";
 
 const prisma = new PrismaClient();
 const SPRINT_ELAPSED_DAYS = 2;
@@ -15,7 +16,7 @@ async function main() {
     },
   });
 
-  const passwordHash = await bcrypt.hash('admin123', 12);
+  const passwordHash = await bcrypt.hash('@admin#321', 12);
 
   const user = await prisma.user.upsert({
     where: { email: 'admin@plan-self.local' },
@@ -225,8 +226,9 @@ async function main() {
     },
   });
 
+  const projectId = createId();
   const project = await prisma.project.upsert({
-    where: { id: 'seed-kanban-project' },
+    where: { id: projectId },
     update: {
       name: 'Kanban Transformation',
       description: 'Roadmap incremental para board/sprint/task',
@@ -237,7 +239,7 @@ async function main() {
       progress: 42,
     },
     create: {
-      id: 'seed-kanban-project',
+      id: projectId,
       name: 'Kanban Transformation',
       description: 'Roadmap incremental para board/sprint/task',
       organizationId: organization.id,
@@ -285,8 +287,9 @@ async function main() {
     ),
   );
 
+  const sprintId = createId();
   const activeSprint = await prisma.sprint.upsert({
-    where: { id: 'seed-active-sprint' },
+    where: { id: sprintId },
     update: {
       projectId: project.id,
       name: 'Sprint 24 - Premium Kanban',
@@ -302,7 +305,7 @@ async function main() {
       createdBy: user.id,
     },
     create: {
-      id: 'seed-active-sprint',
+      id: sprintId,
       projectId: project.id,
       name: 'Sprint 24 - Premium Kanban',
       status: 'ACTIVE',
@@ -322,7 +325,7 @@ async function main() {
 
   const taskSeeds = [
     {
-      id: 'seed-task-backlog',
+      id: createId(),
       code: 'KAN-001',
       title: 'Criar endpoint GET /boards/:projectId',
       status: 'BACKLOG',
@@ -330,7 +333,7 @@ async function main() {
       position: 0,
     },
     {
-      id: 'seed-task-progress',
+      id: createId(),
       code: 'KAN-002',
       title: 'Adicionar controle de concorrência no move/reorder',
       status: 'IN_PROGRESS',
@@ -339,7 +342,7 @@ async function main() {
       sprintId: activeSprint.id,
     },
     {
-      id: 'seed-task-done',
+      id: createId(),
       code: 'KAN-003',
       title: 'Implementar soft delete de task',
       status: 'DONE',
