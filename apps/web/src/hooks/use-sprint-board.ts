@@ -38,6 +38,17 @@ interface BacklogPageResponse {
   projectName: string;
 }
 
+interface SprintRealtimePayload {
+  projectId: string;
+  sprintId?: string | null;
+  taskId?: string;
+  taskIds?: string[];
+  sourceSprintIds?: string[];
+  targetSprintId?: string | null;
+  reason?: string;
+  at: string;
+}
+
 export function useSprintBoard(projectId: string) {
   const queryClient = useQueryClient();
   const search = useBacklogStore((state) => state.search);
@@ -53,7 +64,10 @@ export function useSprintBoard(projectId: string) {
   );
 
   const setLastUndoMove = useDragStore((state) => state.setLastUndoMove);
-  const invalidateTimeout = useRef<NodeJS.Timeout | null>(null);
+  const invalidateTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingRefreshScopes = useRef(new Set<'board' | 'backlog'>());
+  const projectIdRef = useRef(projectId);
+  projectIdRef.current = projectId;
 
   const board = useQuery({
     queryKey: boardQueryKey(projectId),
@@ -88,10 +102,18 @@ export function useSprintBoard(projectId: string) {
     staleTime: 15_000,
   });
 
-  const invalidateAll = useCallback(() => {
+  const invalidateBoard = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: boardQueryKey(projectId) });
+  }, [projectId, queryClient]);
+
+  const invalidateBacklog = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ['sprints', 'backlog', projectId] });
   }, [projectId, queryClient]);
+
+  const invalidateAll = useCallback(() => {
+    invalidateBoard();
+    invalidateBacklog();
+  }, [invalidateBacklog, invalidateBoard]);
 
   const createSprint = useMutation({
     mutationFn: async (payload: CreateSprintPayload) => {
@@ -187,32 +209,83 @@ export function useSprintBoard(projectId: string) {
       withCredentials: true,
     });
 
-    const invalidate = () => {
+    const scheduleRefresh = (...scopes: Array<'board' | 'backlog'>) => {
+      scopes.forEach((scope) => pendingRefreshScopes.current.add(scope));
+
       if (invalidateTimeout.current) {
         return;
       }
 
       invalidateTimeout.current = setTimeout(() => {
+        const shouldRefreshBoard = pendingRefreshScopes.current.has('board');
+        const shouldRefreshBacklog = pendingRefreshScopes.current.has('backlog');
+        pendingRefreshScopes.current.clear();
         invalidateTimeout.current = null;
-        invalidateAll();
+
+        if (shouldRefreshBoard) {
+          invalidateBoard();
+        }
+        if (shouldRefreshBacklog) {
+          invalidateBacklog();
+        }
       }, 600);
     };
 
-    ['sprint.updated', 'task.moved', 'metrics.updated', 'sprint.completed'].forEach((event) => {
-      socket.on(event, invalidate);
+    const subscribeToProject = () => {
+      socket.emit('project:subscribe', { projectId: projectIdRef.current });
+      invalidateAll();
+    };
+
+    const handleProjectEvent = (
+      payload: SprintRealtimePayload,
+      scopes: Array<'board' | 'backlog'>,
+    ) => {
+      if (payload.projectId !== projectIdRef.current) {
+        return;
+      }
+
+      scheduleRefresh(...scopes);
+    };
+
+    socket.on('connect', subscribeToProject);
+    socket.on('reconnect', subscribeToProject);
+
+    socket.on('sprint.updated', (payload: SprintRealtimePayload) => {
+      handleProjectEvent(payload, ['board']);
+    });
+    socket.on('metrics.updated', (payload: SprintRealtimePayload) => {
+      handleProjectEvent(payload, ['board']);
+    });
+    socket.on('sprint.completed', (payload: SprintRealtimePayload) => {
+      handleProjectEvent(payload, ['board', 'backlog']);
+    });
+    socket.on('backlog.updated', (payload: SprintRealtimePayload) => {
+      handleProjectEvent(payload, ['board', 'backlog']);
+    });
+    socket.on('task.moved', (payload: SprintRealtimePayload) => {
+      handleProjectEvent(payload, ['board', 'backlog']);
     });
 
+    socket.on('connect_error', invalidateAll);
+
     return () => {
-      ['sprint.updated', 'task.moved', 'metrics.updated', 'sprint.completed'].forEach((event) => {
-        socket.off(event, invalidate);
-      });
+      socket.emit('project:unsubscribe', { projectId: projectIdRef.current });
+      socket.off('connect', subscribeToProject);
+      socket.off('reconnect', subscribeToProject);
+      socket.off('sprint.updated');
+      socket.off('metrics.updated');
+      socket.off('sprint.completed');
+      socket.off('backlog.updated');
+      socket.off('task.moved');
+      socket.off('connect_error', invalidateAll);
       if (invalidateTimeout.current) {
         clearTimeout(invalidateTimeout.current);
         invalidateTimeout.current = null;
       }
+      pendingRefreshScopes.current.clear();
       socket.disconnect();
     };
-  }, [invalidateAll, projectId]);
+  }, [invalidateAll, invalidateBacklog, invalidateBoard, projectId]);
 
   const backlogItems = useMemo(
     () => backlog.data?.pages.flatMap((page) => page.items) ?? [],

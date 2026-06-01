@@ -153,10 +153,22 @@ export class TaskService {
       toColumnId: task.boardColumnId,
     });
 
-    this.sprintGateway.emitOrganizationEvent(currentUser.organizationId, 'task.created', {
-      projectId: task.projectId,
-      taskId: task.id,
-    });
+    if (task.sprintId) {
+      this.sprintGateway.emitProjectEvent(currentUser.organizationId, task.projectId, 'sprint.updated', {
+        projectId: task.projectId,
+        sprintId: task.sprintId,
+        taskId: task.id,
+        reason: 'task.created',
+        at: new Date().toISOString(),
+      });
+    } else {
+      this.sprintGateway.emitProjectEvent(currentUser.organizationId, task.projectId, 'backlog.updated', {
+        projectId: task.projectId,
+        taskId: task.id,
+        reason: 'task.created',
+        at: new Date().toISOString(),
+      });
+    }
 
     return this.mapTask(task);
   }
@@ -246,10 +258,23 @@ export class TaskService {
       toColumnId: updated.boardColumnId,
     });
 
-    this.sprintGateway.emitOrganizationEvent(currentUser.organizationId, 'task.updated', {
+    this.sprintGateway.emitProjectEvent(currentUser.organizationId, updated.projectId, 'backlog.updated', {
       projectId: updated.projectId,
+      sprintId: updated.sprintId,
       taskId: updated.id,
+      reason: 'task.updated',
+      at: new Date().toISOString(),
     });
+
+    if (updated.sprintId) {
+      this.sprintGateway.emitProjectEvent(currentUser.organizationId, updated.projectId, 'sprint.updated', {
+        projectId: updated.projectId,
+        sprintId: updated.sprintId,
+        taskId: updated.id,
+        reason: 'task.updated',
+        at: new Date().toISOString(),
+      });
+    }
 
     return this.mapTask(updated);
   }
@@ -257,7 +282,7 @@ export class TaskService {
   async deleteTask(currentUser: CurrentUserPayload, taskId: string) {
     const task = await this.prisma.task.findFirst({
       where: { id: taskId, project: { organizationId: currentUser.organizationId } },
-      select: { id: true, projectId: true, deletedAt: true },
+      select: { id: true, projectId: true, sprintId: true, deletedAt: true },
     });
 
     if (!task) {
@@ -278,10 +303,23 @@ export class TaskService {
 
     await this.writeTaskHistory(task.id, currentUser.id, TaskHistoryAction.DELETED, {});
 
-    this.sprintGateway.emitOrganizationEvent(currentUser.organizationId, 'task.deleted', {
+    this.sprintGateway.emitProjectEvent(currentUser.organizationId, task.projectId, 'backlog.updated', {
       projectId: task.projectId,
+      sprintId: task.sprintId,
       taskId: task.id,
+      reason: 'task.deleted',
+      at: new Date().toISOString(),
     });
+
+    if (task.sprintId) {
+      this.sprintGateway.emitProjectEvent(currentUser.organizationId, task.projectId, 'sprint.updated', {
+        projectId: task.projectId,
+        sprintId: task.sprintId,
+        taskId: task.id,
+        reason: 'task.deleted',
+        at: new Date().toISOString(),
+      });
+    }
 
     return { ok: true };
   }

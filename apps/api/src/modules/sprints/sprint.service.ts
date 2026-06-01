@@ -216,7 +216,9 @@ export class SprintService {
     });
 
     const hydrated = await this.repository.getSprintOrThrow(sprint, currentUser.organizationId);
-    this.emitSprintEvent(currentUser.organizationId, 'sprint.updated', hydrated.id);
+    this.emitSprintEvent(currentUser.organizationId, hydrated.projectId, 'sprint.updated', hydrated.id, {
+      reason: 'sprint.created',
+    });
     return this.mapSprint(hydrated);
   }
 
@@ -298,6 +300,9 @@ export class SprintService {
     });
 
     const refreshed = await this.syncSprintMetrics(sprint.id, currentUser.organizationId);
+    this.emitSprintEvent(currentUser.organizationId, refreshed.projectId, 'sprint.updated', refreshed.id, {
+      reason: 'sprint.updated',
+    });
     return this.mapSprint(refreshed);
   }
 
@@ -329,7 +334,13 @@ export class SprintService {
       });
     });
 
-    this.emitSprintEvent(currentUser.organizationId, 'sprint.updated', sprint.id);
+    this.emitSprintEvent(currentUser.organizationId, sprint.projectId, 'sprint.updated', sprint.id, {
+      reason: 'sprint.deleted',
+    });
+    this.emitBacklogEvent(currentUser.organizationId, sprint.projectId, {
+      reason: 'sprint.deleted',
+      sprintId: sprint.id,
+    });
     return { ok: true };
   }
 
@@ -366,7 +377,9 @@ export class SprintService {
 
     const refreshed = await this.syncSprintMetrics(sprint.id, currentUser.organizationId);
     await this.captureBurndownSnapshot(refreshed);
-    this.emitSprintEvent(currentUser.organizationId, 'sprint.updated', refreshed.id);
+    this.emitSprintEvent(currentUser.organizationId, refreshed.projectId, 'sprint.updated', refreshed.id, {
+      reason: 'sprint.started',
+    });
     return this.mapSprint(refreshed);
   }
 
@@ -455,7 +468,13 @@ export class SprintService {
     });
 
     const refreshed = await this.repository.getSprintOrThrow(sprint.id, currentUser.organizationId);
-    this.emitSprintEvent(currentUser.organizationId, 'sprint.completed', refreshed.id);
+    this.emitSprintEvent(currentUser.organizationId, refreshed.projectId, 'sprint.completed', refreshed.id, {
+      reason: 'sprint.completed',
+    });
+    this.emitBacklogEvent(currentUser.organizationId, refreshed.projectId, {
+      reason: 'sprint.completed',
+      sprintId: refreshed.id,
+    });
     return this.mapSprint(refreshed);
   }
 
@@ -477,7 +496,13 @@ export class SprintService {
     });
 
     const refreshed = await this.repository.getSprintOrThrow(sprint.id, currentUser.organizationId);
-    this.emitSprintEvent(currentUser.organizationId, 'sprint.updated', refreshed.id);
+    this.emitSprintEvent(currentUser.organizationId, refreshed.projectId, 'sprint.updated', refreshed.id, {
+      reason: 'sprint.cancelled',
+    });
+    this.emitBacklogEvent(currentUser.organizationId, refreshed.projectId, {
+      reason: 'sprint.cancelled',
+      sprintId: refreshed.id,
+    });
     return this.mapSprint(refreshed);
   }
 
@@ -528,6 +553,14 @@ export class SprintService {
 
     if (dto.sprintId) {
       await this.syncSprintMetrics(dto.sprintId, currentUser.organizationId);
+      this.emitSprintEvent(currentUser.organizationId, dto.projectId, 'sprint.updated', dto.sprintId, {
+        reason: 'tasks.reordered',
+      });
+    } else {
+      this.emitBacklogEvent(currentUser.organizationId, dto.projectId, {
+        reason: 'backlog.reordered',
+        taskIds: dto.orderedTaskIds,
+      });
     }
 
     return { ok: true };
@@ -630,12 +663,18 @@ export class SprintService {
       await this.syncSprintMetrics(sprintIdToSync, currentUser.organizationId);
     }
 
+    this.emitProjectEvent(currentUser.organizationId, dto.projectId, 'task.moved', {
+      sprintId: targetSprint?.id ?? null,
+      sourceSprintIds: previousSprintIds,
+      targetSprintId: targetSprint?.id ?? null,
+      taskIds,
+      reason: targetSprint ? 'task.added_to_sprint' : 'task.returned_to_backlog',
+    });
+
     if (targetSprint) {
-      this.emitSprintEvent(currentUser.organizationId, 'task.moved', targetSprint.id);
       return this.mapSprint(await this.repository.getSprintOrThrow(targetSprint.id, currentUser.organizationId));
     }
 
-    this.emitSprintEvent(currentUser.organizationId, 'task.moved');
     return { ok: true };
   }
 
@@ -673,6 +712,15 @@ export class SprintService {
 
     if (task.sprintId) {
       await this.syncSprintMetrics(task.sprintId, currentUser.organizationId);
+      this.emitSprintEvent(currentUser.organizationId, task.projectId, 'sprint.updated', task.sprintId, {
+        taskId: task.id,
+        reason: 'task.updated',
+      });
+    } else {
+      this.emitBacklogEvent(currentUser.organizationId, task.projectId, {
+        taskId: task.id,
+        reason: 'task.updated',
+      });
     }
 
     return this.repository.findTaskById(task.id, currentUser.organizationId).then((refreshed) => this.mapTask(refreshed));
@@ -692,10 +740,16 @@ export class SprintService {
 
     if (task.sprintId) {
       await this.syncSprintMetrics(task.sprintId, currentUser.organizationId);
-      this.emitSprintEvent(currentUser.organizationId, 'sprint.updated', task.sprintId);
+      this.emitSprintEvent(currentUser.organizationId, task.projectId, 'sprint.updated', task.sprintId, {
+        taskId: task.id,
+        reason: 'task.deleted',
+      });
+    } else {
+      this.emitBacklogEvent(currentUser.organizationId, task.projectId, {
+        taskId: task.id,
+        reason: 'task.deleted',
+      });
     }
-
-    this.emitSprintEvent(currentUser.organizationId, 'task.moved');
     return { ok: true };
   }
 
@@ -773,7 +827,9 @@ export class SprintService {
       },
     });
 
-    this.emitSprintEvent(organizationId, 'metrics.updated', sprint.id);
+    this.emitSprintEvent(organizationId, sprint.projectId, 'metrics.updated', sprint.id, {
+      reason: 'metrics.updated',
+    });
     return this.repository.getSprintOrThrow(sprint.id, organizationId);
   }
 
@@ -920,11 +976,38 @@ export class SprintService {
     });
   }
 
-  private emitSprintEvent(organizationId: string, event: string, sprintId?: string) {
-    this.sprintGateway.emitOrganizationEvent(organizationId, event, {
-      sprintId,
+  private emitProjectEvent(
+    organizationId: string,
+    projectId: string,
+    event: string,
+    payload: Record<string, unknown> = {},
+  ) {
+    this.sprintGateway.emitProjectEvent(organizationId, projectId, event, {
+      projectId,
       at: new Date().toISOString(),
+      ...payload,
     });
+  }
+
+  private emitSprintEvent(
+    organizationId: string,
+    projectId: string,
+    event: string,
+    sprintId?: string | null,
+    payload: Record<string, unknown> = {},
+  ) {
+    this.emitProjectEvent(organizationId, projectId, event, {
+      sprintId: sprintId ?? null,
+      ...payload,
+    });
+  }
+
+  private emitBacklogEvent(
+    organizationId: string,
+    projectId: string,
+    payload: Record<string, unknown> = {},
+  ) {
+    this.emitProjectEvent(organizationId, projectId, 'backlog.updated', payload);
   }
 
   private startOfDay(date: Date) {

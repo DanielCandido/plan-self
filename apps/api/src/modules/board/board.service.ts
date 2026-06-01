@@ -118,11 +118,15 @@ export class BoardService {
       }
     });
 
-    this.sprintGateway.emitOrganizationEvent(currentUser.organizationId, 'task.moved', {
-      projectId: dto.projectId,
-      columnId: column.id,
-      taskIds: dto.orderedTaskIds,
-    });
+    if (sprintId === null) {
+      this.sprintGateway.emitProjectEvent(currentUser.organizationId, dto.projectId, 'backlog.updated', {
+        projectId: dto.projectId,
+        columnId: column.id,
+        taskIds: dto.orderedTaskIds,
+        reason: 'backlog.reordered',
+        at: new Date().toISOString(),
+      });
+    }
 
     void this.kanbanEvents.publish('kanban.task.reordered', {
       projectId: dto.projectId,
@@ -151,6 +155,7 @@ export class BoardService {
           id: true,
           projectId: true,
           boardColumnId: true,
+          sprintId: true,
           status: true,
           position: true,
         },
@@ -230,12 +235,17 @@ export class BoardService {
       });
     });
 
-    this.sprintGateway.emitOrganizationEvent(currentUser.organizationId, 'task.moved', {
-      projectId: dto.projectId,
-      taskId: task.id,
-      fromColumnId: task.boardColumnId,
-      toColumnId: targetColumn.id,
-    });
+    if (task.sprintId === null || targetSprintId === null) {
+      this.sprintGateway.emitProjectEvent(currentUser.organizationId, dto.projectId, 'backlog.updated', {
+        projectId: dto.projectId,
+        sprintId: targetSprintId,
+        taskId: task.id,
+        fromColumnId: task.boardColumnId,
+        toColumnId: targetColumn.id,
+        reason: 'task.moved',
+        at: new Date().toISOString(),
+      });
+    }
 
     void this.kanbanEvents.publish('kanban.task.moved', {
       projectId: dto.projectId,

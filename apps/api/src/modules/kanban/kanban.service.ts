@@ -46,9 +46,10 @@ export class KanbanService {
       ),
     );
 
-    this.sprintGateway.emitOrganizationEvent(currentUser.organizationId, 'task.updated', {
+    this.sprintGateway.emitProjectEvent(currentUser.organizationId, dto.projectId, 'backlog.updated', {
       projectId: dto.projectId,
       reason: 'backlog.prioritized',
+      at: new Date().toISOString(),
     });
 
     return { ok: true };

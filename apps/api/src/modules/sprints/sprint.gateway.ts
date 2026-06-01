@@ -1,5 +1,6 @@
 import {
   ConnectedSocket,
+  MessageBody,
   OnGatewayConnection,
   SubscribeMessage,
   WebSocketGateway,
@@ -72,8 +73,55 @@ export class SprintGateway implements OnGatewayConnection {
     };
   }
 
+  @SubscribeMessage('project:subscribe')
+  async subscribeProject(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { projectId: string },
+  ) {
+    const organizationId = client.data.organizationId as string | undefined;
+
+    if (!organizationId || !payload?.projectId) {
+      return { ok: false };
+    }
+
+    const project = await this.prisma.project.findFirst({
+      where: {
+        id: payload.projectId,
+        organizationId,
+      },
+      select: { id: true },
+    });
+
+    if (!project) {
+      return { ok: false };
+    }
+
+    const room = `project:${payload.projectId}`;
+    client.join(room);
+    return { ok: true, room };
+  }
+
+  @SubscribeMessage('project:unsubscribe')
+  unsubscribeProject(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { projectId: string },
+  ) {
+    if (!payload?.projectId) {
+      return { ok: false };
+    }
+
+    const room = `project:${payload.projectId}`;
+    client.leave(room);
+    return { ok: true, room };
+  }
+
   emitOrganizationEvent(organizationId: string, event: string, payload: unknown) {
     this.server.to(`organization:${organizationId}`).emit(event, payload);
+  }
+
+  emitProjectEvent(organizationId: string, projectId: string, event: string, payload: unknown) {
+    void organizationId;
+    this.server.to(`project:${projectId}`).emit(event, payload);
   }
 
   private readToken(client: Socket): string | undefined {
