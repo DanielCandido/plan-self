@@ -3,6 +3,7 @@ import { BoardColumnType, type Prisma, TaskHistoryAction, TaskState } from '@pri
 import type { CurrentUserPayload } from '../auth/types/current-user.type';
 import { PrismaService } from '../prisma/prisma.service';
 import { SprintGateway } from '../sprints/sprint.gateway';
+import { KanbanEventsPublisher } from './events/kanban-events.publisher';
 import type { MoveBoardTaskDto } from './dto/move-board-task.dto';
 import type { ReorderBoardTaskDto } from './dto/reorder-board-task.dto';
 
@@ -25,6 +26,7 @@ export class BoardService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly sprintGateway: SprintGateway,
+    private readonly kanbanEvents: KanbanEventsPublisher,
   ) {}
 
   async getBoard(currentUser: CurrentUserPayload, projectId: string) {
@@ -120,6 +122,16 @@ export class BoardService {
       projectId: dto.projectId,
       columnId: column.id,
       taskIds: dto.orderedTaskIds,
+    });
+
+    void this.kanbanEvents.publish('kanban.task.reordered', {
+      projectId: dto.projectId,
+      organizationId: currentUser.organizationId,
+      data: {
+        projectId: dto.projectId,
+        columnId: column.id,
+        orderedTaskIds: dto.orderedTaskIds,
+      },
     });
 
     return { ok: true };
@@ -223,6 +235,19 @@ export class BoardService {
       taskId: task.id,
       fromColumnId: task.boardColumnId,
       toColumnId: targetColumn.id,
+    });
+
+    void this.kanbanEvents.publish('kanban.task.moved', {
+      projectId: dto.projectId,
+      organizationId: currentUser.organizationId,
+      data: {
+        projectId: dto.projectId,
+        taskId: task.id,
+        fromColumnId: task.boardColumnId,
+        toColumnId: targetColumn.id,
+        targetPosition: targetPosition,
+        status: nextState,
+      },
     });
 
     return { ok: true };
