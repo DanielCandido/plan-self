@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsDateString, IsOptional, IsString, MaxLength } from 'class-validator';
+import {IsCuid} from "@plan-self/utils";
 
 export class CreateDashboardTaskDto {
   @ApiProperty()
@@ -29,6 +30,6 @@ export class CreateDashboardTaskDto {
   @ApiProperty({ type: [String], required: false })
   @IsOptional()
   @IsArray()
-  @IsString({ each: true })
+  @IsCuid({ each: true })
   assigneeIds?: string[];
 }

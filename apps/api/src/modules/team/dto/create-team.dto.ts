@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TeamVisibility } from '@prisma/client';
 import { IsArray, IsEnum, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import {IsCuid} from "@plan-self/utils";
 
 export class CreateTeamDto {
   @ApiProperty({ minLength: 2, maxLength: 80 })
@@ -32,12 +33,12 @@ export class CreateTeamDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
+  @IsCuid()
   ownerId?: string;
 
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
   @IsArray()
-  @IsString({ each: true })
+  @IsCuid({ each: true })
   memberIds?: string[];
 }

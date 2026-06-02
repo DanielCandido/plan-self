@@ -6,6 +6,7 @@ export class ReorderTaskDto {
   projectId!: string;
 
   @IsArray()
+  @IsCuid({ each: true })
   orderedTaskIds!: string[];
 
   @IsOptional()

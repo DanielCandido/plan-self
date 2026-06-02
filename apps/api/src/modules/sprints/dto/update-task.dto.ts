@@ -1,5 +1,6 @@
-import { IsArray, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import {IsArray, IsDate, IsEnum, IsInt, IsOptional, IsString, Max, Min} from 'class-validator';
 import {IsCuid} from "@plan-self/utils";
+import {TaskState} from "@prisma/client";
 
 export class UpdateTaskDto {
   @IsOptional()
@@ -23,10 +24,18 @@ export class UpdateTaskDto {
 
   @IsOptional()
   @IsArray()
-  @IsCuid()
+  @IsCuid({ each: true })
   assigneeIds?: string[];
 
   @IsOptional()
   @IsString()
   blockedReason?: string | null;
+
+  @IsOptional()
+  @IsEnum(TaskState)
+  status?: TaskState;
+
+  @IsString()
+  @IsOptional()
+  dueDate?: string;
 }

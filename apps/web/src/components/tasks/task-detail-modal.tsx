@@ -119,8 +119,8 @@ function ChecklistSection({
   onRemove: (id: string) => void;
 }) {
   const [newTitle, setNewTitle] = useState('');
-  const done = items.filter((i) => i.done).length;
-  const pct = items.length > 0 ? Math.round((done / items.length) * 100) : 0;
+  const done = items?.filter((i) => i.done).length;
+  const pct = items?.length > 0 ? Math.round((done / items.length) * 100) : 0;
 
   const handleAdd = () => {
     const title = newTitle.trim();
@@ -135,7 +135,7 @@ function ChecklistSection({
         <span className="text-xs font-semibold uppercase tracking-widest text-white/40">Subtasks</span>
         <span className="text-xs text-white/40">{pct}% Completo</span>
       </div>
-      {items.length > 0 && (
+      {items?.length > 0 && (
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
           <div
             className="h-full rounded-full bg-[#8b5cf6] transition-all"
@@ -144,7 +144,7 @@ function ChecklistSection({
         </div>
       )}
       <div className="space-y-2">
-        {items.map((item) => (
+        {items?.map((item) => (
           <div key={item.id} className="flex items-center gap-3 group">
             <button
               type="button"

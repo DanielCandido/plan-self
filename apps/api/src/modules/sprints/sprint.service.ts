@@ -696,6 +696,9 @@ export class SprintService {
           blockedReason: dto.blockedReason,
           updatedBy: currentUser.id,
           labels: labelPayload ? (labelPayload as Prisma.InputJsonValue) : undefined,
+          status: dto.status,
+          state: dto.status,
+          dueDate: dto.dueDate && new Date(dto.dueDate).toISOString(),
         },
       });
 

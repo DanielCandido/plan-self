@@ -144,7 +144,7 @@ export function KanbanBoard({
 
   const totalTasks = board.tasks.length;
   const projectName = projectQuery.data?.name ?? '';
-  const members = (membersQuery.data ?? []).map((m) => ({
+  const members = (membersQuery.members ?? []).map((m) => ({
     userId: m.userId,
     name: m.name,
     avatarUrl: m.avatarUrl,

@@ -3,6 +3,6 @@ import { IsCuid } from '@plan-self/utils';
 
 export class AddSprintTasksDto {
   @IsArray()
-  @IsCuid()
+  @IsCuid({each: true})
   taskIds!: string[];
 }

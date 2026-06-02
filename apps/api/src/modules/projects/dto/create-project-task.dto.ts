@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import { IsArray, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import {IsCuid} from "@plan-self/utils";
 
 export class CreateProjectTaskDto {
   @IsString()
@@ -25,6 +26,6 @@ export class CreateProjectTaskDto {
 
   @IsOptional()
   @IsArray()
-  @IsString({ each: true })
+  @IsCuid({ each: true })
   assigneeIds?: string[];
 }

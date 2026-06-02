@@ -4,7 +4,7 @@ import { IsCuid } from '@plan-self/utils';
 export class CompleteSprintDto {
   @IsOptional()
   @IsArray()
-  @IsCuid()
+  @IsCuid({ each: true })
   carryOverTaskIds?: string[];
 
   @IsOptional()
