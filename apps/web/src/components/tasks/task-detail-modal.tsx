@@ -301,12 +301,14 @@ function ActivityFeed({
 function MetaPanel({
   task,
   members,
+  statusOptions,
   onUpdate,
   onShare,
   onDelete,
 }: {
   task: TaskDetail;
   members: Array<{ userId: string; name: string; avatarUrl: string | null }>;
+  statusOptions: Array<{ id: string; name: string; type: string }>;
   onUpdate: (payload: Record<string, unknown>) => void;
   onShare: () => void;
   onDelete: () => void;
@@ -356,15 +358,19 @@ function MetaPanel({
       {/* Status */}
       <MetaRow label="Status">
         <select
-          value={task.status}
-          onChange={(e) => onUpdate({ status: e.target.value })}
+          value={task.boardColumnId ?? ''}
+          onChange={(e) => onUpdate({ boardColumnId: e.target.value })}
           className="flex-1 rounded-xl border border-white/10 bg-transparent px-2 py-1 text-sm text-white outline-none"
         >
-          {Object.entries(STATUS_LABELS).map(([value, label]) => (
-            <option key={value} value={value} className="bg-[#101118]">{label}</option>
+          {statusOptions.map((column) => (
+            <option key={column.id} value={column.id} className="bg-[#101118]">
+              {column.name}
+            </option>
           ))}
         </select>
-        <span className={`h-2 w-2 rounded-full flex-shrink-0 ${STATUS_DOT[task.status] ?? 'bg-white/30'}`} />
+        <span
+          className={`h-2 w-2 rounded-full flex-shrink-0 ${STATUS_DOT[task.boardColumnType ?? 'BACKLOG'] ?? 'bg-white/30'}`}
+        />
       </MetaRow>
 
       {/* Assignee */}
@@ -606,6 +612,7 @@ export interface TaskDetailModalProps {
   taskId: string | null;
   projectName: string;
   members: Array<{ userId: string; name: string; avatarUrl: string | null }>;
+  statusOptions: Array<{ id: string; name: string; type: string }>;
   task: TaskDetail | null;
   isLoading: boolean;
   activity: TaskActivityItem[];
@@ -622,6 +629,7 @@ export function TaskDetailModal({
   taskId,
   projectName,
   members,
+  statusOptions,
   task,
   isLoading,
   activity,
@@ -865,6 +873,7 @@ export function TaskDetailModal({
               <MetaPanel
                 task={task}
                 members={members}
+                statusOptions={statusOptions}
                 onUpdate={onUpdate}
                 onShare={handleShare}
                 onDelete={handleDelete}

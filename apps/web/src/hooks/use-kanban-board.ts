@@ -23,7 +23,7 @@ interface KanbanTaskMovedPayload {
   fromColumnId: string | null;
   toColumnId: string;
   targetPosition: number;
-  status: string;
+  boardColumnType: string;
   timestamp: string;
 }
 
@@ -45,8 +45,7 @@ function applyTaskMoved(
     return {
       ...task,
       boardColumnId: payload.toColumnId,
-      status: payload.status,
-      state: payload.status,
+      boardColumnType: payload.boardColumnType,
       position: payload.targetPosition,
     };
   });

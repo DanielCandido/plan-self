@@ -6,7 +6,11 @@ import type { DashboardTask, DashboardTaskState } from '@plan-self/types';
 interface MyTasksCardProps {
   tasks: DashboardTask[];
   isUpdating: boolean;
-  onUpdateStatus: (payload: { taskId: string; status: DashboardTaskState }) => Promise<unknown>;
+  onUpdateStatus: (payload: {
+    taskId: string;
+    projectId: string;
+    boardColumnType: DashboardTaskState;
+  }) => Promise<unknown>;
 }
 
 const VISIBLE_TASKS_LIMIT = 10;
@@ -35,30 +39,40 @@ export const MyTasksCard = memo(function MyTasksCard({
                     {task.dueDate ? ` • Vence em ${new Date(task.dueDate).toLocaleDateString('pt-BR')}` : ''}
                   </p>
                 </div>
-                <span className={`rounded px-2 py-0.5 text-xs font-semibold ${statusClass(task.status)}`}>
-                  {task.status}
+                <span
+                  className={`rounded px-2 py-0.5 text-xs font-semibold ${statusClass(task.boardColumnType ?? 'BACKLOG')}`}
+                >
+                  {task.boardColumnType ?? 'BACKLOG'}
                 </span>
               </div>
 
               <div className="mt-2 flex flex-wrap gap-1">
-                {task.status !== 'IN_PROGRESS' && (
+                {task.boardColumnType !== 'IN_PROGRESS' && (
                   <button
                     type="button"
                     disabled={isUpdating}
                     onClick={() => {
-                      void onUpdateStatus({ taskId: task.id, status: 'IN_PROGRESS' });
+                      void onUpdateStatus({
+                        taskId: task.id,
+                        projectId: task.projectId,
+                        boardColumnType: 'IN_PROGRESS',
+                      });
                     }}
                     className="rounded border border-white/10 bg-white/5 px-2 py-1 text-xs text-white/80 transition hover:bg-white/10 disabled:opacity-60"
                   >
                     Em andamento
                   </button>
                 )}
-                {task.status !== 'DONE' && (
+                {task.boardColumnType !== 'DONE' && (
                   <button
                     type="button"
                     disabled={isUpdating}
                     onClick={() => {
-                      void onUpdateStatus({ taskId: task.id, status: 'DONE' });
+                      void onUpdateStatus({
+                        taskId: task.id,
+                        projectId: task.projectId,
+                        boardColumnType: 'DONE',
+                      });
                     }}
                     className="rounded border border-emerald-400/35 bg-emerald-400/10 px-2 py-1 text-xs text-emerald-300 transition hover:bg-emerald-400/20 disabled:opacity-60"
                   >

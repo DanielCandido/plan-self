@@ -54,6 +54,8 @@ export interface SprintTask {
   description: string | null;
   state: TaskState;
   priority: string;
+  boardColumnId: string | null;
+  boardColumnType: TaskState | null;
   storyPoints: number;
   sortOrder: number;
   blockedReason: string | null;

@@ -92,6 +92,7 @@ export function SprintBoard({
     task: detailTask,
     isLoading: isDetailLoading,
     activity,
+    boardColumns,
     updateTask: updateDetailTask,
     createComment,
     deleteComment,
@@ -361,6 +362,11 @@ export function SprintBoard({
         taskId={selectedTaskId}
         projectName={projectName}
         members={members}
+        statusOptions={boardColumns.map((column) => ({
+          id: column.id,
+          name: column.name,
+          type: column.type,
+        }))}
         task={detailTask}
         isLoading={isDetailLoading}
         activity={activity}

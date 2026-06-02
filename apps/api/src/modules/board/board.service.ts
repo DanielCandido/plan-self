@@ -41,9 +41,12 @@ export class BoardService {
         id: true,
         code: true,
         title: true,
-        status: true,
-        state: true,
         boardColumnId: true,
+        boardColumn: {
+          select: {
+            type: true,
+          },
+        },
         sprintId: true,
         position: true,
         blocked: true,
@@ -66,7 +69,10 @@ export class BoardService {
         wipLimit: column.wipLimit,
         taskCount: tasks.filter((task) => task.boardColumnId === column.id).length,
       })),
-      tasks,
+      tasks: tasks.map((task) => ({
+        ...task,
+        boardColumnType: task.boardColumn?.type ?? null,
+      })),
     };
   }
 
@@ -156,8 +162,12 @@ export class BoardService {
           projectId: true,
           boardColumnId: true,
           sprintId: true,
-          status: true,
           position: true,
+          boardColumn: {
+            select: {
+              type: true,
+            },
+          },
         },
       }),
       this.prisma.boardColumn.findFirst({
@@ -206,10 +216,6 @@ export class BoardService {
         },
       }));
 
-    const nextState = this.columnTypeToState(targetColumn.type);
-
-    console.log(targetSprintId);
-
     await this.prisma.$transaction(async (tx) => {
       await tx.task.update({
         where: { id: task.id },
@@ -218,8 +224,6 @@ export class BoardService {
           sprintId: targetSprintId,
           position: targetPosition,
           sortOrder: targetPosition,
-          status: nextState,
-          state: nextState,
           updatedBy: currentUser.id,
         },
       });
@@ -229,8 +233,8 @@ export class BoardService {
           taskId: task.id,
           actorId: currentUser.id,
           action: TaskHistoryAction.MOVED,
-          fromStatus: task.status,
-          toStatus: nextState,
+          fromStatus: this.columnTypeToState(task.boardColumn?.type),
+          toStatus: this.columnTypeToState(targetColumn.type),
           fromColumnId: task.boardColumnId,
           toColumnId: targetColumn.id,
         },
@@ -258,7 +262,8 @@ export class BoardService {
         fromColumnId: task.boardColumnId,
         toColumnId: targetColumn.id,
         targetPosition: targetPosition,
-        status: nextState,
+        boardColumnId: targetColumn.id,
+        boardColumnType: targetColumn.type,
       },
     });
 

@@ -2,11 +2,12 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type { TaskDetail } from '@plan-self/types';
+import type { KanbanBoardResponse, TaskDetail } from '@plan-self/types';
 import apiClient from '@/lib/api';
 
 const taskDetailQueryKey = (taskId: string) => ['tasks', taskId, 'detail'] as const;
 const taskActivityQueryKey = (taskId: string) => ['tasks', taskId, 'activity'] as const;
+const taskBoardColumnsQueryKey = (projectId: string) => ['tasks', 'board-columns', projectId] as const;
 
 export type TaskActivityItem = {
   type: 'comment' | 'history';
@@ -54,6 +55,15 @@ export function useTaskDetail(taskId: string | null, projectId: string) {
     },
     enabled: Boolean(taskId),
     staleTime: 5_000,
+  });
+
+  const boardColumnsQuery = useQuery({
+    queryKey: taskBoardColumnsQueryKey(projectId),
+    queryFn: async () => {
+      const { data } = await apiClient.get<KanbanBoardResponse>(`/boards/${projectId}`);
+      return data.columns;
+    },
+    staleTime: 10_000,
   });
 
   const updateTask = useMutation({
@@ -120,6 +130,7 @@ export function useTaskDetail(taskId: string | null, projectId: string) {
     isLoading: taskQuery.isLoading,
     activity: activityQuery.data ?? [],
     isActivityLoading: activityQuery.isLoading,
+    boardColumns: boardColumnsQuery.data ?? [],
     updateTask,
     createComment,
     deleteComment,

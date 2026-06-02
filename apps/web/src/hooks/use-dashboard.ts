@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { io, type Socket } from 'socket.io-client';
 import type { DashboardOverviewResponse, DashboardTask, DashboardTaskState } from '@plan-self/types';
+import type { BoardColumn } from '@plan-self/types';
 import apiClient, { getAccessToken } from '@/lib/api';
 import { resolveRealtimeUrl } from '@/lib/realtime';
 import { useDashboardStore } from '@/store/dashboard.store';
@@ -29,15 +30,36 @@ export function useDashboard() {
     gcTime: DASHBOARD_GC_TIME_MS,
   });
 
+  const getBoardColumnIdByType = async (projectId: string, type: DashboardTaskState) => {
+    const columns = await queryClient.fetchQuery({
+      queryKey: ['dashboard', 'columns', projectId],
+      queryFn: async () => {
+        const { data } = await apiClient.get<{ columns: BoardColumn[] }>(`/boards/${projectId}`);
+        return data.columns;
+      },
+      staleTime: DASHBOARD_STALE_TIME_MS,
+    });
+
+    return columns.find((column) => column.type === type)?.id ?? null;
+  };
+
   const updateTaskStatusMutation = useMutation({
-    mutationFn: async (payload: { taskId: string; status: DashboardTaskState }) => {
+    mutationFn: async (payload: {
+      taskId: string;
+      projectId: string;
+      boardColumnType: DashboardTaskState;
+    }) => {
+      const boardColumnId = await getBoardColumnIdByType(payload.projectId, payload.boardColumnType);
+      if (!boardColumnId) {
+        throw new Error('Coluna de destino não encontrada');
+      }
       const { data } = await apiClient.patch<DashboardTask>(
         `/dashboard/tasks/${payload.taskId}/status`,
-        { status: payload.status },
+        { boardColumnId },
       );
       return data;
     },
-    onMutate: async ({ taskId, status }) => {
+    onMutate: async ({ taskId, boardColumnType }) => {
       await queryClient.cancelQueries({ queryKey: DASHBOARD_QUERY_KEY });
 
       const previous = queryClient.getQueryData<DashboardOverviewResponse>(DASHBOARD_QUERY_KEY);
@@ -49,7 +71,7 @@ export function useDashboard() {
             task.id === taskId
               ? {
                   ...task,
-                  status,
+                  boardColumnType,
                 }
               : task,
           ),

@@ -315,11 +315,10 @@ export class SprintService {
       await tx.task.updateMany({
         where: {
           sprintId: sprint.id,
-          state: { not: TaskState.DONE },
+          OR: [{ boardColumn: null }, { boardColumn: { type: { not: TaskState.DONE } } }],
         },
         data: {
           sprintId: null,
-          state: TaskState.BACKLOG,
         },
       });
       await tx.sprintTask.deleteMany({ where: { sprintId: sprint.id } });
@@ -395,7 +394,9 @@ export class SprintService {
     const carryOverIds = new Set(
       dto.carryOverTaskIds && dto.carryOverTaskIds.length > 0
         ? dto.carryOverTaskIds
-        : sprint.tasks.filter((task) => task.state !== TaskState.DONE).map((task) => task.id),
+        : sprint.tasks
+            .filter((task) => this.resolveTaskState(task) !== TaskState.DONE)
+            .map((task) => task.id),
     );
 
     await this.repository.withTransaction(async (tx) => {
@@ -425,14 +426,14 @@ export class SprintService {
       });
 
       const carryOverTasks = sprint.tasks.filter(
-        (task) => task.state !== TaskState.DONE && carryOverIds.has(task.id),
+        (task) => this.resolveTaskState(task) !== TaskState.DONE && carryOverIds.has(task.id),
       );
       const carryOverTaskIds = carryOverTasks.map((task) => task.id);
 
       if (carryOverTaskIds.length > 0) {
         await tx.task.updateMany({
           where: { id: { in: carryOverTaskIds } },
-          data: { sprintId: null, state: TaskState.BACKLOG },
+          data: { sprintId: null },
         });
         await tx.sprintTask.deleteMany({
           where: { sprintId: sprint.id, taskId: { in: carryOverTaskIds } },
@@ -485,8 +486,11 @@ export class SprintService {
 
     await this.repository.withTransaction(async (tx) => {
       await tx.task.updateMany({
-        where: { sprintId: sprint.id, state: { not: TaskState.DONE } },
-        data: { sprintId: null, state: TaskState.BACKLOG },
+        where: {
+          sprintId: sprint.id,
+          OR: [{ boardColumn: null }, { boardColumn: { type: { not: TaskState.DONE } } }],
+        },
+        data: { sprintId: null },
       });
       await tx.sprintTask.deleteMany({ where: { sprintId: sprint.id } });
       await tx.sprint.update({ where: { id: sprint.id }, data: { status: SprintStatus.CANCELLED } });
@@ -583,7 +587,7 @@ export class SprintService {
     }
 
     for (const task of tasks) {
-      if (targetSprint && task.state === TaskState.DONE) {
+      if (targetSprint && this.resolveTaskState(task) === TaskState.DONE) {
         throw new BadRequestException('Tasks DONE não podem entrar na sprint');
       }
       if (targetSprint && task.sprintId && task.sprintId !== targetSprint.id) {
@@ -595,6 +599,16 @@ export class SprintService {
 
     await this.repository.withTransaction(async (tx) => {
       if (targetSprint) {
+        const todoColumn = await tx.boardColumn.findFirst({
+          where: {
+            board: {
+              projectId: dto.projectId,
+            },
+            type: 'TODO',
+          },
+          select: { id: true },
+        });
+
         const existingCount = await tx.sprintTask.count({ where: { sprintId: targetSprint.id } });
         await Promise.all(
           tasks.map((task, index) =>
@@ -602,8 +616,9 @@ export class SprintService {
               where: { id: task.id },
               data: {
                 sprintId: targetSprint.id,
-                state: task.state === TaskState.BACKLOG ? TaskState.TODO : task.state,
-                status: task.state === TaskState.BACKLOG ? TaskState.TODO : task.state,
+                ...(this.resolveTaskState(task) === TaskState.BACKLOG && todoColumn?.id
+                  ? { boardColumnId: todoColumn.id }
+                  : {}),
                 sortOrder: dto.targetIndex != null ? dto.targetIndex + index : existingCount + index,
                 position: dto.targetIndex != null ? dto.targetIndex + index : existingCount + index,
                 updatedBy: currentUser.id,
@@ -649,8 +664,6 @@ export class SprintService {
           where: { id: { in: taskIds } },
           data: {
             sprintId: null,
-            state: TaskState.BACKLOG,
-            status: TaskState.BACKLOG,
             ...(backlogColumn?.id ? { boardColumnId: backlogColumn.id } : {}),
             updatedBy: currentUser.id,
           },
@@ -696,8 +709,6 @@ export class SprintService {
           blockedReason: dto.blockedReason,
           updatedBy: currentUser.id,
           labels: labelPayload ? (labelPayload as Prisma.InputJsonValue) : undefined,
-          status: dto.status,
-          state: dto.status,
           dueDate: dto.dueDate && new Date(dto.dueDate).toISOString(),
         },
       });
@@ -887,7 +898,9 @@ export class SprintService {
   private async ensureDependenciesAllowSprintStart(sprintId: string) {
     const criticalDependencies = await this.repository.getCriticalDependencies(sprintId);
     const unresolved = criticalDependencies.filter(
-      (dependency) => dependency.blocker.state !== TaskState.DONE || dependency.blocked.state === TaskState.BLOCKED,
+      (dependency) =>
+        this.resolveTaskState(dependency.blocker) !== TaskState.DONE ||
+        this.resolveTaskState(dependency.blocked) === TaskState.BLOCKED,
     );
 
     if (unresolved.length > 0) {
@@ -897,7 +910,7 @@ export class SprintService {
 
   private buildMetricsFromTasks(tasks: HydratedTask[], capacity: number, velocity: number) {
     const inputs: SprintMetricTaskInput[] = tasks.map((task) => ({
-      state: task.state,
+      state: this.resolveTaskState(task),
       storyPoints: task.storyPoints ?? task.story?.storyPoints ?? 0,
       isBlocked: this.isTaskBlocked(task),
     }));
@@ -906,9 +919,11 @@ export class SprintService {
 
   private isTaskBlocked(task: HydratedTask) {
     return (
-      task.state === TaskState.BLOCKED ||
+      this.resolveTaskState(task) === TaskState.BLOCKED ||
       Boolean(task.blockedReason) ||
-      task.blockedByDependencies.some((dependency) => dependency.blocker.state !== TaskState.DONE)
+      task.blockedByDependencies.some(
+        (dependency) => this.resolveTaskState(dependency.blocker) !== TaskState.DONE,
+      )
     );
   }
 
@@ -1041,6 +1056,10 @@ export class SprintService {
     });
   }
 
+  private resolveTaskState(task: { boardColumn?: { type: TaskState } | null }) {
+    return task.boardColumn?.type ?? TaskState.BACKLOG;
+  }
+
   private mapTask(task: HydratedTask) {
     return {
       id: task.id,
@@ -1048,8 +1067,10 @@ export class SprintService {
       projectId: task.projectId,
       title: task.title,
       description: task.description,
-      state: task.status ?? task.state,
-      status: task.status ?? task.state,
+      state: this.resolveTaskState(task),
+      status: this.resolveTaskState(task),
+      boardColumnId: task.boardColumnId,
+      boardColumnType: task.boardColumn?.type ?? null,
       priority: task.priority,
       storyPoints: task.storyPoints ?? task.story?.storyPoints ?? 0,
       sortOrder: task.sortOrder,
@@ -1064,7 +1085,7 @@ export class SprintService {
         taskId: dependency.blocker.id,
         title: dependency.blocker.title,
         critical: dependency.critical,
-        state: dependency.blocker.state,
+        state: this.resolveTaskState(dependency.blocker),
       })),
       epic: task.story?.epic
         ? {
@@ -1077,7 +1098,7 @@ export class SprintService {
       sprintTaskId: task.sprintTasks[0]?.id ?? null,
       position: task.sprintTasks[0]?.position ?? task.sortOrder,
       isBlocked: this.isTaskBlocked(task),
-      isDone: task.state === TaskState.DONE,
+      isDone: this.resolveTaskState(task) === TaskState.DONE,
       dueAt: task.dueAt ? task.dueAt.toISOString() : null,
       dueDate: task.dueDate ? task.dueDate.toISOString() : null,
       updatedAt: task.updatedAt.toISOString(),

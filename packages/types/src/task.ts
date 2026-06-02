@@ -70,10 +70,9 @@ export interface TaskDetail {
   projectId: string;
   sprintId: string | null;
   boardColumnId: string | null;
+  boardColumnType: string | null;
   title: string;
   description: string | null;
-  status: string;
-  state: string;
   position: number;
   priority: string;
   points: number | null;

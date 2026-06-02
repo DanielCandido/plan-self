@@ -13,9 +13,8 @@ export interface BoardTask {
   id: string;
   code: string;
   title: string;
-  status: string;
-  state: string;
   boardColumnId: string | null;
+  boardColumnType: BoardColumnType | null;
   sprintId: string | null;
   position: number;
   blocked: boolean;

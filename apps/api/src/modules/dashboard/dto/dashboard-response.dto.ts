@@ -56,10 +56,16 @@ export class DashboardTaskDto {
   id!: string;
 
   @ApiProperty()
+  projectId!: string;
+
+  @ApiProperty()
   title!: string;
 
   @ApiProperty()
-  status!: string;
+  boardColumnId!: string | null;
+
+  @ApiProperty({ nullable: true })
+  boardColumnType!: string | null;
 
   @ApiProperty()
   priority!: string;

@@ -32,8 +32,10 @@ export interface DashboardTaskAssignee {
 
 export interface DashboardTask {
   id: string;
+  projectId: string;
   title: string;
-  status: DashboardTaskState;
+  boardColumnId: string | null;
+  boardColumnType: DashboardTaskState | null;
   priority: string;
   dueDate: string | null;
   project: string;
@@ -63,5 +65,5 @@ export interface DashboardOverviewResponse {
 }
 
 export interface DashboardTaskStatusPayload {
-  status: DashboardTaskState;
+  boardColumnId: string;
 }

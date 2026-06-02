@@ -42,6 +42,7 @@ const taskInclude = {
   boardColumn: {
     select: {
       id: true,
+      boardId: true,
       name: true,
       type: true,
     },
@@ -70,6 +71,19 @@ const taskInclude = {
 type TaskWithRelations = Prisma.TaskGetPayload<{ include: typeof taskInclude }>;
 const OPTIMISTIC_LOCK_TOLERANCE_MS = 1_000;
 const MAX_CODE_GENERATION_ATTEMPTS = 5;
+const DEFAULT_BOARD_COLUMNS: Array<{
+  name: string;
+  type: BoardColumnType;
+  order: number;
+  wipLimit: number | null;
+}> = [
+  { name: 'Backlog', type: 'BACKLOG', order: 0, wipLimit: null },
+  { name: 'Todo', type: 'TODO', order: 1, wipLimit: null },
+  { name: 'In Progress', type: 'IN_PROGRESS', order: 2, wipLimit: 6 },
+  { name: 'Review', type: 'REVIEW', order: 3, wipLimit: 5 },
+  { name: 'Done', type: 'DONE', order: 4, wipLimit: null },
+  { name: 'Blocked', type: 'BLOCKED', order: 5, wipLimit: 4 },
+];
 
 @Injectable()
 export class TaskService {
@@ -84,7 +98,6 @@ export class TaskService {
     const tasks = await this.prisma.task.findMany({
       where: {
         projectId: query.projectId,
-        ...(query.status ? { status: query.status } : {}),
         ...(query.sprintId ? { sprintId: query.sprintId } : {}),
         ...(query.boardColumnId ? { boardColumnId: query.boardColumnId } : {}),
         ...(query.includeDeleted ? {} : { deletedAt: null }),
@@ -124,23 +137,17 @@ export class TaskService {
 
   async createTask(currentUser: CurrentUserPayload, dto: CreateTaskDto) {
     const project = await this.assertProjectScope(dto.projectId, currentUser.organizationId);
-    const boardColumn = dto.boardColumnId
-      ? await this.assertBoardColumn(dto.boardColumnId, dto.projectId)
-      : null;
-
-    const status = dto.status ?? this.columnTypeToState(boardColumn?.type);
-    const position = dto.position ?? (await this.nextTaskPosition(dto.projectId, dto.boardColumnId ?? null));
+    const boardColumn = await this.resolveBoardColumn(dto.projectId, dto.boardColumnId);
+    const position = dto.position ?? (await this.nextTaskPosition(dto.projectId, boardColumn.id));
 
     const task = await this.createTaskWithUniqueCode({
       projectId: dto.projectId,
-      boardId: project.board?.id ?? null,
-      boardColumnId: dto.boardColumnId ?? null,
+      boardId: boardColumn.boardId ?? project.board?.id ?? null,
+      boardColumnId: boardColumn.id,
       sprintId: dto.sprintId,
       code: dto.code ?? this.generateTaskCode(),
       title: dto.title,
       description: dto.description,
-      status,
-      state: status,
       position,
       sortOrder: position,
       priority: dto.priority ?? 'MEDIUM',
@@ -164,7 +171,7 @@ export class TaskService {
 
     await this.persistLabelCatalog(currentUser, dto.projectId, dto.labels ?? []);
     await this.writeTaskHistory(task.id, currentUser.id, TaskHistoryAction.CREATED, {
-      toStatus: task.status,
+      toStatus: this.columnTypeToState(task.boardColumn?.type),
       toColumnId: task.boardColumnId,
     });
 
@@ -213,19 +220,18 @@ export class TaskService {
       }
     }
 
+    const targetColumn =
+      dto.boardColumnId === undefined
+        ? current.boardColumn
+        : await this.resolveBoardColumn(current.projectId, dto.boardColumnId);
+
     if (
-      current.status === TaskState.DONE &&
-      dto.status &&
-      dto.status !== TaskState.DONE &&
+      current.boardColumn?.type === 'DONE' &&
+      targetColumn?.type !== 'DONE' &&
       !['OWNER', 'ADMIN'].includes(currentUser.role)
     ) {
       throw new ForbiddenException('Apenas Owner/Admin podem reabrir tasks DONE');
     }
-
-    const targetColumn = dto.boardColumnId
-      ? await this.assertBoardColumn(dto.boardColumnId, current.projectId)
-      : null;
-    const nextStatus = dto.status ?? (targetColumn ? this.columnTypeToState(targetColumn.type) : current.status);
 
     const updated = await this.prisma.$transaction(async (tx) => {
       if (dto.assigneeIds) {
@@ -247,8 +253,6 @@ export class TaskService {
         data: {
           title: dto.title,
           description: dto.description,
-          status: nextStatus,
-          state: nextStatus,
           priority: dto.priority,
           position: dto.position,
           sortOrder: dto.position,
@@ -258,7 +262,8 @@ export class TaskService {
           blockedReason: dto.blockedReason === undefined ? undefined : dto.blockedReason,
           dueDate: dto.dueDate === undefined ? undefined : dto.dueDate ? new Date(dto.dueDate) : null,
           dueAt: dto.dueDate === undefined ? undefined : dto.dueDate ? new Date(dto.dueDate) : null,
-          boardColumnId: dto.boardColumnId === undefined ? undefined : dto.boardColumnId,
+          boardId: targetColumn?.boardId ?? undefined,
+          boardColumnId: targetColumn?.id ?? undefined,
           updatedBy: currentUser.id,
           labels: this.serializeLabels(dto.labels),
           checklist:
@@ -271,8 +276,8 @@ export class TaskService {
     });
 
     await this.writeTaskHistory(updated.id, currentUser.id, TaskHistoryAction.UPDATED, {
-      fromStatus: current.status,
-      toStatus: updated.status,
+      fromStatus: this.columnTypeToState(current.boardColumn?.type),
+      toStatus: this.columnTypeToState(updated.boardColumn?.type),
       fromColumnId: current.boardColumnId,
       toColumnId: updated.boardColumnId,
     });
@@ -571,6 +576,55 @@ export class TaskService {
     return column;
   }
 
+  private async resolveBoardColumn(projectId: string, boardColumnId?: string | null) {
+    if (boardColumnId) {
+      return this.assertBoardColumn(boardColumnId, projectId);
+    }
+
+    return this.ensureBacklogColumn(projectId);
+  }
+
+  private async ensureBacklogColumn(projectId: string) {
+    const existing = await this.prisma.boardColumn.findFirst({
+      where: {
+        board: { projectId },
+        type: 'BACKLOG',
+      },
+    });
+
+    if (existing) {
+      return existing;
+    }
+
+    const board = await this.prisma.board.upsert({
+      where: { projectId },
+      update: {},
+      create: { projectId },
+      select: { id: true },
+    });
+
+    await this.prisma.boardColumn.createMany({
+      data: DEFAULT_BOARD_COLUMNS.map((column) => ({
+        boardId: board.id,
+        name: column.name,
+        type: column.type,
+        order: column.order,
+        wipLimit: column.wipLimit,
+      })),
+      skipDuplicates: true,
+    });
+
+    const backlogColumn = await this.prisma.boardColumn.findFirst({
+      where: { boardId: board.id, type: 'BACKLOG' },
+    });
+
+    if (!backlogColumn) {
+      throw new BadRequestException('Coluna de backlog não encontrada para o projeto');
+    }
+
+    return backlogColumn;
+  }
+
   private async nextTaskPosition(projectId: string, boardColumnId: string | null) {
     const latest = await this.prisma.task.findFirst({
       where: {
@@ -693,10 +747,9 @@ export class TaskService {
       projectId: task.projectId,
       sprintId: task.sprintId,
       boardColumnId: task.boardColumnId,
+      boardColumnType: task.boardColumn?.type ?? null,
       title: task.title,
       description: task.description,
-      status: task.status,
-      state: task.state,
       position: task.position,
       priority: task.priority,
       points: task.points,

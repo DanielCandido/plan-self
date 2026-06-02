@@ -4,7 +4,6 @@ import {
   IsArray,
   IsBoolean,
   IsDateString,
-  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -12,7 +11,6 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { TaskState } from '@prisma/client';
 import { IsCuid } from '@plan-self/utils';
 
 export class ChecklistItemDto {
@@ -34,10 +32,6 @@ export class UpdateTaskRestDto {
   @IsOptional()
   @IsString()
   description?: string;
-
-  @IsOptional()
-  @IsIn(Object.values(TaskState))
-  status?: TaskState;
 
   @IsOptional()
   @Type(() => Number)

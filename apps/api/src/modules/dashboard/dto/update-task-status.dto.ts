@@ -1,9 +1,10 @@
-import { TaskState } from '@prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum } from 'class-validator';
+import { IsString } from 'class-validator';
+import { IsCuid } from '@plan-self/utils';
 
 export class UpdateTaskStatusDto {
-  @ApiProperty({ enum: TaskState })
-  @IsEnum(TaskState)
-  status!: TaskState;
+  @ApiProperty()
+  @IsString()
+  @IsCuid()
+  boardColumnId!: string;
 }

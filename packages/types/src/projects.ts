@@ -117,6 +117,8 @@ export interface ProjectTaskItem {
   title: string;
   description: string | null;
   state: string;
+  boardColumnId: string | null;
+  boardColumnType: string | null;
   priority: string;
   storyPoints: number | null;
   dueAt: string | null;

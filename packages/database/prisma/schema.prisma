@@ -433,8 +433,6 @@ model Task {
   storyId               String?
   title                 String
   description           String?
-  status                TaskState        @default(BACKLOG)
-  state                 TaskState        @default(BACKLOG)
   position              Int              @default(0)
   priority              String           @default("MEDIUM")
   points                Int?
@@ -466,7 +464,6 @@ model Task {
   blockedByDependencies TaskDependency[] @relation("TaskBlockedBy")
 
   @@index([projectId, sprintId, sortOrder])
-  @@index([projectId, state])
   @@index([projectId, deletedAt])
   @@index([boardColumnId, position])
 }

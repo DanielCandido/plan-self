@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, TaskState, type Role } from '@prisma/client';
+import { BoardColumnType, Prisma, type Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 export const taskInclude = {
@@ -31,7 +31,11 @@ export const taskInclude = {
         select: {
           id: true,
           title: true,
-          state: true,
+          boardColumn: {
+            select: {
+              type: true,
+            },
+          },
         },
       },
     },
@@ -40,6 +44,12 @@ export const taskInclude = {
     select: {
       id: true,
       position: true,
+    },
+  },
+  boardColumn: {
+    select: {
+      id: true,
+      type: true,
     },
   },
 } satisfies Prisma.TaskInclude;
@@ -340,14 +350,22 @@ export class SprintRepository {
           select: {
             id: true,
             title: true,
-            state: true,
+            boardColumn: {
+              select: {
+                type: true,
+              },
+            },
           },
         },
         blocked: {
           select: {
             id: true,
             title: true,
-            state: true,
+            boardColumn: {
+              select: {
+                type: true,
+              },
+            },
           },
         },
       },
@@ -447,7 +465,7 @@ export class SprintRepository {
 
   async findTaskByProjectState(projectId: string) {
     return this.prisma.task.groupBy({
-      by: ['state'],
+      by: ['boardColumnId'],
       where: { projectId },
       _count: { _all: true },
     });
@@ -459,7 +477,21 @@ export class SprintRepository {
         projectId,
         sprintId: null,
         deletedAt: null,
-        state: { not: TaskState.DONE },
+        OR: [{ boardColumn: null }, { boardColumn: { type: { not: 'DONE' as BoardColumnType } } }],
+      },
+    });
+  }
+
+  async getProjectColumnByType(projectId: string, type: BoardColumnType) {
+    return this.prisma.boardColumn.findFirst({
+      where: {
+        board: { projectId },
+        type,
+      },
+      select: {
+        id: true,
+        boardId: true,
+        type: true,
       },
     });
   }

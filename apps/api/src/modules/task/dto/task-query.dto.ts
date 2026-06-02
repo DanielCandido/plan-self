@@ -1,6 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
-import { TaskState } from '@prisma/client';
+import { IsBoolean, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 import { IsCuid } from '@plan-self/utils';
 
 export class TaskQueryDto {
@@ -10,10 +9,6 @@ export class TaskQueryDto {
   @IsOptional()
   @IsString()
   search?: string;
-
-  @IsOptional()
-  @IsIn(Object.values(TaskState))
-  status?: TaskState;
 
   @IsOptional()
   @IsCuid()

@@ -197,6 +197,11 @@ export function KanbanBoard({
         taskId={selectedTaskId}
         projectName={projectName}
         members={members}
+        statusOptions={board.columns.map((column) => ({
+          id: column.id,
+          name: column.name,
+          type: column.type,
+        }))}
         task={detailTask}
         isLoading={isDetailLoading}
         activity={activity}
@@ -215,4 +220,3 @@ export function KanbanBoard({
     </>
   );
 }
-

@@ -4,14 +4,12 @@ import {
   IsArray,
   IsBoolean,
   IsDateString,
-  IsIn,
   IsInt,
   IsOptional,
   IsString,
   Max,
   Min,
 } from 'class-validator';
-import { TaskState } from '@prisma/client';
 import { IsCuid } from '@plan-self/utils';
 
 export class CreateTaskDto {
@@ -28,10 +26,6 @@ export class CreateTaskDto {
   @IsOptional()
   @IsString()
   code?: string;
-
-  @IsOptional()
-  @IsIn(Object.values(TaskState))
-  status?: TaskState;
 
   @IsOptional()
   @Type(() => Number)

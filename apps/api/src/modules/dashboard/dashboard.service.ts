@@ -49,7 +49,7 @@ export class DashboardService {
       include: {
         tasks: {
           select: {
-            state: true,
+            boardColumn: { select: { type: true } },
             story: { select: { storyPoints: true } },
           },
         },
@@ -62,9 +62,9 @@ export class DashboardService {
 
     const sprintTotalTasks = activeSprint?.tasks.length ?? 0;
     const sprintCompletedTasks =
-      activeSprint?.tasks.filter((task) => task.state === TaskState.DONE).length ?? 0;
+      activeSprint?.tasks.filter((task) => this.resolveTaskState(task) === TaskState.DONE).length ?? 0;
     const sprintBlockedTasks =
-      activeSprint?.tasks.filter((task) => task.state === TaskState.BLOCKED).length ?? 0;
+      activeSprint?.tasks.filter((task) => this.resolveTaskState(task) === TaskState.BLOCKED).length ?? 0;
 
     const sprintProgress =
       sprintTotalTasks > 0 ? Math.round((sprintCompletedTasks / sprintTotalTasks) * 100) : 0;
@@ -88,6 +88,7 @@ export class DashboardService {
       include: {
         task: {
           include: {
+            boardColumn: { select: { id: true, type: true } },
             project: { select: { name: true } },
             assignees: {
               include: {
@@ -113,8 +114,10 @@ export class DashboardService {
 
     const myTasks: DashboardTaskDto[] = myAssignments.map(({ task }) => ({
       id: task.id,
+      projectId: task.projectId,
       title: task.title,
-      status: task.state,
+      boardColumnId: task.boardColumnId,
+      boardColumnType: task.boardColumn?.type ?? null,
       priority: task.priority,
       dueDate: task.dueAt ? task.dueAt.toISOString() : null,
       project: task.project.name,
@@ -174,7 +177,9 @@ export class DashboardService {
         project: {
           organizationId: currentUser.organizationId,
         },
-        state: TaskState.DONE,
+        boardColumn: {
+          type: TaskState.DONE,
+        },
       },
     });
 
@@ -313,6 +318,14 @@ export class DashboardService {
       }
     }
 
+    const defaultColumn = await this.prisma.boardColumn.findFirst({
+      where: {
+        board: { projectId: project.id },
+        type: dto.sprintId ? 'TODO' : 'BACKLOG',
+      },
+      select: { id: true, boardId: true },
+    });
+
     const task = await this.prisma.task.create({
       data: {
         title: dto.title,
@@ -320,6 +333,8 @@ export class DashboardService {
         dueAt: dto.dueDate ? new Date(dto.dueDate) : null,
         projectId: project.id,
         sprintId: dto.sprintId,
+        boardId: defaultColumn?.boardId ?? null,
+        boardColumnId: defaultColumn?.id ?? null,
         assignees:
           dto.assigneeIds && dto.assigneeIds.length > 0
             ? {
@@ -331,6 +346,7 @@ export class DashboardService {
             : undefined,
       },
       include: {
+        boardColumn: { select: { type: true } },
         project: { select: { name: true } },
         assignees: {
           include: {
@@ -387,6 +403,7 @@ export class DashboardService {
         project: { organizationId: currentUser.organizationId },
       },
       include: {
+        boardColumn: { select: { id: true, type: true, boardId: true } },
         project: { select: { name: true } },
         assignees: {
           include: {
@@ -406,12 +423,26 @@ export class DashboardService {
       throw new NotFoundException('Task não encontrada');
     }
 
+    const targetColumn = await this.prisma.boardColumn.findFirst({
+      where: {
+        id: dto.boardColumnId,
+        board: { projectId: existingTask.projectId },
+      },
+      select: { id: true, boardId: true },
+    });
+
+    if (!targetColumn) {
+      throw new BadRequestException('Coluna inválida para a task informada');
+    }
+
     const task = await this.prisma.task.update({
       where: { id: existingTask.id },
       data: {
-        state: dto.status,
+        boardId: targetColumn.boardId,
+        boardColumnId: targetColumn.id,
       },
       include: {
+        boardColumn: { select: { id: true, type: true } },
         project: { select: { name: true } },
         assignees: {
           include: {
@@ -435,13 +466,16 @@ export class DashboardService {
         metadata: {
           taskId: task.id,
           taskTitle: task.title,
-          from: existingTask.state,
-          to: task.state,
+          from: this.resolveTaskState(existingTask),
+          to: this.resolveTaskState(task),
         },
       },
     });
 
-    if (dto.status === TaskState.DONE && existingTask.state !== TaskState.DONE) {
+    if (
+      this.resolveTaskState(task) === TaskState.DONE &&
+      this.resolveTaskState(existingTask) !== TaskState.DONE
+    ) {
       await this.prisma.auditLog.create({
         data: {
           organizationId: currentUser.organizationId,
@@ -457,7 +491,8 @@ export class DashboardService {
 
     this.dashboardGateway.emitOrganizationEvent(currentUser.organizationId, TASK_UPDATED_ACTION, {
       taskId: task.id,
-      status: task.state,
+      boardColumnId: task.boardColumnId,
+      boardColumnType: task.boardColumn?.type ?? null,
       sprintId: task.sprintId,
     });
 
@@ -493,8 +528,10 @@ export class DashboardService {
 
   private mapTask(task: {
     id: string;
+    projectId: string;
     title: string;
-    state: TaskState;
+    boardColumnId: string | null;
+    boardColumn?: { type: TaskState } | null;
     priority: string;
     dueAt: Date | null;
     project: { name: string };
@@ -508,8 +545,10 @@ export class DashboardService {
   }): DashboardTaskDto {
     return {
       id: task.id,
+      projectId: task.projectId,
       title: task.title,
-      status: task.state,
+      boardColumnId: task.boardColumnId,
+      boardColumnType: task.boardColumn?.type ?? null,
       priority: task.priority,
       dueDate: task.dueAt ? task.dueAt.toISOString() : null,
       project: task.project.name,
@@ -519,5 +558,9 @@ export class DashboardService {
         avatar: user.avatarUrl,
       })),
     };
+  }
+
+  private resolveTaskState(task: { boardColumn?: { type: TaskState } | null }) {
+    return task.boardColumn?.type ?? TaskState.BACKLOG;
   }
 }

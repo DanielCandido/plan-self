@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, Role, TaskState } from '@prisma/client';
+import { BoardColumnType, Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 const PROJECT_ORDER_FIELDS = ['name', 'createdAt', 'priority', 'updatedAt'] as const;
@@ -81,7 +81,10 @@ export class ProjectsRepository {
     const withBacklog = (
       await this.prisma.task.groupBy({
         by: ['projectId'],
-        where: { project: { organizationId, archived: false }, state: { not: 'DONE' } },
+        where: {
+          project: { organizationId, archived: false },
+          OR: [{ boardColumn: null }, { boardColumn: { type: { not: 'DONE' } } }],
+        },
         _count: { _all: true },
       })
     ).length;
@@ -90,7 +93,7 @@ export class ProjectsRepository {
     const completedProjectIds = (
       await this.prisma.task.groupBy({
         by: ['projectId'],
-        where: { project: { organizationId, archived: false }, state: 'DONE' },
+        where: { project: { organizationId, archived: false }, boardColumn: { type: 'DONE' } },
         _count: { _all: true },
       })
     ).map((r) => r.projectId);
@@ -213,7 +216,9 @@ export class ProjectsRepository {
   async computeProgress(projectId: string, organizationId: string) {
     const total = await this.prisma.task.count({ where: { projectId, project: { organizationId } } });
     if (total === 0) return 0;
-    const done = await this.prisma.task.count({ where: { projectId, state: 'DONE', project: { organizationId } } });
+    const done = await this.prisma.task.count({
+      where: { projectId, boardColumn: { type: 'DONE' }, project: { organizationId } },
+    });
     return Math.round((done / total) * 100);
   }
 
@@ -395,7 +400,7 @@ export class ProjectsRepository {
             ],
           }
         : {}),
-      ...(options.state ? { state: options.state as TaskState } : {}),
+      ...(options.state ? { boardColumn: { type: options.state as BoardColumnType } } : {}),
       ...(options.priority ? { priority: options.priority } : {}),
       ...(options.assigneeId ? { assignees: { some: { userId: options.assigneeId } } } : {}),
     };
@@ -404,6 +409,12 @@ export class ProjectsRepository {
       this.prisma.task.findMany({
         where,
         include: {
+          boardColumn: {
+            select: {
+              id: true,
+              type: true,
+            },
+          },
           assignees: {
             include: {
               user: {
@@ -424,7 +435,9 @@ export class ProjectsRepository {
         id: task.id,
         title: task.title,
         description: task.description,
-        state: task.state,
+        state: task.boardColumn?.type ?? 'BACKLOG',
+        boardColumnId: task.boardColumnId,
+        boardColumnType: task.boardColumn?.type ?? null,
         priority: task.priority,
         storyPoints: task.storyPoints,
         dueAt: task.dueAt?.toISOString() ?? null,
@@ -461,9 +474,19 @@ export class ProjectsRepository {
       throw new NotFoundException('Projeto não encontrado');
     }
 
+    const backlogColumn = await this.prisma.boardColumn.findFirst({
+      where: {
+        board: { projectId: project.id },
+        type: 'BACKLOG',
+      },
+      select: { id: true, boardId: true },
+    });
+
     const task = await this.prisma.task.create({
       data: {
         projectId: project.id,
+        boardId: backlogColumn?.boardId ?? null,
+        boardColumnId: backlogColumn?.id ?? null,
         title: data.title,
         description: data.description,
         priority: data.priority ?? 'MEDIUM',
@@ -479,6 +502,11 @@ export class ProjectsRepository {
           : undefined,
       },
       include: {
+        boardColumn: {
+          select: {
+            type: true,
+          },
+        },
         assignees: {
           include: {
             user: {
@@ -493,7 +521,9 @@ export class ProjectsRepository {
       id: task.id,
       title: task.title,
       description: task.description,
-      state: task.state,
+      state: task.boardColumn?.type ?? 'BACKLOG',
+      boardColumnId: task.boardColumnId,
+      boardColumnType: task.boardColumn?.type ?? null,
       priority: task.priority,
       storyPoints: task.storyPoints,
       dueAt: task.dueAt?.toISOString() ?? null,
@@ -521,7 +551,7 @@ export class ProjectsRepository {
     const completed = projectIds.length
       ? await this.prisma.task.groupBy({
           by: ['projectId'],
-          where: { projectId: { in: projectIds }, state: 'DONE' },
+          where: { projectId: { in: projectIds }, boardColumn: { type: 'DONE' } },
           _count: { _all: true },
         })
       : [];
