@@ -150,7 +150,6 @@ export class SprintController {
     @CurrentUser() currentUser: CurrentUserPayload,
     @Body() dto: UpdateTaskDto,
   ) {
-    console.log(dto);
     return this.sprintService.updateTask(taskId, currentUser, dto);
   }
 

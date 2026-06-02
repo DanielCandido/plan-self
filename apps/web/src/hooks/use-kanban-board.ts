@@ -23,7 +23,7 @@ interface KanbanTaskMovedPayload {
   fromColumnId: string | null;
   toColumnId: string;
   targetPosition: number;
-  boardColumnType: string;
+  boardColumnType: BoardTask['boardColumnType'];
   timestamp: string;
 }
 

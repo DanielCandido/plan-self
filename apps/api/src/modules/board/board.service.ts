@@ -348,7 +348,7 @@ export class BoardService {
     return activeSprintId;
   }
 
-  private columnTypeToState(type: BoardColumnType): TaskState {
+  private columnTypeToState(type?: BoardColumnType | null): TaskState {
     switch (type) {
       case 'TODO':
       case 'IN_PROGRESS':
