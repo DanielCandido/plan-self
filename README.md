@@ -60,6 +60,9 @@ Monorepo com Turborepo:
 
 ## Setup rápido
 
+Para uso em rede isolada com DNS e HTTPS local, consulte o
+[guia de instalacao LAN](./docs/lan-setup.md).
+
 ```bash
 cp .env.example .env
 npm install
@@ -100,6 +103,10 @@ Ou:
 
 ## Roadmap imediato
 
+> O roadmap detalhado e atualizado, incluindo operacao LAN isolada e a edicao
+> Plan Self Construcao para engenharia civil, esta em
+> [ROADMAP.md](./ROADMAP.md). A lista historica abaixo sera absorvida pelos
+> marcos descritos no documento canonico.
 1. Completar módulos NestJS (auth refresh, MFA, sessões, API keys)
 2. Entregar board/timeline/list/calendar no frontend
 3. Integrar DM/thread/reactions em mensagens

@@ -6,6 +6,7 @@ import { io, type Socket } from 'socket.io-client';
 import { toast } from 'sonner';
 import type { BoardTask, KanbanBoardResponse, MoveBoardTaskPayload, ReorderBoardTaskPayload } from '@plan-self/types';
 import apiClient, { getAccessToken } from '@/lib/api';
+import { resolveRealtimeUrl } from '@/lib/realtime';
 
 const boardQueryKey = (projectId: string) => ['kanban', 'board', projectId] as const;
 
@@ -111,8 +112,7 @@ export function useKanbanBoard(projectId: string) {
     const token = getAccessToken();
     if (!token) return;
 
-    const gatewayUrl = process.env.NEXT_PUBLIC_GATEWAY_URL ?? 'http://localhost:3010';
-    const socket: Socket = io(`${gatewayUrl}/events`, {
+    const socket: Socket = io(`${resolveRealtimeUrl()}/events`, {
       transports: ['websocket'],
       auth: { token },
       withCredentials: true,

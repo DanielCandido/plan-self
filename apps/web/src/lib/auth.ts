@@ -2,8 +2,6 @@ import type { AuthResponse, LoginPayload, OAuthProvider, RefreshResponse, User }
 import apiClient, { setAccessToken } from './api';
 import { storage } from './storage';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
-
 export async function loginRequest(payload: LoginPayload): Promise<AuthResponse> {
   const { data } = await apiClient.post<AuthResponse>('/auth/login', {
     email: payload.email,
@@ -31,7 +29,7 @@ export async function getMeRequest(): Promise<User> {
 }
 
 export function redirectToOAuth(provider: OAuthProvider): void {
-  window.location.href = `${API_BASE_URL}/auth/${provider}`;
+  window.location.href = `/api/auth/${provider}`;
 }
 
 export async function bootstrapSession(): Promise<User | null> {

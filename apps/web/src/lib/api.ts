@@ -5,7 +5,9 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+// Browser traffic always goes through the same reverse-proxy origin. On a LAN,
+// "localhost" would point at the user's device, not at the Plan Self server.
+const API_BASE_URL = '/api';
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
