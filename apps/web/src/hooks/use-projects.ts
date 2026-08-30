@@ -15,6 +15,12 @@ import type {
   ProjectMember,
   ProjectAvailableUser,
   UpdateProjectPayload,
+  WbsNode,
+  WbsNodeType,
+  ProjectMemberRole,
+  ProjectTimeline,
+  ProjectFile,
+  FileRevision,
 } from '@plan-self/types';
 import apiClient from '@/lib/api';
 import { useProjectsStore } from '@/store/projects.store';
@@ -190,6 +196,18 @@ export function useProjectMembers(projectId: string | null, search = '') {
     },
   });
 
+  const updateMember = useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: ProjectMemberRole }) => {
+      if (!projectId) return [] as ProjectMember[];
+      const { data } = await apiClient.patch<ProjectMember[]>(`/projects/${projectId}/members/${userId}`, { role });
+      return data;
+    },
+    onSuccess: async () => {
+      toast.success('Papel atualizado');
+      await refreshMembers();
+    },
+  });
+
   return {
     members: members.data ?? [],
     isLoadingMembers: members.isLoading,
@@ -199,7 +217,65 @@ export function useProjectMembers(projectId: string | null, search = '') {
     isAddingMember: addMember.isPending,
     removeMember: removeMember.mutateAsync,
     isRemovingMember: removeMember.isPending,
+    updateMember: updateMember.mutateAsync,
+    isUpdatingMember: updateMember.isPending,
   };
+}
+
+export function useProjectWbs(projectId: string) {
+  const queryClient = useQueryClient();
+  const key = ['projects', projectId, 'wbs'] as const;
+  const query = useQuery({
+    queryKey: key,
+    queryFn: async () => (await apiClient.get<WbsNode[]>(`/projects/${projectId}/wbs`)).data,
+    enabled: Boolean(projectId),
+  });
+  const refresh = () => queryClient.invalidateQueries({ queryKey: key });
+  const create = useMutation({
+    mutationFn: async (payload: { code: string; name: string; description?: string; type: WbsNodeType; parentId?: string; position?: number }) =>
+      (await apiClient.post<WbsNode>(`/projects/${projectId}/wbs`, payload)).data,
+    onSuccess: async () => { toast.success('Item adicionado a EAP'); await refresh(); },
+  });
+  const remove = useMutation({
+    mutationFn: async (nodeId: string) => apiClient.delete(`/projects/${projectId}/wbs/${nodeId}`),
+    onSuccess: async () => { toast.success('Item removido da EAP'); await refresh(); },
+  });
+  return { nodes: query.data ?? [], isLoading: query.isLoading, createNode: create.mutateAsync, removeNode: remove.mutateAsync, isSaving: create.isPending || remove.isPending };
+}
+
+export function useProjectTimeline(projectId: string) {
+  const queryClient = useQueryClient();
+  const key = ['projects', projectId, 'timeline'] as const;
+  const query = useQuery({
+    queryKey: key,
+    queryFn: async () => (await apiClient.get<ProjectTimeline>(`/projects/${projectId}/timeline`)).data,
+    enabled: Boolean(projectId),
+    staleTime: 20_000,
+  });
+  const schedule = useMutation({
+    mutationFn: async ({ taskId, plannedStart, plannedEnd, wbsNodeId }: { taskId: string; plannedStart: string; plannedEnd: string; wbsNodeId?: string | null }) =>
+      (await apiClient.patch(`/tasks/${taskId}`, { plannedStart, plannedEnd, wbsNodeId })).data,
+    onSuccess: async () => { toast.success('Planejamento atualizado'); await queryClient.invalidateQueries({ queryKey: key }); },
+  });
+  return { ...query, scheduleTask: schedule.mutateAsync, isScheduling: schedule.isPending };
+}
+
+export function useProjectFiles(projectId: string) {
+  const queryClient = useQueryClient();
+  const key = ['projects', projectId, 'files'] as const;
+  const query = useQuery({ queryKey: key, queryFn: async () => (await apiClient.get<ProjectFile[]>(`/projects/${projectId}/files`)).data, enabled: Boolean(projectId) });
+  const refresh = () => queryClient.invalidateQueries({ queryKey: key });
+  const upload = useMutation({
+    mutationFn: async ({ file, name, description }: { file: File; name?: string; description?: string }) => { const form = new FormData(); form.append('file', file); if (name) form.append('name', name); if (description) form.append('description', description); return (await apiClient.post(`/projects/${projectId}/files`, form)).data; },
+    onSuccess: async () => { toast.success('Arquivo enviado'); await refresh(); },
+  });
+  const revise = useMutation({
+    mutationFn: async ({ fileId, file, note }: { fileId: string; file: File; note?: string }) => { const form = new FormData(); form.append('file', file); if (note) form.append('note', note); return (await apiClient.post(`/projects/${projectId}/files/${fileId}/revisions`, form)).data; },
+    onSuccess: async () => { toast.success('Nova revisao enviada'); await refresh(); },
+  });
+  const remove = useMutation({ mutationFn: (fileId: string) => apiClient.delete(`/projects/${projectId}/files/${fileId}`), onSuccess: async () => { toast.success('Arquivo removido'); await refresh(); } });
+  async function download(fileId: string, revision: FileRevision) { const response = await apiClient.get(`/projects/${projectId}/files/${fileId}/revisions/${revision.id}/download`, { responseType: 'blob' }); const url = URL.createObjectURL(response.data); const anchor = document.createElement('a'); anchor.href = url; anchor.download = revision.originalName; anchor.click(); URL.revokeObjectURL(url); }
+  return { files: query.data ?? [], isLoading: query.isLoading, uploadFile: upload.mutateAsync, uploadRevision: revise.mutateAsync, removeFile: remove.mutateAsync, downloadRevision: download, isSaving: upload.isPending || revise.isPending || remove.isPending };
 }
 
 export function useProjectFormOptions(ownerSearch = '', teamSearch = '', enabled = true) {

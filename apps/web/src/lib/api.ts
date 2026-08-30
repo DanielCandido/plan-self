@@ -4,6 +4,16 @@ import axios, {
   type AxiosRequestConfig,
   type InternalAxiosRequestConfig,
 } from 'axios';
+import { enqueueMutation } from './offline-queue';
+
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    _offlineReplay?: boolean;
+  }
+  interface InternalAxiosRequestConfig {
+    _offlineReplay?: boolean;
+  }
+}
 
 // Browser traffic always goes through the same reverse-proxy origin. On a LAN,
 // "localhost" would point at the user's device, not at the Plan Self server.
@@ -58,8 +68,17 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  const method = config.method?.toLowerCase();
+  if (method && ['post', 'put', 'patch', 'delete'].includes(method) && !config.headers['Idempotency-Key']) {
+    config.headers['Idempotency-Key'] = createMutationId();
+  }
   return config;
 });
+
+function createMutationId() {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
+  return `offline-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
 
 // ─── Response interceptor ─────────────────────────────────────────────────────
 
@@ -67,6 +86,41 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+
+    const method = originalRequest.method?.toLowerCase();
+    const isMutation = method && ['post', 'put', 'patch', 'delete'].includes(method);
+    const isAuthRequest = originalRequest.url?.startsWith('/auth/');
+    const isNetworkFailure = !error.response;
+    const isFilePayload = typeof FormData !== 'undefined' && originalRequest.data instanceof FormData;
+
+    if (
+      typeof window !== 'undefined' &&
+      isMutation &&
+      !isAuthRequest &&
+      isNetworkFailure &&
+      !isFilePayload &&
+      !originalRequest._offlineReplay
+    ) {
+      const idempotencyKey = String((originalRequest.headers as Record<string, unknown> | undefined)?.['Idempotency-Key'] ?? createMutationId());
+      let payload = originalRequest.data;
+      if (typeof payload === 'string') {
+        try { payload = JSON.parse(payload); } catch { /* keep plain text payload */ }
+      }
+      await enqueueMutation({
+        id: idempotencyKey,
+        method: method as 'post' | 'put' | 'patch' | 'delete',
+        url: originalRequest.url ?? '/',
+        data: payload,
+        headers: { 'Idempotency-Key': idempotencyKey },
+      });
+      return {
+        data: { queued: true, offlineMutationId: idempotencyKey },
+        status: 202,
+        statusText: 'Queued offline',
+        headers: {},
+        config: error.config!,
+      };
+    }
 
     const isUnauthorized = error.response?.status === 401;
     const isRefreshUrl = originalRequest.url?.includes('/auth/refresh');

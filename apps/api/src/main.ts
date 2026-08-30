@@ -15,7 +15,7 @@ async function bootstrap() {
     origin: apiConfig.appBaseUrl,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key'],
   });
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));

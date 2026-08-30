@@ -1,4 +1,5 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { ProjectProfile } from '@prisma/client';
 
 export class CreateProjectDto {
   @IsString()
@@ -27,4 +28,8 @@ export class CreateProjectDto {
   @IsOptional()
   @IsString()
   status?: string;
+
+  @IsOptional()
+  @IsEnum(ProjectProfile)
+  profile?: ProjectProfile;
 }

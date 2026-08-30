@@ -1,4 +1,5 @@
-import { Controller, Get, Query, UseGuards, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, UseInterceptors, UploadedFile, Post, Body, Patch, Param, Delete, Res, StreamableFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { CurrentUserPayload } from '../auth/types/current-user.type';
@@ -13,13 +14,15 @@ import { ListProjectTasksQueryDto } from './dto/list-project-tasks-query.dto';
 import { CreateProjectTaskDto } from './dto/create-project-task.dto';
 import { ListProjectUsersQueryDto } from './dto/list-project-users-query.dto';
 import { ListProjectOptionsQueryDto } from './dto/list-project-options-query.dto';
+import { UpdateProjectMemberDto } from './dto/update-project-member.dto';
+import { ProjectFilesService } from './project-files.service';
 
 @ApiTags('projects')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller()
 export class ProjectsController {
-  constructor(private readonly projectsService: ProjectsService) {}
+  constructor(private readonly projectsService: ProjectsService, private readonly projectFiles: ProjectFilesService) {}
 
   @Get('projects')
   @ApiOperation({ summary: 'Lista de projetos com paginação e filtros simples' })
@@ -111,6 +114,17 @@ export class ProjectsController {
     return this.projectsService.removeProjectMember(id, userId, currentUser);
   }
 
+  @Patch('projects/:id/members/:userId')
+  @ApiOperation({ summary: 'Atualiza o papel de um membro no projeto' })
+  updateProjectMember(
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+    @CurrentUser() currentUser: CurrentUserPayload,
+    @Body() dto: UpdateProjectMemberDto,
+  ) {
+    return this.projectsService.updateProjectMember(id, userId, currentUser, dto);
+  }
+
   @Get('projects/:id/tasks')
   @ApiOperation({ summary: 'Lista tarefas do projeto com filtros e paginação' })
   listProjectTasks(
@@ -129,5 +143,75 @@ export class ProjectsController {
     @Body() dto: CreateProjectTaskDto,
   ) {
     return this.projectsService.createProjectTask(id, currentUser, dto);
+  }
+
+  @Get('projects/:id/wbs')
+  @ApiOperation({ summary: 'Lista a EAP do projeto' })
+  listWbs(@Param('id') id: string, @CurrentUser() currentUser: CurrentUserPayload) {
+    return this.projectsService.listWbs(id, currentUser);
+  }
+
+  @Get('projects/:id/timeline')
+  @ApiOperation({ summary: 'Retorna EAP, tarefas planejadas e dependencias para o Gantt' })
+  getTimeline(@Param('id') id: string, @CurrentUser() currentUser: CurrentUserPayload) {
+    return this.projectsService.getTimeline(id, currentUser);
+  }
+
+  @Post('projects/:id/wbs')
+  @ApiOperation({ summary: 'Cria um item na EAP do projeto' })
+  createWbsNode(@Param('id') id: string, @CurrentUser() currentUser: CurrentUserPayload, @Body() dto: any) {
+    return this.projectsService.createWbsNode(id, currentUser, dto);
+  }
+
+  @Patch('projects/:id/wbs/:nodeId')
+  updateWbsNode(@Param('id') id: string, @Param('nodeId') nodeId: string, @CurrentUser() currentUser: CurrentUserPayload, @Body() dto: any) {
+    return this.projectsService.updateWbsNode(id, nodeId, currentUser, dto);
+  }
+
+  @Delete('projects/:id/wbs/:nodeId')
+  removeWbsNode(@Param('id') id: string, @Param('nodeId') nodeId: string, @CurrentUser() currentUser: CurrentUserPayload) {
+    return this.projectsService.removeWbsNode(id, nodeId, currentUser);
+  }
+
+  @Post('projects/:id/dependencies')
+  @ApiOperation({ summary: 'Cria uma dependencia entre tarefas do projeto' })
+  createDependency(@Param('id') id: string, @CurrentUser() currentUser: CurrentUserPayload, @Body() dto: any) {
+    return this.projectsService.createDependency(id, currentUser, dto);
+  }
+
+  @Delete('projects/:id/dependencies/:dependencyId')
+  removeDependency(@Param('id') id: string, @Param('dependencyId') dependencyId: string, @CurrentUser() currentUser: CurrentUserPayload) {
+    return this.projectsService.removeDependency(id, dependencyId, currentUser);
+  }
+
+  @Get('projects/:id/files')
+  listFiles(@Param('id') id: string, @CurrentUser() currentUser: CurrentUserPayload) {
+    return this.projectFiles.list(id, currentUser.organizationId);
+  }
+
+  @Post('projects/:id/files')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 50 * 1024 * 1024 } }))
+  uploadFile(@Param('id') id: string, @CurrentUser() currentUser: CurrentUserPayload, @UploadedFile() file: any, @Body() body: any) {
+    return this.projectFiles.create(id, currentUser.organizationId, currentUser.id, file, body);
+  }
+
+  @Post('projects/:id/files/:fileId/revisions')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 50 * 1024 * 1024 } }))
+  uploadRevision(@Param('id') id: string, @Param('fileId') fileId: string, @CurrentUser() currentUser: CurrentUserPayload, @UploadedFile() file: any, @Body('note') note?: string) {
+    return this.projectFiles.addRevision(id, fileId, currentUser.organizationId, currentUser.id, file, note);
+  }
+
+  @Get('projects/:id/files/:fileId/revisions/:revisionId/download')
+  async downloadRevision(@Param('id') id: string, @Param('fileId') fileId: string, @Param('revisionId') revisionId: string, @CurrentUser() currentUser: CurrentUserPayload, @Res({ passthrough: true }) response: any) {
+    const result = await this.projectFiles.download(id, fileId, revisionId, currentUser.organizationId);
+    response.setHeader('Content-Type', result.revision.mimeType);
+    response.setHeader('Content-Length', String(result.revision.size));
+    response.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(result.revision.originalName)}`);
+    return new StreamableFile(result.stream);
+  }
+
+  @Delete('projects/:id/files/:fileId')
+  removeFile(@Param('id') id: string, @Param('fileId') fileId: string, @CurrentUser() currentUser: CurrentUserPayload) {
+    return this.projectFiles.remove(id, fileId, currentUser.organizationId);
   }
 }

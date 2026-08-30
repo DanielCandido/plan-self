@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { ProjectAvailableUser, ProjectMember } from '@plan-self/types';
+import type { ProjectAvailableUser, ProjectMember, ProjectMemberRole } from '@plan-self/types';
 
 export function ProjectMembersModal({
   open,
@@ -14,6 +14,7 @@ export function ProjectMembersModal({
   onSearchChange,
   onAddMember,
   onRemoveMember,
+  onUpdateMember,
 }: {
   open: boolean;
   projectName: string;
@@ -25,6 +26,7 @@ export function ProjectMembersModal({
   onSearchChange: (value: string) => void;
   onAddMember: (userId: string) => Promise<void>;
   onRemoveMember: (userId: string) => Promise<void>;
+  onUpdateMember: (userId: string, role: ProjectMemberRole) => Promise<void>;
 }) {
   const [pendingUserId, setPendingUserId] = useState<string | null>(null);
 
@@ -57,13 +59,15 @@ export function ProjectMembersModal({
                   key={member.userId}
                   className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2"
                 >
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm text-white">{member.name}</p>
-                    <p className="text-xs text-white/60">{member.role}</p>
+                    <select value={member.role} onChange={(event) => onUpdateMember(member.userId, event.target.value as ProjectMemberRole)} disabled={isSaving || member.role === 'OWNER'} className="mt-1 rounded-lg border border-white/10 bg-[#171821] px-2 py-1 text-xs text-white/70 disabled:opacity-60">
+                      <option value="OWNER">Owner</option><option value="MANAGER">Manager</option><option value="CONTRIBUTOR">Contributor</option><option value="VIEWER">Viewer</option>
+                    </select>
                   </div>
                   <button
                     type="button"
-                    disabled={isSaving}
+                    disabled={isSaving || member.role === 'OWNER'}
                     onClick={async () => {
                       try {
                         await onRemoveMember(member.userId);

@@ -10,6 +10,9 @@ import { usePrivateShell } from '@/components/layout/private-shell-context';
 const tabs = [
   { label: 'Sprints', slug: 'sprints' },
   { label: 'Kanban', slug: 'kanban' },
+  { label: 'EAP', slug: 'wbs' },
+  { label: 'Timeline', slug: 'timeline' },
+  { label: 'Arquivos', slug: 'files' },
 ] as const;
 
 export function ProjectWorkspaceHeader({ projectId }: { projectId: string }) {

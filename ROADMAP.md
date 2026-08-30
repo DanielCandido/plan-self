@@ -17,11 +17,14 @@ O nucleo ja possui organizacoes, equipes, projetos, dashboard, Kanban, backlog, 
 
 ## Marco 1 - fundacoes compartilhadas
 
-- Adicionar perfis GENERAL e CONSTRUCTION_SITE.
-- Criar membros e papeis explicitos por projeto.
-- Expor EAP, dependencias e timeline/Gantt.
-- Implementar arquivos e revisoes em armazenamento local.
-- Entregar PWA com fila offline, idempotencia e conflitos visiveis.
+- [x] Adicionar perfis GENERAL e CONSTRUCTION_SITE.
+- [x] Criar membros e papeis explicitos por projeto.
+- [x] Expor a fundacao de EAP e dependencias pela API.
+- [x] Entregar interface hierarquica da EAP e edicao de papeis dos membros.
+- [x] Criar a visualizacao timeline/Gantt sobre EAP e dependencias.
+- [x] Implementar arquivos e revisoes em armazenamento local.
+- [x] Entregar base PWA com fila offline para mutacoes JSON, idempotencia e conflitos visiveis.
+- Ampliar o modo offline com cache de consultas por projeto e uploads reprogramaveis em blocos.
 
 ## Marco 2 - Plan Self Construcao
 

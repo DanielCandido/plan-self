@@ -1,0 +1,24 @@
+'use client';
+
+import { FormEvent, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { useProjectFiles } from '@/hooks/use-projects';
+
+export default function FilesPage() {
+  const { projectId } = useParams<{ projectId: string }>();
+  const storage = useProjectFiles(projectId);
+  const [selected, setSelected] = useState<File | null>(null);
+  const [name, setName] = useState('');
+  async function submit(event: FormEvent) { event.preventDefault(); if (!selected) return; await storage.uploadFile({ file: selected, name: name || undefined }); setSelected(null); setName(''); }
+  return <main className="mx-auto grid max-w-[1600px] gap-6 xl:grid-cols-[360px_1fr]">
+    <form onSubmit={submit} className="h-fit space-y-4 rounded-[28px] border border-white/10 bg-[#111219] p-5"><div><p className="text-xs uppercase tracking-[.2em] text-white/40">Armazenamento local</p><h2 className="text-xl font-semibold text-white">Enviar arquivo</h2></div><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome no projeto (opcional)" className={inputClass} /><input required type="file" onChange={(e) => setSelected(e.target.files?.[0] ?? null)} className="block w-full text-sm text-white/60 file:mr-3 file:rounded-lg file:border-0 file:bg-violet-500/20 file:px-3 file:py-2 file:text-violet-100" /><p className="text-xs text-white/35">Limite por revisao: 50 MB. Os dados permanecem no servidor local.</p><button disabled={!selected || storage.isSaving} className="w-full rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white disabled:opacity-40">Enviar</button></form>
+    <section className="rounded-[28px] border border-white/10 bg-[#111219] p-5"><div className="mb-5"><p className="text-xs uppercase tracking-[.2em] text-white/40">Documentos</p><h2 className="text-2xl font-semibold text-white">Arquivos e revisoes</h2></div>{storage.isLoading ? <p className="text-white/45">Carregando...</p> : storage.files.length === 0 ? <p className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-white/40">Nenhum arquivo enviado.</p> : <div className="space-y-3">{storage.files.map((file) => <FileCard key={file.id} file={file} saving={storage.isSaving} onRevision={storage.uploadRevision} onDownload={storage.downloadRevision} onRemove={storage.removeFile} />)}</div>}</section>
+  </main>;
+}
+
+function FileCard({ file, saving, onRevision, onDownload, onRemove }: { file: any; saving: boolean; onRevision: (payload: { fileId: string; file: File; note?: string }) => Promise<unknown>; onDownload: (fileId: string, revision: any) => Promise<void>; onRemove: (fileId: string) => Promise<unknown> }) {
+  const [revisionFile, setRevisionFile] = useState<File | null>(null); const [note, setNote] = useState('');
+  return <article className="rounded-2xl border border-white/10 bg-white/[.025] p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-medium text-white">{file.name}</h3><p className="text-xs text-white/40">{file.revisions.length} revisoes · ultima atualizacao {new Date(file.updatedAt).toLocaleDateString('pt-BR')}</p></div><button disabled={saving} onClick={() => onRemove(file.id)} className="text-xs text-rose-300">Remover</button></div><div className="mt-3 space-y-2">{file.revisions.map((revision: any) => <div key={revision.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/[.07] bg-black/15 px-3 py-2"><div><p className="text-sm text-white/75">R{revision.revision} · {revision.originalName}</p><p className="text-[11px] text-white/35">{formatBytes(revision.size)} · SHA-256 {revision.sha256.slice(0, 12)}… · {revision.uploadedBy?.name}</p>{revision.note && <p className="text-xs text-white/50">{revision.note}</p>}</div><button onClick={() => onDownload(file.id, revision)} className="rounded-lg border border-violet-300/20 px-3 py-1.5 text-xs text-violet-200">Baixar</button></div>)}</div><div className="mt-3 grid gap-2 md:grid-cols-[1fr_1fr_auto]"><input type="file" onChange={(e) => setRevisionFile(e.target.files?.[0] ?? null)} className="text-xs text-white/50" /><input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Nota da revisao" className={inputClass} /><button disabled={!revisionFile || saving} onClick={async () => { if (!revisionFile) return; await onRevision({ fileId: file.id, file: revisionFile, note: note || undefined }); setRevisionFile(null); setNote(''); }} className="rounded-lg bg-white/10 px-3 py-2 text-xs text-white disabled:opacity-40">Nova revisao</button></div></article>;
+}
+function formatBytes(value: number) { if (value < 1024) return `${value} B`; if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`; return `${(value / 1024 / 1024).toFixed(1)} MB`; }
+const inputClass = 'w-full rounded-xl border border-white/10 bg-white/[.04] px-3 py-2.5 text-sm text-white outline-none';

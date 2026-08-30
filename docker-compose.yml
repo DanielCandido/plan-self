@@ -27,6 +27,8 @@ services:
       dockerfile: infrastructure/docker/api.Dockerfile
     env_file:
       - .env
+    volumes:
+      - project_files:/data/files
     depends_on:
       postgres:
         condition: service_healthy
@@ -101,3 +103,4 @@ services:
 
 volumes:
   postgres_data:
+  project_files:

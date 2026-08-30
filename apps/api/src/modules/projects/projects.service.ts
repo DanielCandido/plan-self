@@ -90,6 +90,10 @@ export class ProjectsService {
     return this.repository.removeProjectMember(projectId, currentUser.organizationId, userId);
   }
 
+  async updateProjectMember(projectId: string, userId: string, currentUser: CurrentUserPayload, dto: { role?: string }) {
+    return this.repository.updateProjectMember(projectId, currentUser.organizationId, userId, dto);
+  }
+
   async listAvailableProjectUsers(projectId: string, currentUser: CurrentUserPayload, search: string) {
     return this.repository.listAvailableProjectUsers(projectId, currentUser.organizationId, search);
   }
@@ -122,5 +126,33 @@ export class ProjectsService {
     },
   ) {
     return this.repository.createProjectTask(projectId, currentUser.organizationId, dto);
+  }
+
+  listWbs(projectId: string, currentUser: CurrentUserPayload) {
+    return this.repository.listWbs(projectId, currentUser.organizationId);
+  }
+
+  getTimeline(projectId: string, currentUser: CurrentUserPayload) {
+    return this.repository.getTimeline(projectId, currentUser.organizationId);
+  }
+
+  createWbsNode(projectId: string, currentUser: CurrentUserPayload, dto: any) {
+    return this.repository.createWbsNode(projectId, currentUser.organizationId, dto);
+  }
+
+  updateWbsNode(projectId: string, nodeId: string, currentUser: CurrentUserPayload, dto: any) {
+    return this.repository.updateWbsNode(projectId, nodeId, currentUser.organizationId, dto);
+  }
+
+  removeWbsNode(projectId: string, nodeId: string, currentUser: CurrentUserPayload) {
+    return this.repository.removeWbsNode(projectId, nodeId, currentUser.organizationId);
+  }
+
+  createDependency(projectId: string, currentUser: CurrentUserPayload, dto: any) {
+    return this.repository.createDependency(projectId, currentUser.organizationId, dto);
+  }
+
+  removeDependency(projectId: string, dependencyId: string, currentUser: CurrentUserPayload) {
+    return this.repository.removeDependency(projectId, dependencyId, currentUser.organizationId);
   }
 }

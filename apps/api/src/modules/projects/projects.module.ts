@@ -5,11 +5,12 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { ProjectsController } from './projects.controller';
 import { ProjectsRepository } from './projects.repository';
 import { ProjectsService } from './projects.service';
+import { ProjectFilesService } from './project-files.service';
 
 @Module({
   imports: [PrismaModule, AuthModule],
   controllers: [ProjectsController],
-  providers: [ProjectsService, ProjectsRepository, JwtAuthGuard],
+  providers: [ProjectsService, ProjectsRepository, ProjectFilesService, JwtAuthGuard],
   exports: [ProjectsService],
 })
 export class ProjectsModule {}

@@ -56,6 +56,18 @@ export class UpdateTaskRestDto {
   dueDate?: string | null;
 
   @IsOptional()
+  @IsDateString()
+  plannedStart?: string | null;
+
+  @IsOptional()
+  @IsDateString()
+  plannedEnd?: string | null;
+
+  @IsOptional()
+  @IsCuid()
+  wbsNodeId?: string | null;
+
+  @IsOptional()
   @IsBoolean()
   blocked?: boolean;
 

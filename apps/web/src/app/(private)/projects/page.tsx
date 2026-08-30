@@ -137,7 +137,7 @@ function ProjectsPageContent() {
         members={members.members}
         availableUsers={members.availableUsers}
         isLoading={members.isLoadingMembers || members.isLoadingUsers}
-        isSaving={members.isAddingMember || members.isRemovingMember}
+        isSaving={members.isAddingMember || members.isRemovingMember || members.isUpdatingMember}
         onOpenChange={(open) => {
           setActiveModal(open ? 'members' : null);
           if (!open) setSelectedProjectId(null);
@@ -148,6 +148,9 @@ function ProjectsPageContent() {
         }}
         onRemoveMember={async (userId) => {
           await members.removeMember(userId);
+        }}
+        onUpdateMember={async (userId, role) => {
+          await members.updateMember({ userId, role });
         }}
       />
     </>

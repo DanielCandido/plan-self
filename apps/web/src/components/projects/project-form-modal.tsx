@@ -15,6 +15,7 @@ const schema = z.object({
   color: z.string().optional(),
   ownerId: z.string().optional(),
   teamId: z.string().optional(),
+  profile: z.enum(['GENERAL', 'CONSTRUCTION_SITE']),
 });
 
 type FormValues = z.input<typeof schema>;
@@ -84,6 +85,7 @@ export function ProjectFormModal({
       color: initialProject?.color ?? '#7c3aed',
       ownerId: initialProject?.ownerId ?? '',
       teamId: initialProject?.teamId ?? '',
+      profile: initialProject?.profile ?? 'GENERAL',
     },
   });
   const resetForm = form.reset;
@@ -97,6 +99,7 @@ export function ProjectFormModal({
       color: initialProject?.color ?? '#7c3aed',
       ownerId: initialProject?.ownerId ?? '',
       teamId: initialProject?.teamId ?? '',
+      profile: initialProject?.profile ?? 'GENERAL',
     });
   }, [initialProject, open, resetForm]);
 
@@ -135,6 +138,7 @@ export function ProjectFormModal({
               color: values.color || undefined,
               ownerId: values.ownerId || undefined,
               teamId: values.teamId || undefined,
+              profile: values.profile,
             });
             onOpenChange(false);
           })}
@@ -145,6 +149,13 @@ export function ProjectFormModal({
 
           <Field label="Description">
             <textarea {...form.register('description')} className={`${inputClass} min-h-[88px]`} />
+          </Field>
+
+          <Field label="Perfil do projeto">
+            <select {...form.register('profile')} className={inputClass}>
+              <option value="GENERAL">Geral</option>
+              <option value="CONSTRUCTION_SITE">Obra / Engenharia civil</option>
+            </select>
           </Field>
 
           <div className="grid gap-4 md:grid-cols-2">

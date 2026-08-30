@@ -15,6 +15,31 @@ enum Role {
   GUEST
 }
 
+enum ProjectProfile {
+  GENERAL
+  CONSTRUCTION_SITE
+}
+
+enum ProjectMemberRole {
+  OWNER
+  MANAGER
+  CONTRIBUTOR
+  VIEWER
+}
+
+enum WbsNodeType {
+  PHASE
+  DELIVERABLE
+  WORK_PACKAGE
+}
+
+enum TaskDependencyType {
+  FINISH_TO_START
+  START_TO_START
+  FINISH_TO_FINISH
+  START_TO_FINISH
+}
+
 enum UserStatus {
   ACTIVE
   BLOCKED
@@ -120,31 +145,33 @@ model Team {
 }
 
 model User {
-  id                String           @id @default(cuid())
-  email             String           @unique
-  name              String
-  passwordHash      String?
-  status            UserStatus       @default(ACTIVE)
-  role              Role             @default(MEMBER)
-  avatarUrl         String?
-  onlineStatus      String           @default("offline")
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  organizationId    String
-  organization      Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  memberships       TeamMember[]
-  ownedTeams        Team[]           @relation("TeamOwner")
-  teamInvitesSent   TeamInvite[]     @relation("TeamInviteSentBy")
-  teamActivities    TeamActivity[]
-  authSessions      AuthSession[]
-  taskAssignees     TaskAssignee[]
-  taskComments      TaskComment[]
-  messages          Message[]
-  sprintMemberships SprintMember[]
-  sprintAuditLogs   SprintAuditLog[]
-  projects          Project[]
-  taskHistory       TaskHistory[]
-  labelsCreated     Label[]
+  id                 String           @id @default(cuid())
+  email              String           @unique
+  name               String
+  passwordHash       String?
+  status             UserStatus       @default(ACTIVE)
+  role               Role             @default(MEMBER)
+  avatarUrl          String?
+  onlineStatus       String           @default("offline")
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  organizationId     String
+  organization       Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  memberships        TeamMember[]
+  ownedTeams         Team[]           @relation("TeamOwner")
+  teamInvitesSent    TeamInvite[]     @relation("TeamInviteSentBy")
+  teamActivities     TeamActivity[]
+  authSessions       AuthSession[]
+  taskAssignees      TaskAssignee[]
+  taskComments       TaskComment[]
+  messages           Message[]
+  sprintMemberships  SprintMember[]
+  sprintAuditLogs    SprintAuditLog[]
+  projects           Project[]
+  projectMemberships ProjectMember[]
+  taskHistory        TaskHistory[]
+  labelsCreated      Label[]
+  fileRevisions      FileRevision[]
 }
 
 model AuthSession {
@@ -248,6 +275,7 @@ model Project {
   archived        Boolean          @default(false)
   progress        Int              @default(0)
   color           String?
+  profile         ProjectProfile   @default(GENERAL)
   organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   epics           Epic[]
   sprints         Sprint[]
@@ -256,11 +284,82 @@ model Project {
   sprintAuditLogs SprintAuditLog[]
   board           Board?
   labels          Label[]
+  members         ProjectMember[]
+  wbsNodes        WbsNode[]
+  files           ProjectFile[]
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
   @@index([organizationId])
   @@index([archived])
+}
+
+model ProjectMember {
+  id        String            @id @default(cuid())
+  projectId String
+  userId    String
+  role      ProjectMemberRole @default(CONTRIBUTOR)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([userId])
+}
+
+model WbsNode {
+  id          String      @id @default(cuid())
+  projectId   String
+  parentId    String?
+  code        String
+  name        String
+  description String?
+  type        WbsNodeType @default(WORK_PACKAGE)
+  position    Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent      WbsNode?    @relation("WbsHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    WbsNode[]   @relation("WbsHierarchy")
+  tasks       Task[]
+
+  @@unique([projectId, code])
+  @@index([projectId, parentId, position])
+}
+
+model ProjectFile {
+  id          String         @id @default(cuid())
+  projectId   String
+  name        String
+  description String?
+  deletedAt   DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  revisions   FileRevision[]
+
+  @@unique([projectId, name])
+  @@index([projectId, deletedAt])
+}
+
+model FileRevision {
+  id            String      @id @default(cuid())
+  projectFileId String
+  revision      Int
+  storageKey    String      @unique
+  originalName  String
+  mimeType      String
+  size          Int
+  sha256        String
+  note          String?
+  uploadedById  String
+  createdAt     DateTime    @default(now())
+  projectFile   ProjectFile @relation(fields: [projectFileId], references: [id], onDelete: Cascade)
+  uploadedBy    User        @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@unique([projectFileId, revision])
+  @@index([projectFileId, createdAt])
 }
 
 model Board {
@@ -431,6 +530,7 @@ model Task {
   boardColumnId         String?
   sprintId              String?
   storyId               String?
+  wbsNodeId             String?
   title                 String
   description           String?
   position              Int              @default(0)
@@ -443,6 +543,8 @@ model Task {
   dueDate               DateTime?
   slaAt                 DateTime?
   dueAt                 DateTime?
+  plannedStart          DateTime?
+  plannedEnd            DateTime?
   customFields          Json?
   checklist             Json?
   labels                Json?
@@ -456,6 +558,7 @@ model Task {
   project               Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
   sprint                Sprint?          @relation("TaskSprint", fields: [sprintId], references: [id], onDelete: SetNull)
   story                 Story?           @relation(fields: [storyId], references: [id], onDelete: SetNull)
+  wbsNode               WbsNode?         @relation(fields: [wbsNodeId], references: [id], onDelete: SetNull)
   assignees             TaskAssignee[]
   comments              TaskComment[]
   history               TaskHistory[]
@@ -466,6 +569,7 @@ model Task {
   @@index([projectId, sprintId, sortOrder])
   @@index([projectId, deletedAt])
   @@index([boardColumnId, position])
+  @@index([projectId, plannedStart, plannedEnd])
 }
 
 model TaskHistory {
@@ -502,13 +606,15 @@ model Label {
 }
 
 model TaskDependency {
-  id            String   @id @default(cuid())
+  id            String             @id @default(cuid())
   blockerTaskId String
   blockedTaskId String
-  critical      Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  blocker       Task     @relation("TaskBlocking", fields: [blockerTaskId], references: [id], onDelete: Cascade)
-  blocked       Task     @relation("TaskBlockedBy", fields: [blockedTaskId], references: [id], onDelete: Cascade)
+  critical      Boolean            @default(false)
+  type          TaskDependencyType @default(FINISH_TO_START)
+  lagDays       Int                @default(0)
+  createdAt     DateTime           @default(now())
+  blocker       Task               @relation("TaskBlocking", fields: [blockerTaskId], references: [id], onDelete: Cascade)
+  blocked       Task               @relation("TaskBlockedBy", fields: [blockedTaskId], references: [id], onDelete: Cascade)
 
   @@unique([blockerTaskId, blockedTaskId])
 }
@@ -567,4 +673,23 @@ model AuditLog {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([entity, entityId])
+}
+
+model IdempotencyRecord {
+  id             String   @id @default(cuid())
+  key            String   @unique
+  method         String
+  path           String
+  requestHash    String
+  status         String   @default("PENDING")
+  statusCode     Int?
+  response       Json?
+  userId         String?
+  organizationId String?
+  createdAt      DateTime @default(now())
+  expiresAt      DateTime
+
+  @@index([expiresAt])
+  @@index([userId, createdAt])
+  @@index([organizationId, createdAt])
 }

@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { BoardColumnType, Prisma, Role } from '@prisma/client';
+import { BoardColumnType, Prisma, ProjectMemberRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 const PROJECT_ORDER_FIELDS = ['name', 'createdAt', 'priority', 'updatedAt'] as const;
@@ -172,7 +172,7 @@ export class ProjectsRepository {
     }));
   }
 
-  async createProject(organizationId: string, data: { name: string; description?: string; teamId?: string; ownerId?: string; priority?: string; color?: string; status?: string }) {
+  async createProject(organizationId: string, data: { name: string; description?: string; teamId?: string; ownerId?: string; priority?: string; color?: string; status?: string; profile?: 'GENERAL' | 'CONSTRUCTION_SITE' }) {
     const project = await this.prisma.project.create({
       data: { ...data, organizationId },
       include: {
@@ -180,6 +180,12 @@ export class ProjectsRepository {
         owner: { select: { id: true, name: true, avatarUrl: true } },
       },
     });
+
+    if (project.ownerId) {
+      await this.prisma.projectMember.create({
+        data: { projectId: project.id, userId: project.ownerId, role: 'OWNER' },
+      });
+    }
 
     const [hydrated] = await this.hydrateProjects([project]);
     return hydrated;
@@ -225,17 +231,15 @@ export class ProjectsRepository {
   async listProjectMembers(projectId: string, organizationId: string) {
     const project = await this.prisma.project.findFirst({
       where: { id: projectId, organizationId },
-      select: { teamId: true },
+      select: { id: true },
     });
 
     if (!project) {
       throw new NotFoundException('Projeto não encontrado');
     }
 
-    if (!project.teamId) return [];
-
-    const members = await this.prisma.teamMember.findMany({
-      where: { teamId: project.teamId },
+    const members = await this.prisma.projectMember.findMany({
+      where: { projectId: project.id },
       include: {
         user: {
           select: {
@@ -261,15 +265,11 @@ export class ProjectsRepository {
   async addProjectMember(projectId: string, organizationId: string, data: { userId: string; role?: string }) {
     const project = await this.prisma.project.findFirst({
       where: { id: projectId, organizationId },
-      select: { teamId: true },
+      select: { id: true },
     });
 
     if (!project) {
       throw new NotFoundException('Projeto não encontrado');
-    }
-
-    if (!project.teamId) {
-      throw new NotFoundException('Projeto sem equipe vinculada');
     }
 
     const user = await this.prisma.user.findFirst({
@@ -281,20 +281,20 @@ export class ProjectsRepository {
       throw new NotFoundException('Usuário não encontrado');
     }
 
-    await this.prisma.teamMember.upsert({
+    await this.prisma.projectMember.upsert({
       where: {
-        teamId_userId: {
-          teamId: project.teamId,
+        projectId_userId: {
+          projectId: project.id,
           userId: data.userId,
         },
       },
       update: {
-        role: this.resolveRole(data.role),
+        role: this.resolveProjectRole(data.role),
       },
       create: {
-        teamId: project.teamId,
+        projectId: project.id,
         userId: data.userId,
-        role: this.resolveRole(data.role),
+        role: this.resolveProjectRole(data.role),
       },
     });
 
@@ -304,19 +304,19 @@ export class ProjectsRepository {
   async removeProjectMember(projectId: string, organizationId: string, userId: string) {
     const project = await this.prisma.project.findFirst({
       where: { id: projectId, organizationId },
-      select: { teamId: true },
+      select: { id: true, ownerId: true },
     });
 
     if (!project) {
       throw new NotFoundException('Projeto não encontrado');
     }
 
-    if (!project.teamId) {
-      throw new NotFoundException('Projeto sem equipe vinculada');
+    if (project.ownerId === userId) {
+      throw new BadRequestException('O proprietario do projeto nao pode ser removido');
     }
 
-    await this.prisma.teamMember.deleteMany({
-      where: { teamId: project.teamId, userId },
+    await this.prisma.projectMember.deleteMany({
+      where: { projectId: project.id, userId },
     });
 
     return this.listProjectMembers(projectId, organizationId);
@@ -325,19 +325,17 @@ export class ProjectsRepository {
   async listAvailableProjectUsers(projectId: string, organizationId: string, search?: string) {
     const project = await this.prisma.project.findFirst({
       where: { id: projectId, organizationId },
-      select: { id: true, teamId: true },
+      select: { id: true },
     });
 
     if (!project) {
       throw new NotFoundException('Projeto não encontrado');
     }
 
-    const existingMembers = project.teamId
-      ? await this.prisma.teamMember.findMany({
-          where: { teamId: project.teamId },
-          select: { userId: true },
-        })
-      : [];
+    const existingMembers = await this.prisma.projectMember.findMany({
+      where: { projectId: project.id },
+      select: { userId: true },
+    });
 
     const memberIds = new Set(existingMembers.map((member) => member.userId));
 
@@ -567,6 +565,70 @@ export class ProjectsRepository {
     });
   }
 
+  async listWbs(projectId: string, organizationId: string) {
+    await this.assertProject(projectId, organizationId);
+    return this.prisma.wbsNode.findMany({ where: { projectId }, include: { _count: { select: { tasks: true, children: true } } }, orderBy: [{ position: 'asc' }, { code: 'asc' }] });
+  }
+
+  async getTimeline(projectId: string, organizationId: string) {
+    await this.assertProject(projectId, organizationId);
+    const [wbs, tasks, dependencies] = await Promise.all([
+      this.prisma.wbsNode.findMany({ where: { projectId }, orderBy: [{ position: 'asc' }, { code: 'asc' }] }),
+      this.prisma.task.findMany({
+        where: { projectId, deletedAt: null },
+        select: { id: true, code: true, title: true, wbsNodeId: true, plannedStart: true, plannedEnd: true, dueAt: true, blocked: true, boardColumn: { select: { type: true } } },
+        orderBy: [{ plannedStart: 'asc' }, { title: 'asc' }],
+      }),
+      this.prisma.taskDependency.findMany({ where: { blocker: { projectId }, blocked: { projectId } } }),
+    ]);
+    return {
+      wbs,
+      tasks: tasks.map((task) => ({ ...task, state: task.boardColumn?.type ?? 'BACKLOG', boardColumn: undefined, plannedStart: task.plannedStart?.toISOString() ?? null, plannedEnd: (task.plannedEnd ?? task.dueAt)?.toISOString() ?? null })),
+      dependencies,
+    };
+  }
+
+  async createWbsNode(projectId: string, organizationId: string, data: any) {
+    await this.assertProject(projectId, organizationId);
+    if (data.parentId && !(await this.prisma.wbsNode.findFirst({ where: { id: data.parentId, projectId } }))) throw new BadRequestException('Item pai da EAP invalido');
+    return this.prisma.wbsNode.create({ data: { projectId, parentId: data.parentId, code: data.code, name: data.name, description: data.description, type: data.type, position: data.position ?? 0 } });
+  }
+
+  async updateWbsNode(projectId: string, nodeId: string, organizationId: string, data: any) {
+    await this.assertProject(projectId, organizationId);
+    if (data.parentId === nodeId) throw new BadRequestException('Um item da EAP nao pode ser pai de si mesmo');
+    if (!(await this.prisma.wbsNode.findFirst({ where: { id: nodeId, projectId } }))) throw new NotFoundException('Item da EAP nao encontrado');
+    return this.prisma.wbsNode.update({ where: { id: nodeId }, data });
+  }
+
+  async removeWbsNode(projectId: string, nodeId: string, organizationId: string) {
+    await this.assertProject(projectId, organizationId);
+    const result = await this.prisma.wbsNode.deleteMany({ where: { id: nodeId, projectId } });
+    if (!result.count) throw new NotFoundException('Item da EAP nao encontrado');
+    return { deleted: true };
+  }
+
+  async createDependency(projectId: string, organizationId: string, data: any) {
+    await this.assertProject(projectId, organizationId);
+    if (data.blockerTaskId === data.blockedTaskId) throw new BadRequestException('Uma tarefa nao pode depender de si mesma');
+    const tasks = await this.prisma.task.count({ where: { id: { in: [data.blockerTaskId, data.blockedTaskId] }, projectId } });
+    if (tasks !== 2) throw new BadRequestException('As tarefas devem pertencer ao projeto');
+    const reverse = await this.prisma.taskDependency.findUnique({ where: { blockerTaskId_blockedTaskId: { blockerTaskId: data.blockedTaskId, blockedTaskId: data.blockerTaskId } } });
+    if (reverse) throw new BadRequestException('A dependencia criaria um ciclo direto');
+    return this.prisma.taskDependency.create({ data: { blockerTaskId: data.blockerTaskId, blockedTaskId: data.blockedTaskId, type: data.type, lagDays: data.lagDays ?? 0, critical: data.critical ?? false } });
+  }
+
+  async removeDependency(projectId: string, dependencyId: string, organizationId: string) {
+    await this.assertProject(projectId, organizationId);
+    const result = await this.prisma.taskDependency.deleteMany({ where: { id: dependencyId, blocker: { projectId }, blocked: { projectId } } });
+    if (!result.count) throw new NotFoundException('Dependencia nao encontrada');
+    return { deleted: true };
+  }
+
+  private async assertProject(projectId: string, organizationId: string) {
+    if (!(await this.prisma.project.findFirst({ where: { id: projectId, organizationId }, select: { id: true } }))) throw new NotFoundException('Projeto nao encontrado');
+  }
+
   private resolveProjectOrderBy(sortBy?: string, order?: Prisma.SortOrder): Prisma.ProjectOrderByWithRelationInput {
     const safeOrder = order ?? 'desc';
     const map: Record<ProjectOrderField, Prisma.ProjectOrderByWithRelationInput> = {
@@ -583,13 +645,23 @@ export class ProjectsRepository {
     return map[key];
   }
 
-  private resolveRole(role?: string): Role {
-    if (!role) return 'MEMBER';
+  async updateProjectMember(projectId: string, organizationId: string, userId: string, data: { role?: string }) {
+    const project = await this.prisma.project.findFirst({ where: { id: projectId, organizationId } });
+    if (!project) throw new NotFoundException('Projeto nao encontrado');
+    await this.prisma.projectMember.update({
+      where: { projectId_userId: { projectId, userId } },
+      data: { role: this.resolveProjectRole(data.role) },
+    });
+    return this.listProjectMembers(projectId, organizationId);
+  }
+
+  private resolveProjectRole(role?: string): ProjectMemberRole {
+    if (!role) return 'CONTRIBUTOR';
     const normalized = role.toUpperCase();
-    const validRoles: Role[] = ['OWNER', 'ADMIN', 'MANAGER', 'MEMBER', 'GUEST'];
-    if (!validRoles.includes(normalized as Role)) {
+    const validRoles: ProjectMemberRole[] = ['OWNER', 'MANAGER', 'CONTRIBUTOR', 'VIEWER'];
+    if (!validRoles.includes(normalized as ProjectMemberRole)) {
       throw new BadRequestException('Role inválida para membro do projeto');
     }
-    return normalized as Role;
+    return normalized as ProjectMemberRole;
   }
 }

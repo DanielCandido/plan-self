@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './modules/auth/auth.module';
@@ -12,6 +12,8 @@ import { TaskModule } from './modules/task/task.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { TeamModule } from './modules/team/team.module';
 import { UsersModule } from './modules/users/users.module';
+import { PrismaModule } from './modules/prisma/prisma.module';
+import { IdempotencyInterceptor } from './common/interceptors/idempotency.interceptor';
 
 @Module({
   imports: [
@@ -32,7 +34,11 @@ import { UsersModule } from './modules/users/users.module';
     ProjectsModule,
     TeamModule,
     UsersModule,
+    PrismaModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_INTERCEPTOR, useClass: IdempotencyInterceptor },
+  ],
 })
 export class AppModule {}

@@ -8,6 +8,8 @@ export type ProjectStatus =
   | 'CANCELLED';
 
 export type ProjectPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type ProjectProfile = 'GENERAL' | 'CONSTRUCTION_SITE';
+export type ProjectMemberRole = 'OWNER' | 'MANAGER' | 'CONTRIBUTOR' | 'VIEWER';
 
 export interface ProjectOwner {
   id: string;
@@ -29,6 +31,7 @@ export interface ProjectItem {
   priority: ProjectPriority | string | null;
   archived: boolean;
   progress: number;
+  profile: ProjectProfile;
   ownerId: string | null;
   teamId: string | null;
   owner: ProjectOwner | null;
@@ -61,6 +64,7 @@ export interface CreateProjectPayload {
   priority?: string;
   color?: string;
   status?: string;
+  profile?: ProjectProfile;
 }
 
 export interface UpdateProjectPayload {
@@ -71,6 +75,7 @@ export interface UpdateProjectPayload {
   priority?: string;
   color?: string;
   status?: string;
+  profile?: ProjectProfile;
 }
 
 export interface ArchiveProjectPayload {
@@ -93,7 +98,7 @@ export interface ProjectMember {
   userId: string;
   name: string;
   avatarUrl: string | null;
-  role: string;
+  role: ProjectMemberRole;
 }
 
 export interface ProjectAvailableUser extends ProjectMember {
@@ -134,4 +139,68 @@ export interface ProjectTaskItem {
 export interface ProjectTaskListResponse {
   items: ProjectTaskItem[];
   totalCount: number;
+}
+
+export type WbsNodeType = 'PHASE' | 'DELIVERABLE' | 'WORK_PACKAGE';
+export type TaskDependencyType = 'FINISH_TO_START' | 'START_TO_START' | 'FINISH_TO_FINISH' | 'START_TO_FINISH';
+
+export interface WbsNode {
+  id: string;
+  projectId: string;
+  parentId: string | null;
+  code: string;
+  name: string;
+  description: string | null;
+  type: WbsNodeType;
+  position: number;
+  _count: { tasks: number; children: number };
+}
+
+export interface TaskDependency {
+  id: string;
+  blockerTaskId: string;
+  blockedTaskId: string;
+  type: TaskDependencyType;
+  lagDays: number;
+  critical: boolean;
+}
+
+export interface TimelineTask {
+  id: string;
+  code: string | null;
+  title: string;
+  wbsNodeId: string | null;
+  plannedStart: string | null;
+  plannedEnd: string | null;
+  blocked: boolean;
+  state: string;
+}
+
+export interface ProjectTimeline {
+  wbs: Omit<WbsNode, '_count'>[];
+  tasks: TimelineTask[];
+  dependencies: TaskDependency[];
+}
+
+export interface FileRevision {
+  id: string;
+  revision: number;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  sha256: string;
+  note: string | null;
+  createdAt: string;
+  uploadedBy: { id: string; name: string };
+}
+
+export interface ProjectFile {
+  id: string;
+  projectId: string;
+  name: string;
+  description: string | null;
+  createdAt: string;
+  updatedAt: string;
+  revisions: FileRevision[];
+  latestRevision: FileRevision | null;
 }

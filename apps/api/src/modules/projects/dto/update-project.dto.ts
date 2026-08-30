@@ -1,4 +1,5 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { ProjectProfile } from '@prisma/client';
 
 export class UpdateProjectDto {
   @IsOptional()
@@ -28,4 +29,8 @@ export class UpdateProjectDto {
   @IsOptional()
   @IsString()
   color?: string;
+
+  @IsOptional()
+  @IsEnum(ProjectProfile)
+  profile?: ProjectProfile;
 }

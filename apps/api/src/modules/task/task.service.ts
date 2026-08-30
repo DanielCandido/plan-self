@@ -225,6 +225,15 @@ export class TaskService {
         ? current.boardColumn
         : await this.resolveBoardColumn(current.projectId, dto.boardColumnId);
 
+    if (dto.wbsNodeId) {
+      const wbsNode = await this.prisma.wbsNode.findFirst({ where: { id: dto.wbsNodeId, projectId: current.projectId } });
+      if (!wbsNode) throw new BadRequestException('Item da EAP invalido para este projeto');
+    }
+
+    if (dto.plannedStart && dto.plannedEnd && new Date(dto.plannedEnd) < new Date(dto.plannedStart)) {
+      throw new BadRequestException('O termino planejado deve ser posterior ao inicio');
+    }
+
     if (
       current.boardColumn?.type === 'DONE' &&
       targetColumn?.type !== 'DONE' &&
@@ -262,6 +271,9 @@ export class TaskService {
           blockedReason: dto.blockedReason === undefined ? undefined : dto.blockedReason,
           dueDate: dto.dueDate === undefined ? undefined : dto.dueDate ? new Date(dto.dueDate) : null,
           dueAt: dto.dueDate === undefined ? undefined : dto.dueDate ? new Date(dto.dueDate) : null,
+          plannedStart: dto.plannedStart === undefined ? undefined : dto.plannedStart ? new Date(dto.plannedStart) : null,
+          plannedEnd: dto.plannedEnd === undefined ? undefined : dto.plannedEnd ? new Date(dto.plannedEnd) : null,
+          wbsNodeId: dto.wbsNodeId,
           boardId: targetColumn?.boardId ?? undefined,
           boardColumnId: targetColumn?.id ?? undefined,
           updatedBy: currentUser.id,
@@ -756,6 +768,9 @@ export class TaskService {
       blocked: task.blocked,
       blockedReason: task.blockedReason,
       dueDate: task.dueDate ? task.dueDate.toISOString() : null,
+      plannedStart: task.plannedStart ? task.plannedStart.toISOString() : null,
+      plannedEnd: task.plannedEnd ? task.plannedEnd.toISOString() : null,
+      wbsNodeId: task.wbsNodeId,
       labels,
       checklist: this.parseChecklist(task.checklist),
       deletedAt: task.deletedAt ? task.deletedAt.toISOString() : null,
