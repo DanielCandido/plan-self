@@ -8,10 +8,10 @@ O nucleo ja possui organizacoes, equipes, projetos, dashboard, Kanban, backlog, 
 
 ## Marco 0 - operacao LAN isolada
 
-- Usar uma unica origem para web, API e Socket.IO, sem localhost no navegador.
-- Operar sem CDN, OAuth, telemetria ou servicos publicos obrigatorios.
-- Disponibilizar DNS local e HTTPS com certificado confiavel.
-- Entregar instalacao e atualizacao por bundle offline de imagens.
+- [x] Usar uma unica origem para web, API e Socket.IO, sem localhost no navegador.
+- [x] Operar sem CDN, OAuth, telemetria ou servicos publicos obrigatorios.
+- [x] Disponibilizar DNS local e HTTPS com certificado confiavel.
+- [x] Entregar instalacao e atualizacao por bundle offline de imagens.
 - Completar contas locais, reset administrativo, backup e health checks.
 - Exigir build, lint e testes no CI.
 

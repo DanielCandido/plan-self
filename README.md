@@ -63,6 +63,9 @@ Monorepo com Turborepo:
 Para uso em rede isolada com DNS e HTTPS local, consulte o
 [guia de instalacao LAN](./docs/lan-setup.md).
 
+Para transportar e instalar a aplicacao sem acesso a internet, consulte o
+[guia do bundle offline](./docs/offline-bundle.md).
+
 ```bash
 cp .env.example .env
 npm install
@@ -87,12 +90,9 @@ Ou:
 
 ## Serviços (docker compose)
 
-- `web` → http://localhost:3000
-- `api` → http://localhost:3001
-- `setup-wizard` → http://localhost:3002
-- `gateway` → ws://localhost:3010/events
-- `postgres` + `redis`
-- `nginx` → http://localhost:80
+- `nginx` e o unico servico exposto: HTTP em `8080` e HTTPS em `8443` por padrao.
+- `web`, `api`, `setup-wizard`, `gateway`, `postgres` e `redis` permanecem acessiveis apenas na rede interna do Compose.
+- As portas podem ser alteradas por `PLAN_SELF_HTTP_PORT` e `PLAN_SELF_HTTPS_PORT`.
 
 ## Segurança base incluída
 

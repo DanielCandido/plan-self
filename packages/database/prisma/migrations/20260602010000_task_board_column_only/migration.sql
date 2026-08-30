@@ -44,12 +44,10 @@ WHERE t."projectId" = b."projectId"
 
 -- Backfill boardColumnId from persisted state/status fallback
 UPDATE "Task" t
-SET "boardColumnId" = target."id"
-FROM LATERAL (
+SET "boardColumnId" = (
   SELECT bc."id"
-  FROM "Board" b
-  INNER JOIN "BoardColumn" bc ON bc."boardId" = b."id"
-  WHERE b."projectId" = t."projectId"
+  FROM "BoardColumn" bc
+  WHERE bc."boardId" = t."boardId"
     AND bc."type" = CASE UPPER(COALESCE(t."status"::text, t."state"::text, 'BACKLOG'))
       WHEN 'TODO' THEN 'TODO'::"BoardColumnType"
       WHEN 'IN_PROGRESS' THEN 'IN_PROGRESS'::"BoardColumnType"
@@ -60,7 +58,7 @@ FROM LATERAL (
     END
   ORDER BY bc."order" ASC, bc."createdAt" ASC
   LIMIT 1
-) AS target
+)
 WHERE t."boardColumnId" IS NULL;
 
 -- Remove legacy indexes and columns
