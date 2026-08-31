@@ -12,8 +12,9 @@ O nucleo ja possui organizacoes, equipes, projetos, dashboard, Kanban, backlog, 
 - [x] Operar sem CDN, OAuth, telemetria ou servicos publicos obrigatorios.
 - [x] Disponibilizar DNS local e HTTPS com certificado confiavel.
 - [x] Entregar instalacao e atualizacao por bundle offline de imagens.
-- Completar contas locais, reset administrativo, backup e health checks.
-- Exigir build, lint e testes no CI.
+- [x] Completar autenticacao por contas locais e reset administrativo auditavel com revogacao de sessoes.
+- [x] Entregar backup, restauracao e health checks operacionais.
+- [x] Exigir validacao Prisma, build, lint, testes e Compose no CI.
 
 ## Marco 1 - fundacoes compartilhadas
 

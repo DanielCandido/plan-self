@@ -22,7 +22,7 @@ services:
       retries: 5
 
   api:
-    image: plan-self-api:latest
+    image: localhost/plan-self-api:latest
     env_file:
       - .env
     volumes:
@@ -33,14 +33,14 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/docs').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/health/ready').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
       interval: 10s
       timeout: 5s
       retries: 12
       start_period: 30s
 
   gateway:
-    image: plan-self-gateway:latest
+    image: localhost/plan-self-gateway:latest
     env_file:
       - .env
     depends_on:
@@ -50,7 +50,7 @@ services:
         condition: service_healthy
 
   web:
-    image: plan-self-web:latest
+    image: localhost/plan-self-web:latest
     env_file:
       - .env
     depends_on:
@@ -58,12 +58,12 @@ services:
         condition: service_healthy
 
   setup-wizard:
-    image: plan-self-setup-wizard:latest
+    image: localhost/plan-self-setup-wizard:latest
     env_file:
       - .env
 
   worker:
-    image: plan-self-worker:latest
+    image: localhost/plan-self-worker:latest
     env_file:
       - .env
     depends_on:

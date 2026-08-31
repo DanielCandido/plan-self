@@ -14,6 +14,7 @@ import { TeamModule } from './modules/team/team.module';
 import { UsersModule } from './modules/users/users.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { IdempotencyInterceptor } from './common/interceptors/idempotency.interceptor';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { IdempotencyInterceptor } from './common/interceptors/idempotency.interc
     TeamModule,
     UsersModule,
     PrismaModule,
+    HealthModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

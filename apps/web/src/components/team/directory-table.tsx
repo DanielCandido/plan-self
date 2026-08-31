@@ -6,9 +6,11 @@ import { WorkloadBar } from './workload-bar';
 export function DirectoryTable({
   members,
   isLoading,
+  onResetPassword,
 }: {
   members: TeamMemberItem[];
   isLoading: boolean;
+  onResetPassword?: (member: TeamMemberItem) => void;
 }) {
   if (isLoading) {
     return (
@@ -30,6 +32,7 @@ export function DirectoryTable({
             <th className="px-6 py-4">Team</th>
             <th className="px-6 py-4">Status</th>
             <th className="px-6 py-4">Load</th>
+            {onResetPassword && <th className="px-6 py-4 text-right">Administracao</th>}
           </tr>
         </thead>
         <tbody>
@@ -56,6 +59,11 @@ export function DirectoryTable({
               <td className="px-6 py-4">
                 <WorkloadBar value={member.workload} />
               </td>
+              {onResetPassword && (
+                <td className="px-6 py-4 text-right">
+                  <button type="button" onClick={() => onResetPassword(member)} className="rounded-lg border border-violet-500/30 px-3 py-2 text-sm text-violet-300 hover:bg-violet-500/10">Redefinir senha</button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

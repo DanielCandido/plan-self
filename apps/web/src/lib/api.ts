@@ -9,9 +9,11 @@ import { enqueueMutation } from './offline-queue';
 declare module 'axios' {
   interface AxiosRequestConfig {
     _offlineReplay?: boolean;
+    _offlineQueue?: boolean;
   }
   interface InternalAxiosRequestConfig {
     _offlineReplay?: boolean;
+    _offlineQueue?: boolean;
   }
 }
 
@@ -99,6 +101,7 @@ apiClient.interceptors.response.use(
       !isAuthRequest &&
       isNetworkFailure &&
       !isFilePayload &&
+      originalRequest._offlineQueue !== false &&
       !originalRequest._offlineReplay
     ) {
       const idempotencyKey = String((originalRequest.headers as Record<string, unknown> | undefined)?.['Idempotency-Key'] ?? createMutationId());

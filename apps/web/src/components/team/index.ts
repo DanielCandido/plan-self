@@ -1,4 +1,5 @@
 export * from './avatar-stack';
+export * from './admin-reset-password-dialog';
 export * from './create-team-modal';
 export * from './delete-team-confirm-dialog';
 export * from './directory-pagination';

@@ -66,6 +66,12 @@ Para uso em rede isolada com DNS e HTTPS local, consulte o
 Para transportar e instalar a aplicacao sem acesso a internet, consulte o
 [guia do bundle offline](./docs/offline-bundle.md).
 
+Para proteger e restaurar PostgreSQL e arquivos locais, consulte o
+[guia de backup e restauracao](./docs/backup-restore.md).
+
+Para os checks obrigatorios e a protecao da branch principal, consulte o
+[guia de integracao continua](./docs/continuous-integration.md).
+
 ```bash
 cp .env.example .env
 npm install

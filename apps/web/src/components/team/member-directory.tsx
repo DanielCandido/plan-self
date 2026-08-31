@@ -17,6 +17,7 @@ export function MemberDirectory({
   onTabChange,
   page,
   onPageChange,
+  onResetPassword,
 }: {
   members: TeamMemberItem[];
   totalCount: number;
@@ -25,6 +26,7 @@ export function MemberDirectory({
   onTabChange: (tab: DirectoryTab) => void;
   page: number;
   onPageChange: (page: number) => void;
+  onResetPassword?: (member: TeamMemberItem) => void;
 }) {
   return (
     <section className="overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(120deg,rgba(255,255,255,0.03),rgba(124,58,237,0.05))] backdrop-blur-xl">
@@ -45,7 +47,7 @@ export function MemberDirectory({
           ))}
         </div>
       </div>
-      <DirectoryTable members={members} isLoading={isLoading} />
+      <DirectoryTable members={members} isLoading={isLoading} onResetPassword={onResetPassword} />
       <DirectoryPagination page={page} perPage={8} totalCount={totalCount} onPageChange={onPageChange} />
     </section>
   );

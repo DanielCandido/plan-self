@@ -1,6 +1,7 @@
 'use client';
 
-import { Suspense, useEffect, useMemo } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import type { TeamMemberItem } from '@plan-self/types';
 import { useAuth } from '@/hooks/useAuth';
 import { useSession } from '@/hooks/useSession';
 import { useMemberDirectory, useTeamInvites, useTeams } from '@/hooks/use-teams';
@@ -20,6 +21,7 @@ import {
   TeamsErrorState,
   TeamsHeader,
   TeamsSkeleton,
+  AdminResetPasswordDialog,
 } from '@/components/team';
 
 export default function TeamPage() {
@@ -39,6 +41,8 @@ export default function TeamPage() {
 }
 
 function TeamPageContent() {
+  const { user, logout } = useAuth();
+  const [passwordTarget, setPasswordTarget] = useState<TeamMemberItem | null>(null);
   const {
     teams,
     isLoading,
@@ -131,6 +135,7 @@ function TeamPageContent() {
           onTabChange={setDirectoryTab}
           page={directoryPage}
           onPageChange={setDirectoryPage}
+          onResetPassword={user && ['OWNER', 'ADMIN'].includes(user.role) ? setPasswordTarget : undefined}
         />
       </div>
 
@@ -187,6 +192,15 @@ function TeamPageContent() {
           setSelectedTeamId(null);
         }}
       />
+
+      {user && (
+        <AdminResetPasswordDialog
+          member={passwordTarget}
+          currentUserId={user.id}
+          onClose={() => setPasswordTarget(null)}
+          onSelfReset={logout}
+        />
+      )}
     </>
   );
 }

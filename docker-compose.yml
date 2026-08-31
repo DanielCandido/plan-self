@@ -22,6 +22,7 @@ services:
       retries: 5
 
   api:
+    image: localhost/plan-self-api:latest
     build:
       context: .
       dockerfile: infrastructure/docker/api.Dockerfile
@@ -35,13 +36,14 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/docs').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/health/ready').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
       interval: 10s
       timeout: 5s
       retries: 12
       start_period: 30s
 
   gateway:
+    image: localhost/plan-self-gateway:latest
     build:
       context: .
       dockerfile: infrastructure/docker/gateway.Dockerfile
@@ -54,6 +56,7 @@ services:
         condition: service_healthy
 
   web:
+    image: localhost/plan-self-web:latest
     build:
       context: .
       dockerfile: infrastructure/docker/web.Dockerfile
@@ -64,6 +67,7 @@ services:
         condition: service_healthy
 
   setup-wizard:
+    image: localhost/plan-self-setup-wizard:latest
     build:
       context: .
       dockerfile: infrastructure/docker/setup-wizard.Dockerfile
@@ -71,6 +75,7 @@ services:
       - .env
 
   worker:
+    image: localhost/plan-self-worker:latest
     build:
       context: .
       dockerfile: infrastructure/docker/worker.Dockerfile
