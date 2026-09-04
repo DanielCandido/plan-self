@@ -16,6 +16,9 @@ const schema = z.object({
   ownerId: z.string().optional(),
   teamId: z.string().optional(),
   profile: z.enum(['GENERAL', 'CONSTRUCTION_SITE']),
+  siteName: z.string().optional(), address: z.string().optional(), city: z.string().optional(), state: z.string().max(2).optional(), postalCode: z.string().optional(),
+  clientName: z.string().optional(), clientDocument: z.string().optional(), technicalManagerName: z.string().optional(), technicalManagerRegistry: z.string().optional(),
+  artNumber: z.string().optional(), permitNumber: z.string().optional(), contractNumber: z.string().optional(), plannedStart: z.string().optional(), plannedEnd: z.string().optional(),
 });
 
 type FormValues = z.input<typeof schema>;
@@ -33,6 +36,16 @@ function resolveInitialOption(
   }
 
   return { id: initialId, name: initialName };
+}
+
+function constructionDefaults(project?: ProjectItem | null) {
+  const data = project?.construction;
+  return {
+    siteName: data?.siteName ?? '', address: data?.address ?? '', city: data?.city ?? '', state: data?.state ?? '', postalCode: data?.postalCode ?? '',
+    clientName: data?.clientName ?? '', clientDocument: data?.clientDocument ?? '', technicalManagerName: data?.technicalManagerName ?? '',
+    technicalManagerRegistry: data?.technicalManagerRegistry ?? '', artNumber: data?.artNumber ?? '', permitNumber: data?.permitNumber ?? '', contractNumber: data?.contractNumber ?? '',
+    plannedStart: data?.plannedStart?.slice(0, 10) ?? '', plannedEnd: data?.plannedEnd?.slice(0, 10) ?? '',
+  };
 }
 
 export function ProjectFormModal({
@@ -86,6 +99,7 @@ export function ProjectFormModal({
       ownerId: initialProject?.ownerId ?? '',
       teamId: initialProject?.teamId ?? '',
       profile: initialProject?.profile ?? 'GENERAL',
+      ...constructionDefaults(initialProject),
     },
   });
   const resetForm = form.reset;
@@ -100,6 +114,7 @@ export function ProjectFormModal({
       ownerId: initialProject?.ownerId ?? '',
       teamId: initialProject?.teamId ?? '',
       profile: initialProject?.profile ?? 'GENERAL',
+      ...constructionDefaults(initialProject),
     });
   }, [initialProject, open, resetForm]);
 
@@ -115,7 +130,7 @@ export function ProjectFormModal({
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
       <button type="button" className="absolute inset-0" aria-label="Close" onClick={() => onOpenChange(false)} />
-      <div className="relative z-10 w-full max-w-2xl rounded-[28px] border border-white/10 bg-[#101118] p-6">
+      <div className="relative z-10 max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-[28px] border border-white/10 bg-[#101118] p-6">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-2xl font-semibold text-white">{title}</h2>
           <button
@@ -139,6 +154,12 @@ export function ProjectFormModal({
               ownerId: values.ownerId || undefined,
               teamId: values.teamId || undefined,
               profile: values.profile,
+              construction: values.profile === 'CONSTRUCTION_SITE' ? {
+                siteName: values.siteName || undefined, address: values.address || undefined, city: values.city || undefined, state: values.state?.toUpperCase() || undefined, postalCode: values.postalCode || undefined,
+                clientName: values.clientName || undefined, clientDocument: values.clientDocument || undefined, technicalManagerName: values.technicalManagerName || undefined,
+                technicalManagerRegistry: values.technicalManagerRegistry || undefined, artNumber: values.artNumber || undefined, permitNumber: values.permitNumber || undefined,
+                contractNumber: values.contractNumber || undefined, plannedStart: values.plannedStart || undefined, plannedEnd: values.plannedEnd || undefined,
+              } : undefined,
             });
             onOpenChange(false);
           })}
@@ -157,6 +178,33 @@ export function ProjectFormModal({
               <option value="CONSTRUCTION_SITE">Obra / Engenharia civil</option>
             </select>
           </Field>
+
+          {form.watch('profile') === 'CONSTRUCTION_SITE' && (
+            <fieldset className="space-y-4 rounded-2xl border border-amber-400/20 bg-amber-400/[0.04] p-4">
+              <legend className="px-2 text-sm font-semibold text-amber-200">Cadastro tecnico da obra</legend>
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field label="Nome do canteiro"><input {...form.register('siteName')} className={inputClass} /></Field>
+                <Field label="Cliente"><input {...form.register('clientName')} className={inputClass} /></Field>
+                <Field label="CPF/CNPJ do cliente"><input {...form.register('clientDocument')} className={inputClass} /></Field>
+                <Field label="Contrato"><input {...form.register('contractNumber')} className={inputClass} /></Field>
+              </div>
+              <Field label="Endereco da obra"><input {...form.register('address')} className={inputClass} /></Field>
+              <div className="grid gap-4 md:grid-cols-3">
+                <Field label="Cidade"><input {...form.register('city')} className={inputClass} /></Field>
+                <Field label="UF"><input {...form.register('state')} maxLength={2} className={inputClass} /></Field>
+                <Field label="CEP"><input {...form.register('postalCode')} className={inputClass} /></Field>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field label="Responsavel tecnico"><input {...form.register('technicalManagerName')} className={inputClass} /></Field>
+                <Field label="CREA/CAU"><input {...form.register('technicalManagerRegistry')} className={inputClass} /></Field>
+                <Field label="ART/RRT"><input {...form.register('artNumber')} className={inputClass} /></Field>
+                <Field label="Alvara"><input {...form.register('permitNumber')} className={inputClass} /></Field>
+                <Field label="Inicio planejado"><input type="date" {...form.register('plannedStart')} className={inputClass} /></Field>
+                <Field label="Termino planejado"><input type="date" {...form.register('plannedEnd')} className={inputClass} /></Field>
+              </div>
+              <p className="text-xs text-amber-100/60">Ao criar a obra, a EAP padrao de fases e servicos sera gerada automaticamente.</p>
+            </fieldset>
+          )}
 
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Status">

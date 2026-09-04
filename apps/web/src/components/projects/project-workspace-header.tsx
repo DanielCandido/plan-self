@@ -45,7 +45,7 @@ export function ProjectWorkspaceHeader({ projectId }: { projectId: string }) {
       </div>
 
       <nav className="flex items-center gap-1 px-5 py-3" aria-label="Workspace tabs">
-        {tabs.map((tab) => {
+        {[...tabs, ...(project?.profile === 'CONSTRUCTION_SITE' ? [{ label: 'Planejamento semanal', slug: 'weekly-plan' }, { label: 'Diario de obra', slug: 'site-diary' }, { label: 'Qualidade e SST', slug: 'quality' }] : [])].map((tab) => {
           const href = `/projects/${projectId}/${tab.slug}` as Route;
           const isActive = pathname.startsWith(href);
           return (

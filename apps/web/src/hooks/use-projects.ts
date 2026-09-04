@@ -21,6 +21,10 @@ import type {
   ProjectTimeline,
   ProjectFile,
   FileRevision,
+  WeeklyPlan,
+  SiteDiary,
+  ConstructionInspection,
+  NonConformity,
 } from '@plan-self/types';
 import apiClient from '@/lib/api';
 import { useProjectsStore } from '@/store/projects.store';
@@ -266,11 +270,11 @@ export function useProjectFiles(projectId: string) {
   const query = useQuery({ queryKey: key, queryFn: async () => (await apiClient.get<ProjectFile[]>(`/projects/${projectId}/files`)).data, enabled: Boolean(projectId) });
   const refresh = () => queryClient.invalidateQueries({ queryKey: key });
   const upload = useMutation({
-    mutationFn: async ({ file, name, description }: { file: File; name?: string; description?: string }) => { const form = new FormData(); form.append('file', file); if (name) form.append('name', name); if (description) form.append('description', description); return (await apiClient.post(`/projects/${projectId}/files`, form)).data; },
+    mutationFn: async ({ file, name, description, documentCode, category, discipline }: { file: File; name?: string; description?: string; documentCode?: string; category?: string; discipline?: string }) => { const form = new FormData(); form.append('file', file); if (name) form.append('name', name); if (description) form.append('description', description); if (documentCode) form.append('documentCode', documentCode); if (category) form.append('category', category); if (discipline) form.append('discipline', discipline); return (await apiClient.post(`/projects/${projectId}/files`, form, { headers: { 'Content-Type': undefined }, timeout: 120_000, _offlineQueue: false })).data; },
     onSuccess: async () => { toast.success('Arquivo enviado'); await refresh(); },
   });
   const revise = useMutation({
-    mutationFn: async ({ fileId, file, note }: { fileId: string; file: File; note?: string }) => { const form = new FormData(); form.append('file', file); if (note) form.append('note', note); return (await apiClient.post(`/projects/${projectId}/files/${fileId}/revisions`, form)).data; },
+    mutationFn: async ({ fileId, file, note }: { fileId: string; file: File; note?: string }) => { const form = new FormData(); form.append('file', file); if (note) form.append('note', note); return (await apiClient.post(`/projects/${projectId}/files/${fileId}/revisions`, form, { headers: { 'Content-Type': undefined }, timeout: 120_000, _offlineQueue: false })).data; },
     onSuccess: async () => { toast.success('Nova revisao enviada'); await refresh(); },
   });
   const remove = useMutation({ mutationFn: (fileId: string) => apiClient.delete(`/projects/${projectId}/files/${fileId}`), onSuccess: async () => { toast.success('Arquivo removido'); await refresh(); } });
@@ -321,4 +325,39 @@ export function useProjectById(projectId: string, enabled = true) {
     staleTime: 30_000,
     enabled: enabled && Boolean(projectId),
   });
+}
+
+export function useWeeklyPlans(projectId: string) {
+  const queryClient = useQueryClient();
+  const key = ['projects', projectId, 'weekly-plans'] as const;
+  const query = useQuery({ queryKey: key, queryFn: async () => (await apiClient.get<WeeklyPlan[]>(`/projects/${projectId}/weekly-plans`)).data, enabled: Boolean(projectId) });
+  const refresh = () => queryClient.invalidateQueries({ queryKey: key });
+  const createPlan = useMutation({ mutationFn: (payload: { weekStart: string; notes?: string }) => apiClient.post(`/projects/${projectId}/weekly-plans`, payload), onSuccess: async () => { toast.success('Planejamento semanal criado'); await refresh(); } });
+  const addItem = useMutation({ mutationFn: ({ planId, payload }: { planId: string; payload: { wbsNodeId?: string; description: string; unit?: string; plannedQuantity: number; constraintNote?: string } }) => apiClient.post(`/projects/${projectId}/weekly-plans/${planId}/items`, payload), onSuccess: async () => { toast.success('Meta semanal adicionada'); await refresh(); } });
+  const updateItem = useMutation({ mutationFn: ({ planId, itemId, payload }: { planId: string; itemId: string; payload: { actualQuantity?: number; status?: string; constraintNote?: string } }) => apiClient.patch(`/projects/${projectId}/weekly-plans/${planId}/items/${itemId}`, payload), onSuccess: refresh });
+  const closePlan = useMutation({ mutationFn: (planId: string) => apiClient.post(`/projects/${projectId}/weekly-plans/${planId}/close`), onSuccess: async () => { toast.success('Semana encerrada'); await refresh(); } });
+  return { plans: query.data ?? [], isLoading: query.isLoading, createPlan: createPlan.mutateAsync, addItem: addItem.mutateAsync, updateItem: updateItem.mutateAsync, closePlan: closePlan.mutateAsync, isSaving: createPlan.isPending || addItem.isPending || updateItem.isPending || closePlan.isPending };
+}
+
+export function useSiteDiaries(projectId: string) {
+  const queryClient = useQueryClient(); const key = ['projects', projectId, 'site-diaries'] as const;
+  const query = useQuery({ queryKey: key, queryFn: async () => (await apiClient.get<SiteDiary[]>(`/projects/${projectId}/site-diaries`)).data, enabled: Boolean(projectId) });
+  const refresh = () => queryClient.invalidateQueries({ queryKey: key });
+  const save = useMutation({ mutationFn: (payload: Omit<SiteDiary, 'id' | 'photos'>) => apiClient.post(`/projects/${projectId}/site-diaries`, payload), onSuccess: async () => { toast.success('Diario de obra salvo'); await refresh(); } });
+  const upload = useMutation({ mutationFn: ({ diaryId, file, caption }: { diaryId: string; file: File; caption?: string }) => { const form = new FormData(); form.append('file', file); if (caption) form.append('caption', caption); return apiClient.post(`/projects/${projectId}/site-diaries/${diaryId}/photos`, form, { _offlineQueue: false }); }, onSuccess: async () => { toast.success('Foto adicionada'); await refresh(); } });
+  async function openPhoto(diaryId: string, photo: SiteDiary['photos'][number]) { const response = await apiClient.get(`/projects/${projectId}/site-diaries/${diaryId}/photos/${photo.id}`, { responseType: 'blob' }); const url = URL.createObjectURL(response.data); window.open(url, '_blank', 'noopener,noreferrer'); setTimeout(() => URL.revokeObjectURL(url), 60_000); }
+  return { diaries: query.data ?? [], isLoading: query.isLoading, saveDiary: save.mutateAsync, uploadPhoto: upload.mutateAsync, openPhoto, isSaving: save.isPending || upload.isPending };
+}
+
+export function useConstructionQuality(projectId: string) {
+  const queryClient = useQueryClient();
+  const inspectionsKey = ['projects', projectId, 'inspections'] as const;
+  const nonConformitiesKey = ['projects', projectId, 'non-conformities'] as const;
+  const inspections = useQuery({ queryKey: inspectionsKey, queryFn: async () => (await apiClient.get<ConstructionInspection[]>(`/projects/${projectId}/inspections`)).data, enabled: Boolean(projectId) });
+  const nonConformities = useQuery({ queryKey: nonConformitiesKey, queryFn: async () => (await apiClient.get<NonConformity[]>(`/projects/${projectId}/non-conformities`)).data, enabled: Boolean(projectId) });
+  const refresh = async () => { await Promise.all([queryClient.invalidateQueries({ queryKey: inspectionsKey }), queryClient.invalidateQueries({ queryKey: nonConformitiesKey })]); };
+  const createInspection = useMutation({ mutationFn: (payload: { title: string; type: string; inspectionDate: string; location?: string; checklist: unknown[]; notes?: string; status?: string }) => apiClient.post(`/projects/${projectId}/inspections`, payload), onSuccess: async () => { toast.success('Inspecao registrada'); await refresh(); } });
+  const createNonConformity = useMutation({ mutationFn: (payload: { inspectionId?: string; code: string; title: string; description: string; severity?: string; responsibleId?: string; dueDate?: string }) => apiClient.post(`/projects/${projectId}/non-conformities`, payload), onSuccess: async () => { toast.success('Nao conformidade aberta'); await refresh(); } });
+  const updateNonConformity = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: { status?: string; resolution?: string; responsibleId?: string; dueDate?: string } }) => apiClient.patch(`/projects/${projectId}/non-conformities/${id}`, payload), onSuccess: async () => { toast.success('Nao conformidade atualizada'); await refresh(); } });
+  return { inspections: inspections.data ?? [], nonConformities: nonConformities.data ?? [], isLoading: inspections.isLoading || nonConformities.isLoading, createInspection: createInspection.mutateAsync, createNonConformity: createNonConformity.mutateAsync, updateNonConformity: updateNonConformity.mutateAsync, isSaving: createInspection.isPending || createNonConformity.isPending || updateNonConformity.isPending };
 }

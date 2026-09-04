@@ -16,13 +16,19 @@ import { ListProjectUsersQueryDto } from './dto/list-project-users-query.dto';
 import { ListProjectOptionsQueryDto } from './dto/list-project-options-query.dto';
 import { UpdateProjectMemberDto } from './dto/update-project-member.dto';
 import { ProjectFilesService } from './project-files.service';
+import { ConstructionPlanningService } from './construction-planning.service';
+import { CreateWeeklyPlanDto, CreateWeeklyPlanItemDto, UpdateWeeklyPlanItemDto } from './dto/weekly-plan.dto';
+import { SiteDiaryService } from './site-diary.service';
+import { SaveSiteDiaryDto } from './dto/site-diary.dto';
+import { ConstructionQualityService } from './construction-quality.service';
+import { CreateInspectionDto, CreateNonConformityDto, UpdateNonConformityDto } from './dto/construction-quality.dto';
 
 @ApiTags('projects')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller()
 export class ProjectsController {
-  constructor(private readonly projectsService: ProjectsService, private readonly projectFiles: ProjectFilesService) {}
+  constructor(private readonly projectsService: ProjectsService, private readonly projectFiles: ProjectFilesService, private readonly constructionPlanning: ConstructionPlanningService, private readonly siteDiary: SiteDiaryService, private readonly constructionQuality: ConstructionQualityService) {}
 
   @Get('projects')
   @ApiOperation({ summary: 'Lista de projetos com paginação e filtros simples' })
@@ -184,6 +190,55 @@ export class ProjectsController {
     return this.projectsService.removeDependency(id, dependencyId, currentUser);
   }
 
+  @Get('projects/:id/weekly-plans')
+  listWeeklyPlans(@Param('id') id: string, @CurrentUser() user: CurrentUserPayload) {
+    return this.constructionPlanning.list(id, user.organizationId);
+  }
+
+  @Post('projects/:id/weekly-plans')
+  createWeeklyPlan(@Param('id') id: string, @CurrentUser() user: CurrentUserPayload, @Body() dto: CreateWeeklyPlanDto) {
+    return this.constructionPlanning.create(id, user.organizationId, user.id, dto);
+  }
+
+  @Post('projects/:id/weekly-plans/:planId/items')
+  addWeeklyPlanItem(@Param('id') id: string, @Param('planId') planId: string, @CurrentUser() user: CurrentUserPayload, @Body() dto: CreateWeeklyPlanItemDto) {
+    return this.constructionPlanning.addItem(id, planId, user.organizationId, dto);
+  }
+
+  @Patch('projects/:id/weekly-plans/:planId/items/:itemId')
+  updateWeeklyPlanItem(@Param('id') id: string, @Param('planId') planId: string, @Param('itemId') itemId: string, @CurrentUser() user: CurrentUserPayload, @Body() dto: UpdateWeeklyPlanItemDto) {
+    return this.constructionPlanning.updateItem(id, planId, itemId, user.organizationId, dto);
+  }
+
+  @Post('projects/:id/weekly-plans/:planId/close')
+  closeWeeklyPlan(@Param('id') id: string, @Param('planId') planId: string, @CurrentUser() user: CurrentUserPayload) {
+    return this.constructionPlanning.close(id, planId, user.organizationId);
+  }
+
+  @Get('projects/:id/site-diaries')
+  listSiteDiaries(@Param('id') id: string, @CurrentUser() user: CurrentUserPayload) {
+    return this.siteDiary.list(id, user.organizationId);
+  }
+
+  @Post('projects/:id/site-diaries')
+  saveSiteDiary(@Param('id') id: string, @CurrentUser() user: CurrentUserPayload, @Body() dto: SaveSiteDiaryDto) {
+    return this.siteDiary.save(id, user.organizationId, user.id, dto);
+  }
+
+  @Post('projects/:id/site-diaries/:diaryId/photos')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 15 * 1024 * 1024 } }))
+  addSiteDiaryPhoto(@Param('id') id: string, @Param('diaryId') diaryId: string, @CurrentUser() user: CurrentUserPayload, @UploadedFile() file: any, @Body('caption') caption?: string) {
+    return this.siteDiary.addPhoto(id, diaryId, user.organizationId, file, caption);
+  }
+
+  @Get('projects/:id/site-diaries/:diaryId/photos/:photoId')
+  async getSiteDiaryPhoto(@Param('id') id: string, @Param('diaryId') diaryId: string, @Param('photoId') photoId: string, @CurrentUser() user: CurrentUserPayload, @Res({ passthrough: true }) response: any) {
+    const result = await this.siteDiary.photo(id, diaryId, photoId, user.organizationId);
+    response.setHeader('Content-Type', result.photo.mimeType);
+    response.setHeader('Content-Length', String(result.photo.size));
+    return new StreamableFile(result.stream);
+  }
+
   @Get('projects/:id/files')
   listFiles(@Param('id') id: string, @CurrentUser() currentUser: CurrentUserPayload) {
     return this.projectFiles.list(id, currentUser.organizationId);
@@ -213,5 +268,30 @@ export class ProjectsController {
   @Delete('projects/:id/files/:fileId')
   removeFile(@Param('id') id: string, @Param('fileId') fileId: string, @CurrentUser() currentUser: CurrentUserPayload) {
     return this.projectFiles.remove(id, fileId, currentUser.organizationId);
+  }
+
+  @Get('projects/:id/inspections')
+  listInspections(@Param('id') id: string, @CurrentUser() user: CurrentUserPayload) {
+    return this.constructionQuality.listInspections(id, user.organizationId);
+  }
+
+  @Post('projects/:id/inspections')
+  createInspection(@Param('id') id: string, @CurrentUser() user: CurrentUserPayload, @Body() dto: CreateInspectionDto) {
+    return this.constructionQuality.createInspection(id, user.organizationId, user.id, dto);
+  }
+
+  @Get('projects/:id/non-conformities')
+  listNonConformities(@Param('id') id: string, @CurrentUser() user: CurrentUserPayload) {
+    return this.constructionQuality.listNonConformities(id, user.organizationId);
+  }
+
+  @Post('projects/:id/non-conformities')
+  createNonConformity(@Param('id') id: string, @CurrentUser() user: CurrentUserPayload, @Body() dto: CreateNonConformityDto) {
+    return this.constructionQuality.createNonConformity(id, user.organizationId, dto);
+  }
+
+  @Patch('projects/:id/non-conformities/:nonConformityId')
+  updateNonConformity(@Param('id') id: string, @Param('nonConformityId') nonConformityId: string, @CurrentUser() user: CurrentUserPayload, @Body() dto: UpdateNonConformityDto) {
+    return this.constructionQuality.updateNonConformity(id, nonConformityId, user.organizationId, dto);
   }
 }

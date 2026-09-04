@@ -364,8 +364,6 @@ async function main() {
           sprintId: item.sprintId ?? null,
           title: item.title,
           code: item.code,
-          status: item.status,
-          state: item.status,
           points: item.points,
           storyPoints: item.points,
           position: item.position,
@@ -381,8 +379,6 @@ async function main() {
           sprintId: item.sprintId ?? null,
           title: item.title,
           code: item.code,
-          status: item.status,
-          state: item.status,
           points: item.points,
           storyPoints: item.points,
           position: item.position,
@@ -439,6 +435,11 @@ async function main() {
   });
 }
 
-main().finally(async () => {
-  await prisma.$disconnect();
-});
+main()
+  .catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

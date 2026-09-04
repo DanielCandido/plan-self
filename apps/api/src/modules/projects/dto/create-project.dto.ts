@@ -1,4 +1,6 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+import { ConstructionProjectDto } from './construction-project.dto';
 import { ProjectProfile } from '@prisma/client';
 
 export class CreateProjectDto {
@@ -32,4 +34,9 @@ export class CreateProjectDto {
   @IsOptional()
   @IsEnum(ProjectProfile)
   profile?: ProjectProfile;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ConstructionProjectDto)
+  construction?: ConstructionProjectDto;
 }

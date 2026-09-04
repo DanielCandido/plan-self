@@ -5,6 +5,23 @@ import { PrismaService } from '../prisma/prisma.service';
 const PROJECT_ORDER_FIELDS = ['name', 'createdAt', 'priority', 'updatedAt'] as const;
 type ProjectOrderField = (typeof PROJECT_ORDER_FIELDS)[number];
 
+const CONSTRUCTION_WBS = [
+  { code: '1', name: 'Servicos preliminares', children: ['Mobilizacao e canteiro', 'Levantamentos e projetos'] },
+  { code: '2', name: 'Infraestrutura', children: ['Terraplenagem', 'Fundacoes'] },
+  { code: '3', name: 'Superestrutura', children: ['Estrutura', 'Alvenaria e vedacoes'] },
+  { code: '4', name: 'Instalacoes', children: ['Instalacoes eletricas', 'Instalacoes hidrossanitarias'] },
+  { code: '5', name: 'Acabamentos', children: ['Revestimentos', 'Pintura e esquadrias'] },
+  { code: '6', name: 'Entrega', children: ['Testes e comissionamento', 'As built e encerramento'] },
+] as const;
+
+function constructionData(data: Record<string, any>) {
+  return {
+    ...data,
+    plannedStart: data.plannedStart ? new Date(data.plannedStart) : undefined,
+    plannedEnd: data.plannedEnd ? new Date(data.plannedEnd) : undefined,
+  };
+}
+
 @Injectable()
 export class ProjectsRepository {
   constructor(public readonly prisma: PrismaService) {}
@@ -44,6 +61,7 @@ export class ProjectsRepository {
         include: {
           team: { select: { id: true, name: true } },
           owner: { select: { id: true, name: true, avatarUrl: true } },
+          construction: true,
         },
         skip: options.page * options.perPage,
         take: options.perPage,
@@ -63,6 +81,7 @@ export class ProjectsRepository {
       include: {
         team: { select: { id: true, name: true } },
         owner: { select: { id: true, name: true, avatarUrl: true } },
+        construction: true,
       },
     });
 
@@ -172,20 +191,38 @@ export class ProjectsRepository {
     }));
   }
 
-  async createProject(organizationId: string, data: { name: string; description?: string; teamId?: string; ownerId?: string; priority?: string; color?: string; status?: string; profile?: 'GENERAL' | 'CONSTRUCTION_SITE' }) {
-    const project = await this.prisma.project.create({
-      data: { ...data, organizationId },
-      include: {
-        team: { select: { id: true, name: true } },
-        owner: { select: { id: true, name: true, avatarUrl: true } },
-      },
-    });
-
-    if (project.ownerId) {
-      await this.prisma.projectMember.create({
-        data: { projectId: project.id, userId: project.ownerId, role: 'OWNER' },
+  async createProject(organizationId: string, data: { name: string; description?: string; teamId?: string; ownerId?: string; priority?: string; color?: string; status?: string; profile?: 'GENERAL' | 'CONSTRUCTION_SITE'; construction?: Record<string, any> }) {
+    const { construction, ...projectData } = data;
+    const project = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.project.create({
+        data: {
+          ...projectData,
+          organizationId,
+          construction: projectData.profile === 'CONSTRUCTION_SITE' ? { create: constructionData(construction ?? {}) } : undefined,
+        },
       });
-    }
+      if (created.ownerId) {
+        await tx.projectMember.create({ data: { projectId: created.id, userId: created.ownerId, role: 'OWNER' } });
+      }
+      if (created.profile === 'CONSTRUCTION_SITE') {
+        for (const [phaseIndex, phase] of CONSTRUCTION_WBS.entries()) {
+          const root = await tx.wbsNode.create({
+            data: { projectId: created.id, code: phase.code, name: phase.name, type: 'PHASE', position: phaseIndex },
+          });
+          await tx.wbsNode.createMany({
+            data: phase.children.map((name, index) => ({ projectId: created.id, parentId: root.id, code: `${phase.code}.${index + 1}`, name, type: 'WORK_PACKAGE', position: index })),
+          });
+        }
+      }
+      return tx.project.findUniqueOrThrow({
+        where: { id: created.id },
+        include: {
+          team: { select: { id: true, name: true } },
+          owner: { select: { id: true, name: true, avatarUrl: true } },
+          construction: true,
+        },
+      });
+    });
 
     const [hydrated] = await this.hydrateProjects([project]);
     return hydrated;
@@ -197,12 +234,17 @@ export class ProjectsRepository {
       throw new NotFoundException('Projeto não encontrado');
     }
 
+    const { construction, ...projectData } = data;
     const updated = await this.prisma.project.update({
       where: { id: projectId },
-      data,
+      data: {
+        ...projectData,
+        construction: construction ? { upsert: { create: constructionData(construction), update: constructionData(construction) } } : undefined,
+      },
       include: {
         team: { select: { id: true, name: true } },
         owner: { select: { id: true, name: true, avatarUrl: true } },
+        construction: true,
       },
     });
     const [hydrated] = await this.hydrateProjects([updated]);

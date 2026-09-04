@@ -22,6 +22,23 @@ export interface ProjectTeam {
   name: string;
 }
 
+export interface ConstructionProject {
+  siteName: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  postalCode: string | null;
+  clientName: string | null;
+  clientDocument: string | null;
+  technicalManagerName: string | null;
+  technicalManagerRegistry: string | null;
+  artNumber: string | null;
+  permitNumber: string | null;
+  contractNumber: string | null;
+  plannedStart: string | null;
+  plannedEnd: string | null;
+}
+
 export interface ProjectItem {
   id: string;
   name: string;
@@ -32,6 +49,7 @@ export interface ProjectItem {
   archived: boolean;
   progress: number;
   profile: ProjectProfile;
+  construction: ConstructionProject | null;
   ownerId: string | null;
   teamId: string | null;
   owner: ProjectOwner | null;
@@ -65,6 +83,7 @@ export interface CreateProjectPayload {
   color?: string;
   status?: string;
   profile?: ProjectProfile;
+  construction?: Partial<ConstructionProject>;
 }
 
 export interface UpdateProjectPayload {
@@ -76,6 +95,7 @@ export interface UpdateProjectPayload {
   color?: string;
   status?: string;
   profile?: ProjectProfile;
+  construction?: Partial<ConstructionProject>;
 }
 
 export interface ArchiveProjectPayload {
@@ -199,8 +219,70 @@ export interface ProjectFile {
   projectId: string;
   name: string;
   description: string | null;
+  documentCode: string | null;
+  category: 'DOCUMENT' | 'DRAWING' | 'SPECIFICATION' | 'REPORT' | string;
+  discipline: string | null;
+  status: 'CURRENT' | 'SUPERSEDED' | 'ARCHIVED' | string;
   createdAt: string;
   updatedAt: string;
   revisions: FileRevision[];
   latestRevision: FileRevision | null;
+}
+
+export interface ConstructionInspection {
+  id: string;
+  title: string;
+  type: 'QUALITY' | 'SAFETY';
+  inspectionDate: string;
+  location: string | null;
+  status: 'OPEN' | 'APPROVED' | 'REJECTED';
+  checklist: Array<{ description: string; result: 'PASS' | 'FAIL' | 'NA'; note?: string }>;
+  notes: string | null;
+  inspector: { id: string; name: string };
+  nonConformities: NonConformity[];
+}
+
+export interface NonConformity {
+  id: string;
+  inspectionId: string | null;
+  code: string;
+  title: string;
+  description: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
+  responsibleId: string | null;
+  dueDate: string | null;
+  resolution: string | null;
+  resolvedAt: string | null;
+  responsible?: { id: string; name: string } | null;
+  inspection?: { id: string; title: string } | null;
+}
+
+export interface WeeklyPlanItem {
+  id: string;
+  description: string;
+  unit: string;
+  plannedQuantity: number;
+  actualQuantity: number;
+  status: 'PLANNED' | 'IN_PROGRESS' | 'DONE' | 'BLOCKED';
+  constraintNote: string | null;
+  wbsNode: { code: string; name: string } | null;
+  task: { id: string; code: string | null; title: string } | null;
+}
+
+export interface WeeklyPlan {
+  id: string;
+  weekStart: string;
+  status: 'DRAFT' | 'CLOSED';
+  notes: string | null;
+  ppc: number;
+  items: WeeklyPlanItem[];
+}
+
+export interface SiteDiaryPhoto { id: string; originalName: string; mimeType: string; size: number; caption: string | null; }
+export interface SiteDiary {
+  id: string; reportDate: string; weather: string | null; temperature: number | null;
+  workforce: Array<{ role: string; quantity: number }>; equipment: Array<{ description: string }>;
+  services: Array<{ description: string }>; occurrences: Array<{ description: string }>;
+  notes: string | null; status: 'DRAFT' | 'CLOSED'; photos: SiteDiaryPhoto[];
 }

@@ -31,12 +31,13 @@ O nucleo ja possui organizacoes, equipes, projetos, dashboard, Kanban, backlog, 
 
 A edicao sera Brasil-first e voltada a operacao de campo:
 
-- template de obra com fase, servico e atividade;
-- canteiro, cliente, responsaveis tecnicos, CREA e ART;
-- cronograma, planejamento semanal e acompanhamento fisico;
-- diario de obra com efetivo, equipamentos, servicos, ocorrencias e fotos;
-- documentos e plantas versionados;
-- inspecoes de qualidade e seguranca e nao conformidades;
+- [x] template de obra com fases e pacotes de servico na EAP;
+- [x] canteiro, cliente, responsavel tecnico, CREA/CAU, ART/RRT, alvara e contrato;
+- detalhar atividades executivas reutilizaveis dentro dos pacotes de servico;
+- [x] cronograma, planejamento semanal, metas quantitativas, realizado e PPC;
+- [x] diario de obra com clima, efetivo, equipamentos, servicos, ocorrencias e fotos locais;
+- [x] documentos e plantas versionados;
+- [x] inspecoes de qualidade e seguranca e nao conformidades;
 - PDF gerado localmente;
 - captura offline e sincronizacao posterior.
 

@@ -23,7 +23,7 @@ export class ProjectFilesService {
     return files.map((file) => ({ ...file, latestRevision: file.revisions[0] ?? null }));
   }
 
-  async create(projectId: string, organizationId: string, userId: string, file: Upload | undefined, body: { name?: string; description?: string; note?: string }) {
+  async create(projectId: string, organizationId: string, userId: string, file: Upload | undefined, body: { name?: string; description?: string; note?: string; documentCode?: string; category?: string; discipline?: string; status?: string }) {
     await this.assertProject(projectId, organizationId);
     if (!file) throw new BadRequestException('Arquivo obrigatorio');
     const name = (body.name || file.originalname).trim();
@@ -31,7 +31,7 @@ export class ProjectFilesService {
     const stored = await this.persist(projectId, file);
     try {
       return await this.prisma.projectFile.create({
-        data: { projectId, name, description: body.description, revisions: { create: { revision: 1, storageKey: stored.key, originalName: file.originalname, mimeType: file.mimetype || 'application/octet-stream', size: file.size, sha256: stored.sha256, note: body.note, uploadedById: userId } } },
+        data: { projectId, name, description: body.description, documentCode: body.documentCode, category: body.category || 'DOCUMENT', discipline: body.discipline, status: body.status || 'CURRENT', revisions: { create: { revision: 1, storageKey: stored.key, originalName: file.originalname, mimeType: file.mimetype || 'application/octet-stream', size: file.size, sha256: stored.sha256, note: body.note, uploadedById: userId } } },
         include: { revisions: true },
       });
     } catch (error) { await unlink(stored.path).catch(() => undefined); throw error; }

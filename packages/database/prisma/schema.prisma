@@ -145,21 +145,21 @@ model Team {
 }
 
 model User {
-  id                 String           @id @default(cuid())
-  email              String           @unique
+  id                 String                   @id @default(cuid())
+  email              String                   @unique
   name               String
   passwordHash       String?
-  status             UserStatus       @default(ACTIVE)
-  role               Role             @default(MEMBER)
+  status             UserStatus               @default(ACTIVE)
+  role               Role                     @default(MEMBER)
   avatarUrl          String?
-  onlineStatus       String           @default("offline")
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
+  onlineStatus       String                   @default("offline")
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
   organizationId     String
-  organization       Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization       Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   memberships        TeamMember[]
-  ownedTeams         Team[]           @relation("TeamOwner")
-  teamInvitesSent    TeamInvite[]     @relation("TeamInviteSentBy")
+  ownedTeams         Team[]                   @relation("TeamOwner")
+  teamInvitesSent    TeamInvite[]             @relation("TeamInviteSentBy")
   teamActivities     TeamActivity[]
   authSessions       AuthSession[]
   taskAssignees      TaskAssignee[]
@@ -172,6 +172,8 @@ model User {
   taskHistory        TaskHistory[]
   labelsCreated      Label[]
   fileRevisions      FileRevision[]
+  inspections        ConstructionInspection[] @relation("ConstructionInspectionInspector")
+  nonConformities    NonConformity[]          @relation("NonConformityResponsible")
 }
 
 model AuthSession {
@@ -262,21 +264,21 @@ model TeamActivity {
 }
 
 model Project {
-  id              String           @id @default(cuid())
+  id              String                   @id @default(cuid())
   name            String
   description     String?
   organizationId  String
   ownerId         String?
-  owner           User?            @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  owner           User?                    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   teamId          String?
-  team            Team?            @relation(fields: [teamId], references: [id], onDelete: SetNull)
-  priority        String?          @default("MEDIUM")
-  status          String?          @default("PLANNED")
-  archived        Boolean          @default(false)
-  progress        Int              @default(0)
+  team            Team?                    @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  priority        String?                  @default("MEDIUM")
+  status          String?                  @default("PLANNED")
+  archived        Boolean                  @default(false)
+  progress        Int                      @default(0)
   color           String?
-  profile         ProjectProfile   @default(GENERAL)
-  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  profile         ProjectProfile           @default(GENERAL)
+  organization    Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   epics           Epic[]
   sprints         Sprint[]
   stories         Story[]
@@ -287,11 +289,113 @@ model Project {
   members         ProjectMember[]
   wbsNodes        WbsNode[]
   files           ProjectFile[]
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  construction    ConstructionProject?
+  weeklyPlans     WeeklyPlan[]
+  siteDiaries     SiteDiary[]
+  inspections     ConstructionInspection[]
+  nonConformities NonConformity[]
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
 
   @@index([organizationId])
   @@index([archived])
+}
+
+model ConstructionProject {
+  id                       String    @id @default(cuid())
+  projectId                String    @unique
+  siteName                 String?
+  address                  String?
+  city                     String?
+  state                    String?
+  postalCode               String?
+  clientName               String?
+  clientDocument           String?
+  technicalManagerName     String?
+  technicalManagerRegistry String?
+  artNumber                String?
+  permitNumber             String?
+  contractNumber           String?
+  plannedStart             DateTime?
+  plannedEnd               DateTime?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  project                  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model WeeklyPlan {
+  id          String           @id @default(cuid())
+  projectId   String
+  weekStart   DateTime
+  status      String           @default("DRAFT")
+  notes       String?
+  createdById String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  items       WeeklyPlanItem[]
+
+  @@unique([projectId, weekStart])
+  @@index([projectId, status, weekStart])
+}
+
+model WeeklyPlanItem {
+  id              String     @id @default(cuid())
+  weeklyPlanId    String
+  wbsNodeId       String?
+  taskId          String?
+  description     String
+  unit            String     @default("un")
+  plannedQuantity Float      @default(0)
+  actualQuantity  Float      @default(0)
+  status          String     @default("PLANNED")
+  constraintNote  String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  weeklyPlan      WeeklyPlan @relation(fields: [weeklyPlanId], references: [id], onDelete: Cascade)
+  wbsNode         WbsNode?   @relation(fields: [wbsNodeId], references: [id], onDelete: SetNull)
+  task            Task?      @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([weeklyPlanId, status])
+  @@index([wbsNodeId])
+  @@index([taskId])
+}
+
+model SiteDiary {
+  id          String           @id @default(cuid())
+  projectId   String
+  reportDate  DateTime
+  weather     String?
+  temperature Float?
+  workforce   Json
+  equipment   Json
+  services    Json
+  occurrences Json
+  notes       String?
+  status      String           @default("DRAFT")
+  createdById String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  photos      SiteDiaryPhoto[]
+
+  @@unique([projectId, reportDate])
+  @@index([projectId, reportDate])
+}
+
+model SiteDiaryPhoto {
+  id           String    @id @default(cuid())
+  siteDiaryId  String
+  storageKey   String    @unique
+  originalName String
+  mimeType     String
+  size         Int
+  sha256       String
+  caption      String?
+  createdAt    DateTime  @default(now())
+  siteDiary    SiteDiary @relation(fields: [siteDiaryId], references: [id], onDelete: Cascade)
+
+  @@index([siteDiaryId, createdAt])
 }
 
 model ProjectMember {
@@ -309,38 +413,88 @@ model ProjectMember {
 }
 
 model WbsNode {
-  id          String      @id @default(cuid())
-  projectId   String
-  parentId    String?
-  code        String
-  name        String
-  description String?
-  type        WbsNodeType @default(WORK_PACKAGE)
-  position    Int         @default(0)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  parent      WbsNode?    @relation("WbsHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
-  children    WbsNode[]   @relation("WbsHierarchy")
-  tasks       Task[]
+  id              String           @id @default(cuid())
+  projectId       String
+  parentId        String?
+  code            String
+  name            String
+  description     String?
+  type            WbsNodeType      @default(WORK_PACKAGE)
+  position        Int              @default(0)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent          WbsNode?         @relation("WbsHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children        WbsNode[]        @relation("WbsHierarchy")
+  tasks           Task[]
+  weeklyPlanItems WeeklyPlanItem[]
 
   @@unique([projectId, code])
   @@index([projectId, parentId, position])
 }
 
 model ProjectFile {
-  id          String         @id @default(cuid())
-  projectId   String
-  name        String
-  description String?
-  deletedAt   DateTime?
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  revisions   FileRevision[]
+  id           String         @id @default(cuid())
+  projectId    String
+  name         String
+  description  String?
+  documentCode String?
+  category     String         @default("DOCUMENT")
+  discipline   String?
+  status       String         @default("CURRENT")
+  deletedAt    DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  project      Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  revisions    FileRevision[]
 
   @@unique([projectId, name])
   @@index([projectId, deletedAt])
+}
+
+model ConstructionInspection {
+  id              String          @id @default(cuid())
+  projectId       String
+  title           String
+  type            String
+  inspectionDate  DateTime
+  location        String?
+  inspectorId     String
+  status          String          @default("OPEN")
+  checklist       Json
+  notes           String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  project         Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  inspector       User            @relation("ConstructionInspectionInspector", fields: [inspectorId], references: [id], onDelete: Restrict)
+  nonConformities NonConformity[]
+
+  @@index([projectId, inspectionDate])
+  @@index([projectId, status])
+}
+
+model NonConformity {
+  id            String                  @id @default(cuid())
+  projectId     String
+  inspectionId  String?
+  code          String
+  title         String
+  description   String
+  severity      String                  @default("MEDIUM")
+  status        String                  @default("OPEN")
+  responsibleId String?
+  dueDate       DateTime?
+  resolution    String?
+  resolvedAt    DateTime?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  project       Project                 @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  inspection    ConstructionInspection? @relation(fields: [inspectionId], references: [id], onDelete: SetNull)
+  responsible   User?                   @relation("NonConformityResponsible", fields: [responsibleId], references: [id], onDelete: SetNull)
+
+  @@unique([projectId, code])
+  @@index([projectId, status, dueDate])
+  @@index([inspectionId])
 }
 
 model FileRevision {
@@ -565,6 +719,7 @@ model Task {
   sprintTasks           SprintTask[]
   blockingDependencies  TaskDependency[] @relation("TaskBlocking")
   blockedByDependencies TaskDependency[] @relation("TaskBlockedBy")
+  weeklyPlanItems       WeeklyPlanItem[]
 
   @@index([projectId, sprintId, sortOrder])
   @@index([projectId, deletedAt])
